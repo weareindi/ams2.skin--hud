@@ -1,0 +1,37 @@
+@each $name, $color in $colors {
+    [data-color="#{$name}"] {
+        color: rgba-format($color, 1);
+        color: rgba(var(--color-#{$name}), 1);
+    }
+
+    [data-background-color="#{$name}"] {
+        background-color: rgba-format($color, 1);
+        background-color: rgba(var(--color-#{$name}), 1);
+    }
+
+    [data-border-color="#{$name}"] {
+        border-color: rgba-format($color, 1);
+        border-color: rgba(var(--color-#{$name}), 1);
+    }
+
+    [data-outline-color="#{$name}"] {
+        outline-color: rgba-format($color, 1);
+        outline-color: rgba(var(--color-#{$name}), 1);
+    }
+
+    [data-fill="#{$name}"] {
+        path {
+            fill: rgba-format($color, 1);
+            fill: rgba(var(--color-#{$name}), 1);
+        }
+    }
+
+    [data-fill] { // just incase theres a nested data-fill
+        [data-fill="#{$name}"] {
+            path {
+                fill: rgba-format($color, 1);
+                fill: rgba(var(--color-#{$name}), 1);
+            }
+        }
+    }
+}

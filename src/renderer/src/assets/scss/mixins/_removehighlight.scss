@@ -1,0 +1,6 @@
+@mixin removehighlight() {
+    -webkit-touch-callout: none;
+    -webkit-tap-highlight-color: transparent;
+    user-select: none;
+    outline: 0;
+}

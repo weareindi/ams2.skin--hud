@@ -1,0 +1,3 @@
+@function rgb-unwrap($color) {
+    @return unquote('#{red($color)}, #{green($color)}, #{blue($color)}');
+}

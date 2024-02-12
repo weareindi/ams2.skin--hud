@@ -1,0 +1,21 @@
+// Convert pixels to em
+//
+// We're assuming the browser default font-size is 16 pixels and have defined that as our default context.
+// In our second usage example we're assuming the current element is inheriting or has defined a font-size of 20 which means the context has changed to which this function calculates the em of our desired size
+// Usage: `em(20)`
+// Usage: `em(16, 20)`
+// Usage: `font-size: em(20); border: em(1, 20) solid red;`
+//
+// ```
+// <header class="c-header">
+//     <h1 class="c-header__heading">
+//         <span class="c-header__heading-text">Heading</span>
+//     </h1>
+// </header>
+// ```
+
+@use "sass:math";
+
+@function em($pixels: 16, $context: 16) {
+    @return math.div($pixels, $context) * 1em;
+}

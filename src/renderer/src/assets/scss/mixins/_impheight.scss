@@ -1,0 +1,8 @@
+// A quick helper to calculate the implicit height of an item.
+//
+// Useful for ensuring videos and images keep their aspect ratio
+// Usage: `@include impheight(200, 100)`
+
+@mixin impheight($width, $height) {
+    padding-top: (math.div($height, $width)) * 100%;
+}

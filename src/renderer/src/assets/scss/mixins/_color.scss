@@ -1,0 +1,18 @@
+@use "sass:map";
+
+@mixin color($type: "color", $name: "", $opacity: 1, $important: 0) {
+    @if $name != "" {
+        $color: map.get($colors, $name);
+        $css: --color-#{$name};
+
+        @if $important == 0 {
+            #{$type}: rgba-format($color, $opacity);
+            #{$type}: rgba(var($css), $opacity);
+        }
+
+        @if $important == 1 {
+            #{$type}: rgba-format($color, $opacity) !important;
+            #{$type}: rgba(var($css), $opacity) !important;
+        }
+    }
+}

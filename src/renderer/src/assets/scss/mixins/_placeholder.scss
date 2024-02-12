@@ -1,0 +1,17 @@
+@mixin placeholder {
+    &::input-placeholder {
+        @content;
+    }
+
+    &:placeholder {
+        @content;
+    }
+
+    &::placeholder {
+        @content;
+    }
+
+    &:input-placeholder {
+        @content;
+    }
+}

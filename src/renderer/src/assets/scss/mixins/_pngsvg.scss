@@ -1,0 +1,8 @@
+// Fallback to a PNG for when a browser doesn't support SVG as a background-image
+//
+// Tip: Ensure you add the `preserveAspectRatio="none"` attribute to your opening svg tag.
+// Usage: `@include pngsvg('/path/to/png.png', '/path/to/svg.svg')`
+@mixin pngsvg($pngPath, $svgPath) {
+    background-image: url($pngPath);
+    background-image: linear-gradient(transparent, transparent), url($svgPath);
+}

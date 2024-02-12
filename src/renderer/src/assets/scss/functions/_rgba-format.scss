@@ -1,0 +1,3 @@
+@function rgba-format($color, $alpha: 1) {
+    @return unquote('rgba(#{unquote($color)}, #{$alpha})');
+}

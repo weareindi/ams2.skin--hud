@@ -1,0 +1,25 @@
+@font-face {
+    font-family: "secularone";
+    font-style: normal;
+    font-weight: normal;
+    font-display: swap;
+    src: url('@public/fonts/secularone/SecularOne.ttf') format('truetype');
+}
+
+@font-face {
+    font-family: "firacode";
+    font-style: normal;
+    font-weight: normal;
+    font-display: swap;
+    src: url('@public/fonts/firacode/FiraCode-Bold.ttf') format('truetype');
+}
+
+body {
+    *,
+    *:before,
+    *:after {
+        font-family: inherit;
+    }
+
+    font-family: "secularone", sans-serif;
+}

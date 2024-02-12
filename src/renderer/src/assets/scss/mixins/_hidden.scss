@@ -1,0 +1,29 @@
+// Move an element out of the visual flow but keeps it in play for screen readers/accessibility
+//
+// Usage: `@include hidden()`
+// Usage: `@include hidden(remove)`
+@mixin hidden($process: offscreen) {
+    @if $process == offscreen {
+        position: absolute;
+        top: 0;
+        left: 0;
+        overflow: hidden;
+        width: 1px;
+        height: 1px;
+        margin: 0;
+        padding: 0;
+        opacity: 0;
+    }
+
+    // Reset any previously hidden properties
+    @else if $process == remove {
+        position: static;
+        display: block;
+        display: initial;
+        overflow: visible;
+        width: auto;
+        height: auto;
+        visibility: visible;
+        visibility: initial;
+    }
+}

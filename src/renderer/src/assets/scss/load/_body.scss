@@ -1,0 +1,13 @@
+body {
+    *,
+    *:before,
+    *:after {
+        color: inherit;
+    }
+    
+    @include color('color', 'white');
+
+    width: 100vw;
+    height: 100vh;
+    font-size: var(--font-size, 100%);
+}

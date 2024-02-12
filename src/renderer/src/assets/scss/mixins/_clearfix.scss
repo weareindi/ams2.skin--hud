@@ -1,0 +1,27 @@
+// Add a robust clearfix to the element
+//
+// Usage: `@include clearfix()`
+// Usage: `@include clearfix(remove)`
+
+@mixin clearfix($process: create) {
+    // Remove a clearfix from a previously clearfixed element
+    // Useful for when we upgrade an element to use flexbox as flexbox doesn't ignore pseudo elements
+    @if $process == remove {
+        &:before,
+        &:after {
+            content: none;
+        }
+    }
+
+    @else {
+        &:before,
+        &:after {
+            content: '';
+            display: table;
+        }
+
+        &:after {
+            clear: both;
+        }
+    }
+}
