@@ -2,7 +2,6 @@ import { app, shell, BrowserWindow, Tray, Menu, screen, ipcMain, ipcRenderer } f
 import { join } from 'path';
 import { electronApp, optimizer, is } from '@electron-toolkit/utils';
 import { execFile,  } from 'child_process';
-import { autoUpdater } from "electron-updater";
 import icon from '../../resources/icon.png?asset';
 import iconTrayMac from '../../resources/iconTray.png?asset';
 import iconTrayWin from '../../resources/iconTray.png?asset';
