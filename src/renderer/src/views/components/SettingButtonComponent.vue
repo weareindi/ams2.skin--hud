@@ -1,5 +1,5 @@
 <template>
-    <button class="c-button" :class="`${'c-button--' + color}`">
+    <button class="c-button" :class="`${'c-button--' + color}`" :disabled="disabled">
         <span class="c-button__label">{{ label }}</span>
     </button>
 </template>
@@ -21,6 +21,12 @@
     &[disabled] {
         @include color('color', 'black');
         @include color('background-color', 'white', 0.1);
+        pointer-events: none;
+
+        &:hover {
+            @include color('color', 'black');
+            @include color('background-color', 'white', 0.1);
+        }
     }
 }
 
@@ -80,6 +86,10 @@ export default {
         label: {
             type: String,
             default: 'Button Label'
+        },
+        disabled: {
+            type: Boolean,
+            default: false
         }
     },
     setup() {},
