@@ -41,7 +41,9 @@
                 <div class="m-settings__group">
                     <div class="m-settings__items m-settings__items--buttons">
                         <div class="m-settings__item">
-                            <SettingButtonComponent label="Check for updates" color="blue" @click="updateCheck" />
+                            <SettingButtonComponent label="Check for updates" color="blue" v-if="updateReady === null" @click="updateCheck" />
+                            <SettingButtonComponent label="No update found" color="blue" v-if="updateReady === false" @click="updateCheck" :disabled="true" />
+                            <SettingButtonComponent label="Download Available" color="green" v-if="updateReady === true" @click="gotoUpdate" />
                         </div> 
                         <div class="m-settings__item">
                             <SettingButtonComponent label="Hide Settings" color="yellow" @click="hideSettings" />
@@ -210,11 +212,13 @@ export default {
         electron.ipcRenderer.on('openSettings', async () => {
             await this.openSettings();
         });
+    },
+    data() {
+        const isUpdateAvailable = null;
 
-        // // handle 'open settings' from tray menu
-        // electron.ipcRenderer.on('openSettings', async () => {
-        //     await this.openSettings();
-        // });
+        return {
+            isUpdateAvailable
+        }
     },
     components: {
         SettingInputComponent,
@@ -319,6 +323,20 @@ export default {
                 return this.configStartVisible = value;
             }
         },
+        updateReady: {
+            get() {
+                if (this.isUpdateAvailable === false) {
+                    setTimeout(() => {
+                        this.isUpdateAvailable = null;
+                    }, 2000);
+                }
+
+                return this.isUpdateAvailable;
+            },
+            set(value) {
+                return this.isUpdateAvailable = value;
+            }
+        },
     },
     methods: {
         changeDisplay(id) {
@@ -345,7 +363,11 @@ export default {
             }
         },
         async updateCheck() {
-            console.log('updatecheck');
+            this.isUpdateAvailable = await electron.ipcRenderer.invoke('checkUpdate');
+        },
+        async gotoUpdate() {
+            await this.hideSettings();
+            open('https://github.com/weareindi/ams2.skin--hud/releases/latest', '_blank').focus();
         },
     }
 }

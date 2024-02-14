@@ -2,10 +2,9 @@ import { app, shell, BrowserWindow, Tray, Menu, screen, ipcMain, ipcRenderer } f
 import { join } from 'path';
 import { electronApp, optimizer, is } from '@electron-toolkit/utils';
 import { execFile,  } from 'child_process';
-import { autoUpdater } from "electron-updater";
 import icon from '../../resources/icon.png?asset';
-import iconTrayMac from '../../resources/iconTray.png?asset';
-import iconTrayWin from '../../resources/iconTray.png?asset';
+import iconTrayMac from '../../resources/iconTemplate.png?asset';
+import iconTrayWin from '../../resources/iconTemplate.png?asset';
 import crest2 from '../../resources/crest2/CREST2.exe?asset';
 
 class Main {
@@ -281,6 +280,53 @@ class Main {
             const primaryDisplay = screen.getPrimaryDisplay();
             const {width} = primaryDisplay.bounds;
             return (width / this.defaultWidth) * 100;
+        });
+
+        // get version
+        ipcMain.handle('checkUpdate', async (event) => {
+            // get package.json from repo
+            const url = `https://api.github.com/repos/weareindi/ams2.skin--hud/releases/latest`;
+
+            // fetch the data
+            const response = await fetch(url, {
+                method: 'GET',
+                headers: {
+                    'Accept': 'application/vnd.github+json',
+                    'X-GitHub-Api-Version': '2022-11-28',
+                    'Authorization': 'Bearer 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',
+                },
+                redirect: 'follow'
+            }).catch(async (error) => {
+                console.log(error);
+                return null;
+            });
+        
+            // no response?
+            if (!response) {
+                // .. bail
+                return false;
+            }
+
+            // get json
+            const json = await response.json();
+
+            // get running app current version
+            let currentVersion = `v${app.getVersion()}`;
+
+            // pprepare latest version for comparison
+            let latest_Version = currentVersion;
+            if ('tag_name' in json) {
+                // ... update latest version to found version from fetch request
+                latest_Version = json.tag_name;
+            }
+
+            // compare. if same version return false
+            if (currentVersion === latest_Version) {
+                return false;
+            }
+
+            // return true, update avilable
+            return true;
         });
     }
 
