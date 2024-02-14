@@ -133,7 +133,7 @@ class ParentWorker {
                 const paused = await this.isPaused(event.data.data);
                 if (paused) {
                     // just stop everything. keep data still and dont reset
-                    // return null;
+                    return null;
                 }
 
                 // are we ready?
