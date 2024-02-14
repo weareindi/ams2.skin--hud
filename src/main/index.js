@@ -293,13 +293,7 @@ class Main {
 
             // fetch the data
             const response = await fetch(url, {
-                method: 'GET',
-                headers: {
-                    'Accept': 'application/vnd.github+json',
-                    'X-GitHub-Api-Version': '2022-11-28',
-                    'Authorization': 'Bearer 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',
-                },
-                redirect: 'follow'
+                method: 'GET'
             }).catch(async (error) => {
                 console.log(error);
                 return null;
