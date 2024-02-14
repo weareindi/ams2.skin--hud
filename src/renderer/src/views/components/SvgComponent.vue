@@ -67,7 +67,8 @@
 .c-svg--icon--tyre,
 .c-svg--icon--water-temp,
 .c-svg--icon--wipers,
-.c-svg--icon--power {
+.c-svg--icon--power,
+.c-svg--icon--scale {
     @include svg(48, 48);
 }
 </style>
@@ -91,6 +92,7 @@ import SvgIconTyre from '/src/assets/svg/icon--tyre--48x48.svg';
 import SvgIconWaterTemp from '/src/assets/svg/icon--water-temp--48x48.svg';
 import SvgIconWipers from '/src/assets/svg/icon--wipers--48x48.svg';
 import SvgIconPower from '/src/assets/svg/icon--power--48x48.svg';
+import SvgIconScale from '/src/assets/svg/icon--scale--48x48.svg';
 
 export default {
     computed: {
@@ -166,6 +168,10 @@ export default {
 
                 if (this.$attrs.svg === 'icon--power') {
                     return SvgIconPower;
+                }
+
+                if (this.$attrs.svg === 'icon--scale') {
+                    return SvgIconScale;
                 }
             }
         },
