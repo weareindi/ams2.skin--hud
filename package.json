@@ -24,7 +24,6 @@
     "@electron-toolkit/preload": "^3.0.0",
     "@electron-toolkit/utils": "^3.0.0",
     "autosize-input": "^1.0.2",
-    "electron-updater": "^6.1.7",
     "localforage": "^1.10.0",
     "vh-check": "^2.0.5"
   },
