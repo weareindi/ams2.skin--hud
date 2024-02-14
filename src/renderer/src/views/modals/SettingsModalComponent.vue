@@ -24,7 +24,7 @@
                             <SettingInputComponent icon="display" label="Tick Rate" v-model="tickRate" type="number" min="1" max="30" />
                         </div>
                         <div class="m-settings__item">
-                            <SettingInputComponent icon="display" label="Scale" v-model="scale" type="number" min="50" max="200" step="0.1"  />
+                            <SettingInputComponent icon="scale" label="Scale" v-model="scale" type="number" min="50" max="200" step="0.1"  />
                         </div>
                         <div class="m-settings__item">
                             <SettingToggleComponent label="Display on" v-model="activeDisplay" :options="activeDisplayOptions" />
