@@ -1,10 +1,11 @@
-import { app, shell, BrowserWindow, Tray, Menu, screen, ipcMain, ipcRenderer } from 'electron';
+import { app, shell, BrowserWindow, Tray, Menu, screen, ipcMain, nativeTheme } from 'electron';
 import { join } from 'path';
 import { electronApp, optimizer, is } from '@electron-toolkit/utils';
 import { execFile,  } from 'child_process';
 import icon from '../../resources/icon.png?asset';
 import iconTrayMac from '../../resources/iconTemplate.png?asset';
-import iconTrayWin from '../../resources/iconTemplate.png?asset';
+import iconTrayWinLight from '../../resources/iconTemplate.png?asset';
+import iconTrayWinDark from '../../resources/iconTemplateDark.png?asset';
 import crest2 from '../../resources/crest2/CREST2.exe?asset';
 
 class Main {
@@ -76,8 +77,11 @@ class Main {
         }
 
         // if windows
-        if (process.platform === 'win32') {
-            this.tray = new Tray(iconTrayWin);
+        if (process.platform === 'win32' && nativeTheme.shouldUseDarkColors) {
+            this.tray = new Tray(iconTrayWinDark);
+        }
+        if (process.platform === 'win32' && !nativeTheme.shouldUseDarkColors) {
+            this.tray = new Tray(iconTrayWinLight);
         }
 
         await this.setTrayToolTip();
