@@ -19,7 +19,7 @@
 
 <style lang="scss">
 .c-in-car-standing {
-    @include color('background-color', 'white', 0.2);
+    @include color('background-color', 'pitbox', 0.8);
 
     position: relative;
     padding: em(4) em(12);

@@ -89,30 +89,77 @@ export default {
          const mAirPressureFrontRightDisplay = inject('mAirPressureFrontRightDisplay');
          const mAirPressureRearLeftDisplay = inject('mAirPressureRearLeftDisplay');
          const mAirPressureRearRightDisplay = inject('mAirPressureRearRightDisplay');
+
          const mBrakeDamageFrontLeftDisplay = inject('mBrakeDamageFrontLeftDisplay');
          const mBrakeDamageFrontRightDisplay = inject('mBrakeDamageFrontRightDisplay');
          const mBrakeDamageRearLeftDisplay = inject('mBrakeDamageRearLeftDisplay');
          const mBrakeDamageRearRightDisplay = inject('mBrakeDamageRearRightDisplay');
+
+        const mBrakeDamageFrontLeftStateColor = inject('mBrakeDamageFrontLeftStateColor');
+        const mBrakeDamageFrontRightStateColor = inject('mBrakeDamageFrontRightStateColor');
+        const mBrakeDamageRearLeftStateColor = inject('mBrakeDamageRearLeftStateColor');
+        const mBrakeDamageRearRightStateColor = inject('mBrakeDamageRearRightStateColor');
+
+        const mBrakeDamageFrontLeftStateAmount = inject('mBrakeDamageFrontLeftStateAmount');
+        const mBrakeDamageFrontRightStateAmount = inject('mBrakeDamageFrontRightStateAmount');
+        const mBrakeDamageRearLeftStateAmount = inject('mBrakeDamageRearLeftStateAmount');
+        const mBrakeDamageRearRightStateAmount = inject('mBrakeDamageRearRightStateAmount');
+
          const mBrakeTempCelsiusFrontLeftDisplay = inject('mBrakeTempCelsiusFrontLeftDisplay');
          const mBrakeTempCelsiusFrontRightDisplay = inject('mBrakeTempCelsiusFrontRightDisplay');
          const mBrakeTempCelsiusRearLeftDisplay = inject('mBrakeTempCelsiusRearLeftDisplay');
          const mBrakeTempCelsiusRearRightDisplay = inject('mBrakeTempCelsiusRearRightDisplay');
+
+        const mBrakeTempCelsiusFrontLeftStateColor = inject('mBrakeTempCelsiusFrontLeftStateColor');
+        const mBrakeTempCelsiusFrontRightStateColor = inject('mBrakeTempCelsiusFrontRightStateColor');
+        const mBrakeTempCelsiusRearLeftStateColor = inject('mBrakeTempCelsiusRearLeftStateColor');
+        const mBrakeTempCelsiusRearRightStateColor = inject('mBrakeTempCelsiusRearRightStateColor');
+
+        const mBrakeTempCelsiusFrontLeftStateAmount = inject('mBrakeTempCelsiusFrontLeftStateAmount');
+        const mBrakeTempCelsiusFrontRightStateAmount = inject('mBrakeTempCelsiusFrontRightStateAmount');
+        const mBrakeTempCelsiusRearLeftStateAmount = inject('mBrakeTempCelsiusRearLeftStateAmount');
+        const mBrakeTempCelsiusRearRightStateAmount = inject('mBrakeTempCelsiusRearRightStateAmount');
+
          const mSuspensionDamageFrontLeftDisplay = inject('mSuspensionDamageFrontLeftDisplay');
          const mSuspensionDamageFrontRightDisplay = inject('mSuspensionDamageFrontRightDisplay');
          const mSuspensionDamageRearLeftDisplay = inject('mSuspensionDamageRearLeftDisplay');
          const mSuspensionDamageRearRightDisplay = inject('mSuspensionDamageRearRightDisplay');
+
          const mTyreCompoundFrontLeftDisplay = inject('mTyreCompoundFrontLeftDisplay');
          const mTyreCompoundFrontRightDisplay = inject('mTyreCompoundFrontRightDisplay');
          const mTyreCompoundRearLeftDisplay = inject('mTyreCompoundRearLeftDisplay');
          const mTyreCompoundRearRightDisplay = inject('mTyreCompoundRearRightDisplay');
+
          const mTyreTempFrontLeftDisplay = inject('mTyreTempFrontLeftDisplay');
          const mTyreTempFrontRightDisplay = inject('mTyreTempFrontRightDisplay');
          const mTyreTempRearLeftDisplay = inject('mTyreTempRearLeftDisplay');
          const mTyreTempRearRightDisplay = inject('mTyreTempRearRightDisplay');
+
+         const mTyreTempFrontLeftStateColor = inject('mTyreTempFrontLeftStateColor');
+         const mTyreTempFrontRightStateColor = inject('mTyreTempFrontRightStateColor');
+         const mTyreTempRearLeftStateColor = inject('mTyreTempRearLeftStateColor');
+         const mTyreTempRearRightStateColor = inject('mTyreTempRearRightStateColor');
+
+        const mTyreTempFrontLeftStateAmount = inject('mTyreTempFrontLeftStateAmount');
+        const mTyreTempFrontRightStateAmount = inject('mTyreTempFrontRightStateAmount');
+        const mTyreTempRearLeftStateAmount = inject('mTyreTempRearLeftStateAmount');
+        const mTyreTempRearRightStateAmount = inject('mTyreTempRearRightStateAmount');
+
          const mTyreWearFrontLeftDisplay = inject('mTyreWearFrontLeftDisplay');
          const mTyreWearFrontRightDisplay = inject('mTyreWearFrontRightDisplay');
          const mTyreWearRearLeftDisplay = inject('mTyreWearRearLeftDisplay');
          const mTyreWearRearRightDisplay = inject('mTyreWearRearRightDisplay');
+
+        const mTyreWearFrontLeftStateColor = inject('mTyreWearFrontLeftStateColor');
+        const mTyreWearFrontRightStateColor = inject('mTyreWearFrontRightStateColor');
+        const mTyreWearRearLeftStateColor = inject('mTyreWearRearLeftStateColor');
+        const mTyreWearRearRightStateColor = inject('mTyreWearRearRightStateColor');
+
+        const mTyreWearFrontLeftStateAmount = inject('mTyreWearFrontLeftStateAmount');
+        const mTyreWearFrontRightStateAmount = inject('mTyreWearFrontRightStateAmount');
+        const mTyreWearRearLeftStateAmount = inject('mTyreWearRearLeftStateAmount');
+        const mTyreWearRearRightStateAmount = inject('mTyreWearRearRightStateAmount');
+
          const mEngineDamageDisplay = inject('mEngineDamageDisplay');
          const mAeroDamageDisplay = inject('mAeroDamageDisplay');
 
@@ -122,14 +169,16 @@ export default {
                 suffix: null,
                 monospace: false,
                 zerofill: null,
-                error: null,
+                state: null,
+                stateAmount: null,
             },
             b: {
                 value: null,
                 suffix: null,
                 monospace: false,
                 zerofill: null,
-                error: null,
+                state: null,
+                stateAmount: null,
             }
         }
 
@@ -138,30 +187,77 @@ export default {
             mAirPressureFrontRightDisplay,
             mAirPressureRearLeftDisplay,
             mAirPressureRearRightDisplay,
+
             mBrakeDamageFrontLeftDisplay,
             mBrakeDamageFrontRightDisplay,
             mBrakeDamageRearLeftDisplay,
             mBrakeDamageRearRightDisplay,
+
+            mBrakeDamageFrontLeftStateColor,
+            mBrakeDamageFrontRightStateColor,
+            mBrakeDamageRearLeftStateColor,
+            mBrakeDamageRearRightStateColor,
+
+            mBrakeDamageFrontLeftStateAmount,
+            mBrakeDamageFrontRightStateAmount,
+            mBrakeDamageRearLeftStateAmount,
+            mBrakeDamageRearRightStateAmount,
+
             mBrakeTempCelsiusFrontLeftDisplay,
             mBrakeTempCelsiusFrontRightDisplay,
             mBrakeTempCelsiusRearLeftDisplay,
             mBrakeTempCelsiusRearRightDisplay,
+
+            mBrakeTempCelsiusFrontLeftStateColor,
+            mBrakeTempCelsiusFrontRightStateColor,
+            mBrakeTempCelsiusRearLeftStateColor,
+            mBrakeTempCelsiusRearRightStateColor,
+
+            mBrakeTempCelsiusFrontLeftStateAmount,
+            mBrakeTempCelsiusFrontRightStateAmount,
+            mBrakeTempCelsiusRearLeftStateAmount,
+            mBrakeTempCelsiusRearRightStateAmount,
+
             mSuspensionDamageFrontLeftDisplay,
             mSuspensionDamageFrontRightDisplay,
             mSuspensionDamageRearLeftDisplay,
             mSuspensionDamageRearRightDisplay,
+
             mTyreCompoundFrontLeftDisplay,
             mTyreCompoundFrontRightDisplay,
             mTyreCompoundRearLeftDisplay,
             mTyreCompoundRearRightDisplay,
+
             mTyreTempFrontLeftDisplay,
             mTyreTempFrontRightDisplay,
             mTyreTempRearLeftDisplay,
             mTyreTempRearRightDisplay,
+
+            mTyreTempFrontLeftStateColor,
+            mTyreTempFrontRightStateColor,
+            mTyreTempRearLeftStateColor,
+            mTyreTempRearRightStateColor,
+
+            mTyreTempFrontLeftStateAmount,
+            mTyreTempFrontRightStateAmount,
+            mTyreTempRearLeftStateAmount,
+            mTyreTempRearRightStateAmount,
+
             mTyreWearFrontLeftDisplay,
             mTyreWearFrontRightDisplay,
             mTyreWearRearLeftDisplay,
             mTyreWearRearRightDisplay,
+
+            mTyreWearFrontLeftStateColor,
+            mTyreWearFrontRightStateColor,
+            mTyreWearRearLeftStateColor,
+            mTyreWearRearRightStateColor,
+
+            mTyreWearFrontLeftStateAmount,
+            mTyreWearFrontRightStateAmount,
+            mTyreWearRearLeftStateAmount,
+            mTyreWearRearRightStateAmount,
+
             mEngineDamageDisplay,
             mAeroDamageDisplay,
             skeleton,
@@ -184,13 +280,15 @@ export default {
             data.a.suffix = '%';
             data.a.zerofill = 3;
             data.a.monospace = true;
-            data.a.error = this.mTyreWearFrontLeftDisplay <= 0;
+            data.a.state = this.mTyreWearFrontLeftStateColor;
+            data.a.stateAmount = this.mTyreWearFrontLeftStateAmount;
 
             data.b.value = this.mTyreTempFrontLeftDisplay;
             data.b.suffix = '°';
             data.b.zerofill = 3;
             data.b.monospace = true;
-            data.a.error = this.mTyreTempFrontLeftDisplay <= 0;
+            data.b.state = this.mTyreTempFrontLeftStateColor;
+            data.b.stateAmount = this.mTyreTempFrontLeftStateAmount;
 
             return {a: data};
         },
@@ -210,13 +308,15 @@ export default {
             data.a.suffix = '%';
             data.a.zerofill = 3;
             data.a.monospace = true;
-            data.a.error = this.mTyreWearFrontRightDisplay <= 0;
+            data.a.state = this.mTyreWearFrontRightStateColor;
+            data.a.stateAmount = this.mTyreWearFrontRightStateAmount;
 
             data.b.value = this.mTyreTempFrontRightDisplay;
             data.b.suffix = '°';
             data.b.zerofill = 3;
             data.b.monospace = true;
-            data.a.error = this.mTyreTempFrontRightDisplay <= 0;
+            data.b.state = this.mTyreTempFrontRightStateColor;
+            data.b.stateAmount = this.mTyreTempFrontRightStateAmount;
 
             return {a: data};
         },
@@ -236,13 +336,15 @@ export default {
             data.a.suffix = '%';
             data.a.zerofill = 3;
             data.a.monospace = true;
-            data.a.error = this.mTyreWearRearLeftDisplay <= 0;
+            data.a.state = this.mTyreWearRearLeftStateColor;
+            data.a.stateAmount = this.mTyreWearRearLeftStateAmount;
 
             data.b.value = this.mTyreTempRearLeftDisplay;
             data.b.suffix = '°';
             data.b.zerofill = 3;
             data.b.monospace = true;
-            data.a.error = this.mTyreTempRearLeftDisplay <= 0;
+            data.b.state = this.mTyreTempRearLeftStateColor;
+            data.b.stateAmount = this.mTyreTempRearLeftStateAmount;
 
             return {a: data};
         },
@@ -262,13 +364,15 @@ export default {
             data.a.suffix = '%';
             data.a.zerofill = 3;
             data.a.monospace = true;
-            data.a.error = this.mTyreWearRearRightDisplay <= 0;
+            data.a.state = this.mTyreWearRearRightStateColor;
+            data.a.stateAmount = this.mTyreWearRearRightStateAmount;
 
             data.b.value = this.mTyreTempRearRightDisplay;
             data.b.suffix = '°';
             data.b.zerofill = 3;
             data.b.monospace = true;
-            data.a.error = this.mTyreTempRearRightDisplay <= 0;
+            data.b.state = this.mTyreTempRearRightStateColor;
+            data.b.stateAmount = this.mTyreTempRearRightStateAmount;
 
             return {a: data};
         },
@@ -290,11 +394,15 @@ export default {
             data.a.suffix = '%';
             data.a.zerofill = 3;
             data.a.monospace = true;
+            data.a.state = this.mBrakeDamageFrontLeftStateColor;
+            data.a.stateAmount = this.mBrakeDamageFrontLeftStateAmount;
 
             data.b.value = this.mBrakeTempCelsiusFrontLeftDisplay;
             data.b.suffix = '°';
             data.b.zerofill = 4;
             data.b.monospace = true;
+            data.b.state = this.mBrakeTempCelsiusFrontLeftStateColor;
+            data.b.stateAmount = this.mBrakeTempCelsiusFrontLeftStateAmount;
 
             return {a: data};
         },
@@ -314,11 +422,15 @@ export default {
             data.a.suffix = '%';
             data.a.zerofill = 3;
             data.a.monospace = true;
+            data.a.state = this.mBrakeDamageFrontRightStateColor;
+            data.a.stateAmount = this.mBrakeDamageFrontRightStateAmount;
 
             data.b.value = this.mBrakeTempCelsiusFrontRightDisplay;
             data.b.suffix = '°';
             data.b.zerofill = 4;
             data.b.monospace = true;
+            data.b.state = this.mBrakeTempCelsiusFrontRightStateColor;
+            data.b.stateAmount = this.mBrakeTempCelsiusFrontRightStateAmount;
 
             return {a: data};
         },
@@ -338,11 +450,15 @@ export default {
             data.a.suffix = '%';
             data.a.zerofill = 3;
             data.a.monospace = true;
+            data.a.state = this.mBrakeDamageRearLeftStateColor;
+            data.a.stateAmount = this.mBrakeDamageRearLeftStateAmount;
 
             data.b.value = this.mBrakeTempCelsiusRearLeftDisplay;
             data.b.suffix = '°';
             data.b.zerofill = 4;
             data.b.monospace = true;
+            data.b.state = this.mBrakeTempCelsiusRearLeftStateColor;
+            data.b.stateAmount = this.mBrakeTempCelsiusRearLeftStateAmount;
 
             return {a: data};
         },
@@ -362,11 +478,15 @@ export default {
             data.a.suffix = '%';
             data.a.zerofill = 3;
             data.a.monospace = true;
+            data.a.state = this.mBrakeDamageRearRightStateColor;
+            data.a.stateAmount = this.mBrakeDamageRearRightStateAmount;
 
             data.b.value = this.mBrakeTempCelsiusRearRightDisplay;
             data.b.suffix = '°';
             data.b.zerofill = 4;
             data.b.monospace = true;
+            data.b.state = this.mBrakeTempCelsiusRearRightStateColor;
+            data.b.stateAmount = this.mBrakeTempCelsiusRearRightStateAmount;
 
             return {a: data};
         },

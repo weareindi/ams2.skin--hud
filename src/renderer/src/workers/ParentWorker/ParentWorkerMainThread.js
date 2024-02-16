@@ -87,6 +87,8 @@ export default class ParentWorkerMainThread {
         this.app.provide('fuelPerLapDisplay', ref(null));
         this.app.provide('fuelToEndSessionDisplay', ref(null));
         this.app.provide('pitsToEndSessionDisplay', ref(null));
+        this.app.provide('fuelAtStopDisplay', ref(null));
+        
         this.app.provide('mSpeedDisplay', ref(null));
         this.app.provide('mGearDisplay', ref(null));
         this.app.provide('mRpmDisplay', ref(null));
@@ -95,30 +97,77 @@ export default class ParentWorkerMainThread {
         this.app.provide('mAirPressureFrontRightDisplay', ref(null));
         this.app.provide('mAirPressureRearLeftDisplay', ref(null));
         this.app.provide('mAirPressureRearRightDisplay', ref(null));
+
         this.app.provide('mBrakeDamageFrontLeftDisplay', ref(null));
         this.app.provide('mBrakeDamageFrontRightDisplay', ref(null));
         this.app.provide('mBrakeDamageRearLeftDisplay', ref(null));
         this.app.provide('mBrakeDamageRearRightDisplay', ref(null));
+
+        this.app.provide('mBrakeDamageFrontLeftStateColor', ref(null));
+        this.app.provide('mBrakeDamageFrontRightStateColor', ref(null));
+        this.app.provide('mBrakeDamageRearLeftStateColor', ref(null));
+        this.app.provide('mBrakeDamageRearRightStateColor', ref(null));
+
+        this.app.provide('mBrakeDamageFrontLeftStateAmount', ref(null));
+        this.app.provide('mBrakeDamageFrontRightStateAmount', ref(null));
+        this.app.provide('mBrakeDamageRearLeftStateAmount', ref(null));
+        this.app.provide('mBrakeDamageRearRightStateAmount', ref(null));
+
         this.app.provide('mBrakeTempCelsiusFrontLeftDisplay', ref(null));
         this.app.provide('mBrakeTempCelsiusFrontRightDisplay', ref(null));
         this.app.provide('mBrakeTempCelsiusRearLeftDisplay', ref(null));
         this.app.provide('mBrakeTempCelsiusRearRightDisplay', ref(null));
+
+        this.app.provide('mBrakeTempCelsiusFrontLeftStateColor', ref(null));
+        this.app.provide('mBrakeTempCelsiusFrontRightStateColor', ref(null));
+        this.app.provide('mBrakeTempCelsiusRearLeftStateColor', ref(null));
+        this.app.provide('mBrakeTempCelsiusRearRightStateColor', ref(null));
+
+        this.app.provide('mBrakeTempCelsiusFrontLeftStateAmount', ref(null));
+        this.app.provide('mBrakeTempCelsiusFrontRightStateAmount', ref(null));
+        this.app.provide('mBrakeTempCelsiusRearLeftStateAmount', ref(null));
+        this.app.provide('mBrakeTempCelsiusRearRightStateAmount', ref(null));
+
         this.app.provide('mSuspensionDamageFrontLeftDisplay', ref(null));
         this.app.provide('mSuspensionDamageFrontRightDisplay', ref(null));
         this.app.provide('mSuspensionDamageRearLeftDisplay', ref(null));
         this.app.provide('mSuspensionDamageRearRightDisplay', ref(null));
+
         this.app.provide('mTyreCompoundFrontLeftDisplay', ref(null));
         this.app.provide('mTyreCompoundFrontRightDisplay', ref(null));
         this.app.provide('mTyreCompoundRearLeftDisplay', ref(null));
         this.app.provide('mTyreCompoundRearRightDisplay', ref(null));
+
         this.app.provide('mTyreTempFrontLeftDisplay', ref(null));
         this.app.provide('mTyreTempFrontRightDisplay', ref(null));
         this.app.provide('mTyreTempRearLeftDisplay', ref(null));
         this.app.provide('mTyreTempRearRightDisplay', ref(null));
+
+        this.app.provide('mTyreTempFrontLeftStateColor', ref(null));
+        this.app.provide('mTyreTempFrontRightStateColor', ref(null));
+        this.app.provide('mTyreTempRearLeftStateColor', ref(null));
+        this.app.provide('mTyreTempRearRightStateColor', ref(null));
+
+        this.app.provide('mTyreTempFrontLeftStateAmount', ref(null));
+        this.app.provide('mTyreTempFrontRightStateAmount', ref(null));
+        this.app.provide('mTyreTempRearLeftStateAmount', ref(null));
+        this.app.provide('mTyreTempRearRightStateAmount', ref(null));
+
         this.app.provide('mTyreWearFrontLeftDisplay', ref(null));
         this.app.provide('mTyreWearFrontRightDisplay', ref(null));
         this.app.provide('mTyreWearRearLeftDisplay', ref(null));
         this.app.provide('mTyreWearRearRightDisplay', ref(null));
+
+        this.app.provide('mTyreWearFrontLeftStateColor', ref(null));
+        this.app.provide('mTyreWearFrontRightStateColor', ref(null));
+        this.app.provide('mTyreWearRearLeftStateColor', ref(null));
+        this.app.provide('mTyreWearRearRightStateColor', ref(null));
+
+        this.app.provide('mTyreWearFrontLeftStateAmount', ref(null));
+        this.app.provide('mTyreWearFrontRightStateAmount', ref(null));
+        this.app.provide('mTyreWearRearLeftStateAmount', ref(null));
+        this.app.provide('mTyreWearRearRightStateAmount', ref(null));
+
         this.app.provide('mEngineDamageDisplay', ref(null));
         this.app.provide('mAeroDamageDisplay', ref(null));
         this.app.provide('boostStatusDisplay', ref(null));
@@ -351,38 +400,89 @@ export default class ParentWorkerMainThread {
         this.app._context.provides.fuelPerLapDisplay.value = null;
         this.app._context.provides.fuelToEndSessionDisplay.value = null;
         this.app._context.provides.pitsToEndSessionDisplay.value = null;
+        this.app._context.provides.fuelAtStopDisplay.value = null;
+
+        
         this.app._context.provides.mSpeedDisplay.value = null;
         this.app._context.provides.mGearDisplay.value = null;
         this.app._context.provides.mRpmDisplay.value = null;
         this.app._context.provides.mRpmPercentage.value = null;
+
         this.app._context.provides.mAirPressureFrontLeftDisplay.value = null;
         this.app._context.provides.mAirPressureFrontRightDisplay.value = null;
         this.app._context.provides.mAirPressureRearLeftDisplay.value = null;
         this.app._context.provides.mAirPressureRearRightDisplay.value = null;
+
         this.app._context.provides.mBrakeDamageFrontLeftDisplay.value = null;
         this.app._context.provides.mBrakeDamageFrontRightDisplay.value = null;
         this.app._context.provides.mBrakeDamageRearLeftDisplay.value = null;
         this.app._context.provides.mBrakeDamageRearRightDisplay.value = null;
+
+        this.app._context.provides.mBrakeDamageFrontLeftStateColor.value = null;
+        this.app._context.provides.mBrakeDamageFrontRightStateColor.value = null;
+        this.app._context.provides.mBrakeDamageRearLeftStateColor.value = null;
+        this.app._context.provides.mBrakeDamageRearRightStateColor.value = null;
+
+        this.app._context.provides.mBrakeDamageFrontLeftStateAmount.value = null;
+        this.app._context.provides.mBrakeDamageFrontRightStateAmount.value = null;
+        this.app._context.provides.mBrakeDamageRearLeftStateAmount.value = null;
+        this.app._context.provides.mBrakeDamageRearRightStateAmount.value = null;
+
         this.app._context.provides.mBrakeTempCelsiusFrontLeftDisplay.value = null;
         this.app._context.provides.mBrakeTempCelsiusFrontRightDisplay.value = null;
         this.app._context.provides.mBrakeTempCelsiusRearLeftDisplay.value = null;
         this.app._context.provides.mBrakeTempCelsiusRearRightDisplay.value = null;
+
+        this.app._context.provides.mBrakeTempCelsiusFrontLeftStateColor.value = null;
+        this.app._context.provides.mBrakeTempCelsiusFrontRightStateColor.value = null;
+        this.app._context.provides.mBrakeTempCelsiusRearLeftStateColor.value = null;
+        this.app._context.provides.mBrakeTempCelsiusRearRightStateColor.value = null;
+
+        this.app._context.provides.mBrakeTempCelsiusFrontLeftStateAmount.value = null;
+        this.app._context.provides.mBrakeTempCelsiusFrontRightStateAmount.value = null;
+        this.app._context.provides.mBrakeTempCelsiusRearLeftStateAmount.value = null;
+        this.app._context.provides.mBrakeTempCelsiusRearRightStateAmount.value = null;
+
         this.app._context.provides.mSuspensionDamageFrontLeftDisplay.value = null;
         this.app._context.provides.mSuspensionDamageFrontRightDisplay.value = null;
         this.app._context.provides.mSuspensionDamageRearLeftDisplay.value = null;
         this.app._context.provides.mSuspensionDamageRearRightDisplay.value = null;
+
         this.app._context.provides.mTyreCompoundFrontLeftDisplay.value = null;
         this.app._context.provides.mTyreCompoundFrontRightDisplay.value = null;
         this.app._context.provides.mTyreCompoundRearLeftDisplay.value = null;
         this.app._context.provides.mTyreCompoundRearRightDisplay.value = null;
+
         this.app._context.provides.mTyreTempFrontLeftDisplay.value = null;
         this.app._context.provides.mTyreTempFrontRightDisplay.value = null;
         this.app._context.provides.mTyreTempRearLeftDisplay.value = null;
         this.app._context.provides.mTyreTempRearRightDisplay.value = null;
+
+        this.app._context.provides.mTyreTempFrontLeftStateColor.value = null;
+        this.app._context.provides.mTyreTempFrontRightStateColor.value = null;
+        this.app._context.provides.mTyreTempRearLeftStateColor.value = null;
+        this.app._context.provides.mTyreTempRearRightStateColor.value = null;
+
+        this.app._context.provides.mTyreTempFrontLeftStateAmount.value = null;
+        this.app._context.provides.mTyreTempFrontRightStateAmount.value = null;
+        this.app._context.provides.mTyreTempRearLeftStateAmount.value = null;
+        this.app._context.provides.mTyreTempRearRightStateAmount.value = null;
+
         this.app._context.provides.mTyreWearFrontLeftDisplay.value = null;
         this.app._context.provides.mTyreWearFrontRightDisplay.value = null;
         this.app._context.provides.mTyreWearRearLeftDisplay.value = null;
         this.app._context.provides.mTyreWearRearRightDisplay.value = null;
+
+        this.app._context.provides.mTyreWearFrontLeftStateColor.value = null;
+        this.app._context.provides.mTyreWearFrontRightStateColor.value = null;
+        this.app._context.provides.mTyreWearRearLeftStateColor.value = null;
+        this.app._context.provides.mTyreWearRearRightStateColor.value = null;
+
+        this.app._context.provides.mTyreWearFrontLeftStateAmount.value = null;
+        this.app._context.provides.mTyreWearFrontRightStateAmount.value = null;
+        this.app._context.provides.mTyreWearRearLeftStateAmount.value = null;
+        this.app._context.provides.mTyreWearRearRightStateAmount.value = null;
+
         this.app._context.provides.mEngineDamageDisplay.value = null;
         this.app._context.provides.mAeroDamageDisplay.value = null;
         this.app._context.provides.boostStatusDisplay.value = null;

@@ -108,30 +108,74 @@ class CarStateWorker {
     async getTyreDataForDisplay(tyreData) {
         const { mAirPressureFrontLeftDisplay, mAirPressureFrontRightDisplay, mAirPressureRearLeftDisplay, mAirPressureRearRightDisplay } = await this.mAirPressureDisplay(tyreData.mAirPressure);
         const { mTyreCompoundFrontLeftDisplay, mTyreCompoundFrontRightDisplay, mTyreCompoundRearLeftDisplay, mTyreCompoundRearRightDisplay } = await this.mTyreCompoundDisplay(tyreData.mTyreCompound);
-        const { mTyreTempFrontLeftDisplay, mTyreTempFrontRightDisplay, mTyreTempRearLeftDisplay, mTyreTempRearRightDisplay } = await this.mTyreTempDisplay(tyreData.mTyreTemp);
         const { mTyreWearFrontLeftDisplay, mTyreWearFrontRightDisplay, mTyreWearRearLeftDisplay, mTyreWearRearRightDisplay } = await this.mTyreWearDisplay(tyreData.mTyreWear);
+        const { 
+            mTyreWearFrontLeftStateColor,
+            mTyreWearFrontRightStateColor,
+            mTyreWearRearLeftStateColor,
+            mTyreWearRearRightStateColor,
+            mTyreWearFrontLeftStateAmount,
+            mTyreWearFrontRightStateAmount,
+            mTyreWearRearLeftStateAmount,
+            mTyreWearRearRightStateAmount
+        } = await this.mTyreWearState(tyreData.mTyreWear);
+        const { mTyreTempFrontLeftDisplay, mTyreTempFrontRightDisplay, mTyreTempRearLeftDisplay, mTyreTempRearRightDisplay } = await this.mTyreTempDisplay(tyreData.mTyreTemp);
+        const { 
+            mTyreTempFrontLeftStateColor,
+            mTyreTempFrontRightStateColor,
+            mTyreTempRearLeftStateColor,
+            mTyreTempRearRightStateColor,
+            mTyreTempFrontLeftStateAmount,
+            mTyreTempFrontRightStateAmount,
+            mTyreTempRearLeftStateAmount,
+            mTyreTempRearRightStateAmount
+        } = await this.mTyreTempState(tyreData.mTyreTemp);
 
         return {
             mAirPressureFrontLeftDisplay,
             mAirPressureFrontRightDisplay,
             mAirPressureRearLeftDisplay,
             mAirPressureRearRightDisplay,
+
             mTyreCompoundFrontLeftDisplay,
             mTyreCompoundFrontRightDisplay,
             mTyreCompoundRearLeftDisplay,
             mTyreCompoundRearRightDisplay,
+
             mTyreCompoundFrontLeftDisplay,
             mTyreCompoundFrontRightDisplay,
             mTyreCompoundRearLeftDisplay,
             mTyreCompoundRearRightDisplay,
-            mTyreTempFrontLeftDisplay,
-            mTyreTempFrontRightDisplay,
-            mTyreTempRearLeftDisplay,
-            mTyreTempRearRightDisplay,
+
             mTyreWearFrontLeftDisplay,
             mTyreWearFrontRightDisplay,
             mTyreWearRearLeftDisplay,
             mTyreWearRearRightDisplay,
+
+            mTyreWearFrontLeftStateColor,
+            mTyreWearFrontRightStateColor,
+            mTyreWearRearLeftStateColor,
+            mTyreWearRearRightStateColor,
+            
+            mTyreWearFrontLeftStateAmount,
+            mTyreWearFrontRightStateAmount,
+            mTyreWearRearLeftStateAmount,
+            mTyreWearRearRightStateAmount,
+
+            mTyreTempFrontLeftDisplay,
+            mTyreTempFrontRightDisplay,
+            mTyreTempRearLeftDisplay,
+            mTyreTempRearRightDisplay,
+
+            mTyreTempFrontLeftStateColor,
+            mTyreTempFrontRightStateColor,
+            mTyreTempRearLeftStateColor,
+            mTyreTempRearRightStateColor,
+
+            mTyreTempFrontLeftStateAmount,
+            mTyreTempFrontRightStateAmount,
+            mTyreTempRearLeftStateAmount,
+            mTyreTempRearRightStateAmount,
         };
     }
 
@@ -193,6 +237,54 @@ class CarStateWorker {
     }
 
     /**
+     * Get tyre temps prepared for the view
+     * @param {*} mTyreTemp 
+     * @returns object
+     */
+    async mTyreTempState(mTyreTemp) {
+        let fl = await this.mTyreTempValueState(mTyreTemp[0]);
+        let fr = await this.mTyreTempValueState(mTyreTemp[1]);
+        let rl = await this.mTyreTempValueState(mTyreTemp[2]);
+        let rr = await this.mTyreTempValueState(mTyreTemp[3]);
+
+        return {
+            mTyreTempFrontLeftStateColor: fl.color,
+            mTyreTempFrontLeftStateAmountr: fl.amount,
+            mTyreTempFrontRightStateColor: fr.color,
+            mTyreTempFrontRightStateAmountr: fr.amount,
+            mTyreTempRearLeftStateColor: rl.color,
+            mTyreTempRearLeftStateAmountr: rl.amount,
+            mTyreTempRearRightStateColor: rr.color,
+            mTyreTempRearRightStateAmountr: rr.amount,
+        };
+    }
+
+    /**
+     * Prepare tyre temp state values
+     * @param {*} mTyreTempValue 
+     * @returns object
+     */
+    async mTyreTempValueState(mTyreTempValue) {
+        // amount
+        let amount = 1;
+
+        // color
+        let color = null;
+        if (mTyreTempValue >= 100) {
+            color = 'yellow';
+
+        }
+        if (mTyreTempValue > 110) {
+            color = 'red';
+        }
+
+        return {
+            color: color,
+            amount: amount
+        }
+    }
+
+    /**
      * Get tyre wear prepared for display
      * @param {*} mTyreWear 
      * @returns object
@@ -232,6 +324,53 @@ class CarStateWorker {
     }
 
     /**
+     * Get tyre wear state prepared for the view
+     * @param {*} mTyreTemp 
+     * @returns object
+     */
+    async mTyreWearState(mTyreWear) {
+        let fl = await this.mTyreWearValueState(mTyreWear[0]);
+        let fr = await this.mTyreWearValueState(mTyreWear[1]);
+        let rl = await this.mTyreWearValueState(mTyreWear[2]);
+        let rr = await this.mTyreWearValueState(mTyreWear[3]);
+
+        return {
+            mTyreWearFrontLeftStateColor: fl.color,
+            mTyreWearFrontLeftStateAmount: fl.amount,
+            mTyreWearFrontRightStateColor: fr.color,
+            mTyreWearFrontRightStateAmount: fr.amount,
+            mTyreWearRearLeftStateColor: rl.color,
+            mTyreWearRearLeftStateAmount: rl.amount,
+            mTyreWearRearRightStateColor: rr.color,
+            mTyreWearRearRightStateAmount: rr.amount,
+        };
+    }
+
+    /**
+     * Prepare tyre temp state values
+     * @param {*} mTyreWear 
+     * @returns object
+     */
+    async mTyreWearValueState(mTyreWear) {
+        let color = '';
+        let amount = Math.round((2 * mTyreWear) * 100);
+        if (amount >= 10) {
+            color = 'green';
+        }
+        if (amount >= 20) {
+            color = 'yellow';
+        }
+        if (amount >= 50) {
+            color = 'red';
+        }
+
+        return {
+            color: color,
+            amount: `${amount}%`
+        }
+    }
+
+    /**
      * Get brake data
      * @param {*} data 
      * @returns object
@@ -250,17 +389,53 @@ class CarStateWorker {
      */
     async getBrakeDataForDisplay(brakeData) {
         const { mBrakeDamageFrontLeftDisplay, mBrakeDamageFrontRightDisplay, mBrakeDamageRearLeftDisplay, mBrakeDamageRearRightDisplay } = await this.mBrakeDamageDisplay(brakeData.mBrakeDamage);
+        const { 
+            mBrakeDamageFrontLeftStateColor,
+            mBrakeDamageFrontRightStateColor,
+            mBrakeDamageRearLeftStateColor,
+            mBrakeDamageRearRightStateColor,
+            mBrakeDamageFrontLeftStateAmount,
+            mBrakeDamageFrontRightStateAmount,
+            mBrakeDamageRearLeftStateAmount,
+            mBrakeDamageRearRightStateAmount
+        } = await this.mBrakeDamageState(brakeData.mBrakeDamage);
         const { mBrakeTempCelsiusFrontLeftDisplay, mBrakeTempCelsiusFrontRightDisplay, mBrakeTempCelsiusRearLeftDisplay, mBrakeTempCelsiusRearRightDisplay } = await this.mBrakeTempCelsiusDisplay(brakeData.mBrakeTempCelsius);
+        const { 
+            mBrakeTempCelsiusFrontLeftStateColor,
+            mBrakeTempCelsiusFrontRightStateColor,
+            mBrakeTempCelsiusRearLeftStateColor,
+            mBrakeTempCelsiusRearRightStateColor,
+            mBrakeTempCelsiusFrontLeftStateAmount,
+            mBrakeTempCelsiusFrontRightStateAmount,
+            mBrakeTempCelsiusRearLeftStateAmount,
+            mBrakeTempCelsiusRearRightStateAmount
+        } = await this.mBrakeTempCelsiusState(brakeData.mBrakeTempCelsius);
 
         return {
             mBrakeDamageFrontLeftDisplay,
             mBrakeDamageFrontRightDisplay,
             mBrakeDamageRearLeftDisplay,
             mBrakeDamageRearRightDisplay,
+            mBrakeDamageFrontLeftStateColor,
+            mBrakeDamageFrontRightStateColor,
+            mBrakeDamageRearLeftStateColor,
+            mBrakeDamageRearRightStateColor,
+            mBrakeDamageFrontLeftStateAmount,
+            mBrakeDamageFrontRightStateAmount,
+            mBrakeDamageRearLeftStateAmount,
+            mBrakeDamageRearRightStateAmount,
             mBrakeTempCelsiusFrontLeftDisplay,
             mBrakeTempCelsiusFrontRightDisplay,
             mBrakeTempCelsiusRearLeftDisplay,
             mBrakeTempCelsiusRearRightDisplay,
+            mBrakeTempCelsiusFrontLeftStateColor,
+            mBrakeTempCelsiusFrontRightStateColor,
+            mBrakeTempCelsiusRearLeftStateColor,
+            mBrakeTempCelsiusRearRightStateColor,
+            mBrakeTempCelsiusFrontLeftStateAmount,
+            mBrakeTempCelsiusFrontRightStateAmount,
+            mBrakeTempCelsiusRearLeftStateAmount,
+            mBrakeTempCelsiusRearRightStateAmount,
         };
     }
 
@@ -285,6 +460,50 @@ class CarStateWorker {
     }
 
     /**
+     * Get brake damage state prepared for the view
+     * @param {*} mBrakeDamage 
+     * @returns object
+     */
+    async mBrakeDamageState(mBrakeDamage) {
+        let fl = await this.mBrakeDamageValueState(mBrakeDamage[0]);
+        let fr = await this.mBrakeDamageValueState(mBrakeDamage[1]);
+        let rl = await this.mBrakeDamageValueState(mBrakeDamage[2]);
+        let rr = await this.mBrakeDamageValueState(mBrakeDamage[3]);
+
+        return {
+            mBrakeDamageFrontLeftStateColor: fl.color,
+            mBrakeDamageFrontLeftStateAmount: fl.amount,
+            mBrakeDamageFrontRightStateColor: fr.color,
+            mBrakeDamageFrontRightStateAmount: fr.amount,
+            mBrakeDamageRearLeftStateColor: rl.color,
+            mBrakeDamageRearLeftStateAmount: rl.amount,
+            mBrakeDamageRearRightStateColor: rr.color,
+            mBrakeDamageRearRightStateAmount: rr.amount,
+        };
+    }
+
+    /**
+     * Prepare tyre temp state values
+     * @param {*} mBrakeDamage 
+     * @returns object
+     */
+    async mBrakeDamageValueState(mBrakeDamage) {
+        let color = 'red';
+        let amount = 0;
+        if (mBrakeDamage > 0.1) {
+            amount = 0.4 + mBrakeDamage;
+        }
+        if (mBrakeDamage > 0.5) {
+            amount = 1;
+        }
+
+        return {
+            color: color,
+            amount: amount
+        }
+    }
+
+    /**
      * Get brake temps prepared for the view
      * @param {*} mBrakeTempCelsius 
      * @returns object
@@ -301,6 +520,52 @@ class CarStateWorker {
             mBrakeTempCelsiusRearLeftDisplay,
             mBrakeTempCelsiusRearRightDisplay,
         };
+    }
+
+    /**
+     * Get brake damage state prepared for the view
+     * @param {*} mBrakeTempCelsius 
+     * @returns object
+     */
+    async mBrakeTempCelsiusState(mBrakeTempCelsius) {
+        let fl = await this.mBrakeTempCelsiusValueState(mBrakeTempCelsius[0]);
+        let fr = await this.mBrakeTempCelsiusValueState(mBrakeTempCelsius[1]);
+        let rl = await this.mBrakeTempCelsiusValueState(mBrakeTempCelsius[2]);
+        let rr = await this.mBrakeTempCelsiusValueState(mBrakeTempCelsius[3]);
+
+        return {
+            mBrakeTempCelsiusFrontLeftStateColor: fl.color,
+            mBrakeTempCelsiusFrontLeftStateAmount: fl.amount,
+            mBrakeTempCelsiusFrontRightStateColor: fr.color,
+            mBrakeTempCelsiusFrontRightStateAmount: fr.amount,
+            mBrakeTempCelsiusRearLeftStateColor: rl.color,
+            mBrakeTempCelsiusRearLeftStateAmount: rl.amount,
+            mBrakeTempCelsiusRearRightStateColor: rr.color,
+            mBrakeTempCelsiusRearRightStateAmount: rr.amount,
+        };
+    }
+
+    /**
+     * Prepare tyre temp state values
+     * @param {*} mBrakeTempCelsius 
+     * @returns object
+     */
+    async mBrakeTempCelsiusValueState(mBrakeTempCelsius) {
+        let color = null;
+        let amount = 1;
+
+        if (mBrakeTempCelsius >= 600) {
+            color = 'yellow';
+        }
+
+        if (mBrakeTempCelsius >= 800) {
+            color = 'red';
+        }
+
+        return {
+            color: color,
+            amount: amount
+        }
     }
 
     /**

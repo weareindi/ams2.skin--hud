@@ -8,11 +8,12 @@
 
 <style lang="scss">
 .c-in-car-stat-value {
+    position: relative;
     padding: 0 em(4);
     border-radius: em(4);
     white-space: nowrap;
     color: inherit;
-
+    overflow: hidden;
 }
 
 .c-in-car-stat-value--monospace {
