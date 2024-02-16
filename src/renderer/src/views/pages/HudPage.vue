@@ -51,7 +51,9 @@ export default {
         const mSessionState = inject('mSessionState');
         const mSessionIsPrivate = inject('mSessionIsPrivate');
         const mRaceState = inject('mRaceState');
-
+        const mEventTimeRemainingDisplay = inject('mEventTimeRemainingDisplay');
+        const mLapsInEventDisplay = inject('mLapsInEventDisplay');
+        
         return {
             configIp,
             configPort,
@@ -62,6 +64,8 @@ export default {
             mSessionState,
             mSessionIsPrivate,
             mRaceState,
+            mEventTimeRemainingDisplay,
+            mLapsInEventDisplay,
         }
     },
     components: {
@@ -99,6 +103,14 @@ export default {
             }
 
             if (this.mGameState !== 4) {
+                return false;
+            }
+
+            if (!this.mEventTimeRemainingDisplay && !this.mLapsInEventDisplay) {
+                return false;
+            }
+
+            if (this.mRaceState !== 1 && this.mRaceState !== 3) {
                 return false;
             }
 

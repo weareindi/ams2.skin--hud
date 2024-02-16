@@ -553,11 +553,15 @@ class LapWorker {
      * @returns number
      */
     async getPitsToEndSession(fuelCapacity, fuel, fuelToEndSession) {
+        if (isNaN(fuelToEndSession)) {
+            return null;
+        }
+
         let pitsToEndSession = 0;
 
         const fuelToEndSessionLitres = fuelCapacity * fuelToEndSession;
         if (fuel < fuelToEndSessionLitres) {
-            pitsToEndSession = Math.ceil(fuelCapacity / (fuelToEndSession - fuel));
+            pitsToEndSession =  Math.ceil((fuelCapacity / 100) * (fuelCapacity / (fuelToEndSession - fuel)));
         }
 
         return pitsToEndSession;
