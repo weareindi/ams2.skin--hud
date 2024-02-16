@@ -297,6 +297,7 @@ class LapWorker {
         const fuelPerLap = await this.getMaxFuelPerLap(runLapGroups);
         const fuelToEndSession = await this.getFuelToEndSession(runLapGroups, fuel, fuelPerLap, data.mLapsInEvent, data.mLapsCompleted, data.mEventTimeRemaining, data.mSessionAdditionalLaps, data.mCurrentTime);
         const pitsToEndSession = await this.getPitsToEndSession(fuelCapacity, fuel, fuelToEndSession);
+        const fuelAtStop = await this.getFuelAtStop(fuelCapacity, fuel, fuelToEndSession, pitsToEndSession);
 
         return {
             fuelCapacity,
@@ -304,6 +305,7 @@ class LapWorker {
             fuelPerLap,
             fuelToEndSession,
             pitsToEndSession,
+            fuelAtStop,
         };
     }
 
@@ -328,6 +330,7 @@ class LapWorker {
         const fuelPerLapDisplay = await this.fuelPerLapDisplay(fuelData.fuelCapacity, fuelData.fuelPerLap);
         const fuelToEndSessionDisplay = await this.fuelToEndSessionDisplay(fuelData.fuelCapacity, fuelData.fuelToEndSession);
         const pitsToEndSessionDisplay = await this.pitsToEndSessionDisplay(fuelData.pitsToEndSession);
+        const fuelAtStopDisplay = await this.fuelAtStopDisplay(fuelData.fuelAtStop);
 
         return {
             fuelCapacityDisplay,
@@ -335,7 +338,12 @@ class LapWorker {
             fuelPerLapDisplay,
             fuelToEndSessionDisplay,
             pitsToEndSessionDisplay,
+            fuelAtStopDisplay,
         };
+    }
+
+    async fuelAtStopDisplay() {
+        return 0;
     }
 
     /**
@@ -491,6 +499,18 @@ class LapWorker {
         }
 
         return fuelToEndSession;
+    }
+
+    /**
+     * Get fuel at stop
+     * @param {*} fuelCapacity 
+     * @param {*} fuel 
+     * @param {*} fuelToEndSession 
+     * @param {*} pitsToEndSession 
+     * @returns number
+     */
+    async getFuelAtStop(fuelCapacity, fuel, fuelToEndSession, pitsToEndSession) {
+        return 0;
     }
 
     /**
