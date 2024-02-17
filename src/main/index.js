@@ -22,9 +22,6 @@ class Main {
      */
     async init() {
         try {
-            // stop using gpu
-            app.disableHardwareAcceleration();
-
             // wait for ready state
             await app.whenReady();
             await this.setElectronVars();
