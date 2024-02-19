@@ -44,6 +44,7 @@ export default class ParentWorkerMainThread {
         this.app.provide('configTickRate', ref(null));
         this.app.provide('configActiveDisplay', ref(null));
         this.app.provide('configStartVisible', ref(null));
+        this.app.provide('configDebug', ref(null));
         this.app.provide('isConnected', ref(null));
         this.app.provide('isSettingsOpen', ref(null));
 
@@ -133,15 +134,37 @@ export default class ParentWorkerMainThread {
 
         // ... no data stored?
         if (!config) {
-            // ... populate the defaults
-            config = {
-                configExternalCrest: false,
-                configIp: '127.0.0.1',
-                configPort: 8180,
-                configTickRate: 24,
-                configActiveDisplay: false,
-                configStartVisible: true,
-            }
+            // ... create empty object
+            config = {}
+        }
+
+        // set defaults if data doesnt exist
+        if (!('configExternalCrest' in config)) { 
+            config.configExternalCrest = false;
+        }
+
+        if (!('configIp' in config)) { 
+            config.configIp = '127.0.0.1';
+        }
+
+        if (!('configPort' in config)) { 
+            config.configPort = 8180;
+        }
+        
+        if (!('configTickRate' in config)) { 
+            config.configTickRate = 24;
+        }
+        
+        if (!('configActiveDisplay' in config)) { 
+            config.configActiveDisplay = false;
+        }
+
+        if (!('configStartVisible' in config)) { 
+            config.configStartVisible = true;
+        }
+
+        if (!('configDebug' in config)) { 
+            config.configDebug = false;
         }
 
         // update reactive data with what we had stored
@@ -151,6 +174,7 @@ export default class ParentWorkerMainThread {
         this.app._context.provides.configTickRate.value = config.configTickRate;
         this.app._context.provides.configActiveDisplay.value = config.configActiveDisplay;
         this.app._context.provides.configStartVisible.value = config.configStartVisible;
+        this.app._context.provides.configDebug.value = config.configDebug;
 
         // update stored config for future use
         await localforage.setItem('config', config);
@@ -170,6 +194,7 @@ export default class ParentWorkerMainThread {
             this.app._context.provides.configTickRate,
             this.app._context.provides.configActiveDisplay,
             this.app._context.provides.configStartVisible,
+            this.app._context.provides.configDebug,
         ], async ([
             configExternalCrest,
             configIp,
@@ -177,6 +202,7 @@ export default class ParentWorkerMainThread {
             configTickRate,
             configActiveDisplay,
             configStartVisible,
+            configDebug,
         ], [
             prevConfigExternalCrest,
             prevConfigIp,
@@ -184,6 +210,7 @@ export default class ParentWorkerMainThread {
             prevConfigTickRate,
             prevConfigActiveDisplay,
             prevConfigStartVisible,
+            prevConfigDebug,
         ]) => {
             // get watched vars
             config.configExternalCrest = configExternalCrest;
@@ -192,6 +219,7 @@ export default class ParentWorkerMainThread {
             config.configTickRate = configTickRate;
             config.configActiveDisplay = configActiveDisplay;
             config.configStartVisible = configStartVisible;
+            config.configDebug = configDebug;
 
             // update stored config
             await localforage.setItem('config', config);
