@@ -1,56 +1,57 @@
 <template>
     <div class="m-settings" v-if="open">
         <div class="m-settings__body">
-            <div class="m-settings__groups">
-                <div class="m-settings__group">
-                    <div class="m-settings__items m-settings__items--connections">
-                        <div class="m-settings__item">
-                            <SettingToggleComponent icon="auto" label="External Crest" v-model="externalCrest" :options="externalCrestOptions" />
+            <div class="m-settings__rows">
+                <div class="m-settings__row">
+                    <div class="m-settings__groups">
+                        <div class="m-settings__group">
+                            <div class="m-settings__items m-settings__items--connections">
+                                <div class="m-settings__item">
+                                    <SettingToggleComponent icon="auto" label="External Crest" v-model="externalCrest" :options="externalCrestOptions" />
+                                </div>
+                                <div class="m-settings__item" v-if="externalCrest">
+                                    <SettingInputComponent icon="network" label="IP" v-model="ip" />
+                                </div>
+                                <div class="m-settings__item" v-if="externalCrest">
+                                    <SettingInputComponent label="Port" v-model="port" />
+                                </div>
+                                <div class="m-settings__item">
+                                    <SettingInputComponent label="Connected" readonly="true" :valid="isConnected" v-model="isConnected" />
+                                </div>
+                            </div>
                         </div>
-                        <div class="m-settings__item" v-if="externalCrest">
-                            <SettingInputComponent icon="network" label="IP" v-model="ip" />
+                        <div class="m-settings__group">
+                            <div class="m-settings__items m-settings__items--prefs">
+                                <div class="m-settings__item">
+                                    <SettingInputComponent icon="display" label="Tick Rate" v-model="tickRate" type="number" min="1" max="30" />
+                                </div>
+                                <div class="m-settings__item">
+                                    <SettingToggleComponent label="Display on" v-model="activeDisplay" :options="activeDisplayOptions" />
+                                </div>
+                            </div>
                         </div>
-                        <div class="m-settings__item" v-if="externalCrest">
-                            <SettingInputComponent label="Port" v-model="port" />
+                        <div class="m-settings__group">
+                            <div class="m-settings__items m-settings__items--configs">
+                                <div class="m-settings__item">
+                                    <SettingToggleComponent icon="auto" label="Show settings on start" v-model="startVisible" :options="startVisibleOptions" />
+                                </div>
+                                <div class="m-settings__item">
+                                    <SettingToggleComponent label="Debug" v-model="debug" :options="debugOptions" />
+                                </div>
+                            </div>
                         </div>
-                        <div class="m-settings__item">
-                            <SettingInputComponent label="Connected" readonly="true" :valid="isConnected" v-model="isConnected" />
+                        <div class="m-settings__group">
+                            <div class="m-settings__items m-settings__items--buttons">
+                                <div class="m-settings__item">
+                                    <SettingButtonComponent label="Check for updates" color="blue" v-if="updateReady === null" @click="updateCheck" />
+                                    <SettingButtonComponent label="No update found" color="blue" v-if="updateReady === false" @click="updateCheck" :disabled="true" />
+                                    <SettingButtonComponent label="Download Available" color="green" v-if="updateReady === true" @click="gotoUpdate" />
+                                </div> 
+                                <div class="m-settings__item">
+                                    <SettingButtonComponent label="Hide Settings" color="yellow" @click="hideSettings" />
+                                </div>
+                            </div>
                         </div>
-                    </div>
-                </div>
-                <div class="m-settings__group">
-                    <div class="m-settings__items m-settings__items--prefs">
-                        <div class="m-settings__item">
-                            <SettingInputComponent icon="display" label="Tick Rate" v-model="tickRate" type="number" min="1" max="30" />
-                        </div>
-                        <div class="m-settings__item">
-                            <SettingToggleComponent label="Display on" v-model="activeDisplay" :options="activeDisplayOptions" />
-                        </div>
-                    </div>
-                </div>
-                <div class="m-settings__group">
-                    <div class="m-settings__items m-settings__items--configs">
-                        <div class="m-settings__item">
-                            <SettingToggleComponent icon="auto" label="Show settings on start" v-model="startVisible" :options="startVisibleOptions" />
-                        </div>
-                        <div class="m-settings__item">
-                            <SettingToggleComponent label="Debug" v-model="debug" :options="debugOptions" />
-                        </div>
-                    </div>
-                </div>
-                <div class="m-settings__group">
-                    <div class="m-settings__items m-settings__items--buttons">
-                        <div class="m-settings__item">
-                            <SettingButtonComponent label="Check for updates" color="blue" v-if="updateReady === null" @click="updateCheck" />
-                            <SettingButtonComponent label="No update found" color="blue" v-if="updateReady === false" @click="updateCheck" :disabled="true" />
-                            <SettingButtonComponent label="Download Available" color="green" v-if="updateReady === true" @click="gotoUpdate" />
-                        </div> 
-                        <div class="m-settings__item">
-                            <SettingButtonComponent label="Hide Settings" color="yellow" @click="hideSettings" />
-                        </div> 
-                        <!-- <div class="m-settings__item">
-                            <SettingButtonComponent label="Exit Hud" color="red" @click="exitApp" />
-                        </div> -->
                     </div>
                 </div>
             </div>
@@ -78,6 +79,31 @@
     flex-shrink: 0;
     flex-basis: auto;
 }
+
+.m-settings__hr {
+    @include color('background-color', 'white', 0.1);
+
+    margin: em(16) 0;
+    padding: 0;
+    border: 0;
+    height: 1px;
+}
+
+.m-settings__header {
+    ~ .m-settings__groups {
+        margin-top: em(8);
+    }
+}
+
+.m-settings__heading {
+    @include color('color', 'white', 1);
+
+    font-size: em(18);
+}
+
+.m-settings__rows {}
+
+.m-settings__row {}
 
 .m-settings__groups {
     display: flex;
