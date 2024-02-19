@@ -44,7 +44,6 @@ export default class ParentWorkerMainThread {
         this.app.provide('configTickRate', ref(null));
         this.app.provide('configActiveDisplay', ref(null));
         this.app.provide('configStartVisible', ref(null));
-        this.app.provide('configScale', ref(null));
         this.app.provide('isConnected', ref(null));
         this.app.provide('isSettingsOpen', ref(null));
 
@@ -142,7 +141,6 @@ export default class ParentWorkerMainThread {
                 configTickRate: 24,
                 configActiveDisplay: false,
                 configStartVisible: true,
-                configScale: 100,
             }
         }
 
@@ -153,7 +151,6 @@ export default class ParentWorkerMainThread {
         this.app._context.provides.configTickRate.value = config.configTickRate;
         this.app._context.provides.configActiveDisplay.value = config.configActiveDisplay;
         this.app._context.provides.configStartVisible.value = config.configStartVisible;
-        this.app._context.provides.configScale.value = config.configScale;
 
         // update stored config for future use
         await localforage.setItem('config', config);
@@ -173,7 +170,6 @@ export default class ParentWorkerMainThread {
             this.app._context.provides.configTickRate,
             this.app._context.provides.configActiveDisplay,
             this.app._context.provides.configStartVisible,
-            this.app._context.provides.configScale,
         ], async ([
             configExternalCrest,
             configIp,
@@ -181,7 +177,6 @@ export default class ParentWorkerMainThread {
             configTickRate,
             configActiveDisplay,
             configStartVisible,
-            configScale,
         ], [
             prevConfigExternalCrest,
             prevConfigIp,
@@ -189,7 +184,6 @@ export default class ParentWorkerMainThread {
             prevConfigTickRate,
             prevConfigActiveDisplay,
             prevConfigStartVisible,
-            prevConfigScale,
         ]) => {
             // get watched vars
             config.configExternalCrest = configExternalCrest;
@@ -198,7 +192,6 @@ export default class ParentWorkerMainThread {
             config.configTickRate = configTickRate;
             config.configActiveDisplay = configActiveDisplay;
             config.configStartVisible = configStartVisible;
-            config.configScale = configScale;
 
             // update stored config
             await localforage.setItem('config', config);
@@ -281,6 +274,26 @@ export default class ParentWorkerMainThread {
                 await electron.ipcRenderer.invoke('dump', event.data.data);
             }
         };
+    }
+
+    /**
+     * Send data back to main process/electron
+     * @param {*} data 
+     */
+    async dump(data) {
+        // check we have debug enabled
+        let config = await localforage.getItem('config');
+
+        if (!('debug' in config)) { 
+            return null;
+        }
+
+        if (config.debug !== true) { 
+            return null;
+        }
+
+        // if we got here, send send data back to main process
+        await electron.ipcRenderer.invoke('dump', data);
     }
 
     /**
