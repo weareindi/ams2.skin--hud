@@ -343,6 +343,10 @@ class ParentWorker {
             if (event.data.name === 'updateview') {
                 return await this.returnMessage('updateview-lapdata', event.data.data);
             }
+
+            if (event.data.name === 'dump') {
+                return await this.returnMessage('dump', event.data.data);
+            }
         };
     }
 

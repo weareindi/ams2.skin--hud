@@ -1,7 +1,9 @@
 import { app, shell, BrowserWindow, Tray, Menu, screen, ipcMain, nativeTheme } from 'electron';
 import { join } from 'path';
 import { electronApp, optimizer, is } from '@electron-toolkit/utils';
-import { execFile,  } from 'child_process';
+import { execFile } from 'child_process';
+import mkdirp from 'mkdirp';
+import fs from 'fs';
 import icon from '../../resources/icon.png?asset';
 import iconTrayMac from '../../resources/iconTemplate.png?asset';
 import iconTrayWinLight from '../../resources/iconTemplate.png?asset';
@@ -326,6 +328,31 @@ class Main {
 
             // return true, update avilable
             return true;
+        });
+
+        // dump
+        ipcMain.handle('dump', async (event, data) => {
+            if (!data) { 
+                return false;
+            }
+
+            if (data === 'null') { 
+                return false;
+            }
+
+            if (typeof data === 'object') { 
+                data = JSON.stringify(data);
+            }
+
+            const { default: slash } = await import('slash');
+            const user_documents = app.getPath('documents');
+            const dir = slash(`${user_documents}/${this.appName}/dump`);
+            const date = new Date();
+            const filename = `${date.toISOString().split('-').join('').split(':').join('').split('.').join('')}.log`;
+            const path = `${dir}/${filename}`;
+
+            fs.mkdir(dir, { recursive: true }, (err) => err && console.error(err));
+            fs.writeFileSync(path, data, 'utf-8', (err) => err && console.error(err));
         });
     }
 

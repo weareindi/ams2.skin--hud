@@ -35,10 +35,19 @@ class LapWorker {
             }
 
             if (event.data.name === 'reset') {
+                await this.dump();
                 await this.deleteLapData();
                 await this.returnMessage('resetcomplete');
             }
         };
+    }
+
+    /**
+     * Dump  data
+     */
+    async dump() {
+        const laps = await localforage.getItem('lapstore');
+        await this.returnMessage('dump', laps);
     }
 
     /**
