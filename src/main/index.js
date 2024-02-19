@@ -9,7 +9,6 @@ import iconTrayMac from '../../resources/iconTemplate.png?asset';
 import iconTrayWinLight from '../../resources/iconTemplate.png?asset';
 import iconTrayWinDark from '../../resources/iconTemplateDark.png?asset';
 import crest2 from '../../resources/crest2/CREST2.exe?asset';
-import { log } from 'console';
 
 class Main {
     constructor() {
