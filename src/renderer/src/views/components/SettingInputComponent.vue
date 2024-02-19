@@ -152,15 +152,13 @@ export default {
         }
     },
     mounted() {
-        this.triggerAutosize();
+        debounce(0, () => {
+            this.triggerAutosize();
+        })();
     },
     watch: {
-        model: function() {
-
-            // delay the autosize on content change from "outside" as it triggers before the content has actually changed
-            debounce(0, () => {
-                this.triggerAutosize();
-            })();
+        model: () => {
+            this.triggerAutosize();
         }
     },
     methods: {
@@ -207,8 +205,11 @@ export default {
             this.triggerAutosize();
         },
         triggerAutosize() {
-            const valueSurface = this.$el.querySelector('.c-settings-input__value');
-            autosize(valueSurface);
+            // delay the autosize on content change from "outside" as it triggers before the content has actually changed
+            debounce(0, () => {
+                const valueSurface = this.$el.querySelector('.c-settings-input__value');
+                autosize(valueSurface);
+            })();
         }
     }
 }
