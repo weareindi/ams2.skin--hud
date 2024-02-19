@@ -276,6 +276,10 @@ export default class ParentWorkerMainThread {
             if (event.data.name === 'reset') {
                 await this.resetGameVars();
             }
+
+            if (event.data.name === 'dump') {
+                await electron.ipcRenderer.invoke('dump', event.data.data);
+            }
         };
     }
 

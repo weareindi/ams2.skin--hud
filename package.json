@@ -25,6 +25,7 @@
     "@electron-toolkit/utils": "^3.0.0",
     "autosize-input": "^1.0.2",
     "localforage": "^1.10.0",
+    "slash": "^5.1.0",
     "vh-check": "^2.0.5"
   },
   "devDependencies": {
