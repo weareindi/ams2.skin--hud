@@ -36,6 +36,9 @@
                         <div class="m-settings__item">
                             <SettingToggleComponent icon="auto" label="Show settings on start" v-model="startVisible" :options="startVisibleOptions" />
                         </div>
+                        <div class="m-settings__item">
+                            <SettingToggleComponent label="Debug" v-model="debug" :options="debugOptions" />
+                        </div>
                     </div>
                 </div>
                 <div class="m-settings__group">
@@ -146,8 +149,8 @@ export default {
         const configPort = inject('configPort');
         const configTickRate = inject('configTickRate');
         const configActiveDisplay = inject('configActiveDisplay');
-        const configStartVisible = inject('configStartVisible');
-        const configScale = inject('configScale');        
+        const configStartVisible = inject('configStartVisible');    
+        const configDebug = inject('configDebug');    
         const isConnected = inject('isConnected');
         const isSettingsOpen = inject('isSettingsOpen');
 
@@ -185,6 +188,18 @@ export default {
             }
         ];
 
+        // debug options
+        const debugOptions = [
+            {
+                label: 'Enabled',
+                value: true
+            },
+            {
+                label: 'Disabled',
+                value: false
+            }
+        ];
+
         return {
             configExternalCrest,
             configIp,
@@ -198,7 +213,9 @@ export default {
             primaryDisplay,
             externalCrestOptions,
             activeDisplayOptions,
-            startVisibleOptions
+            startVisibleOptions,
+            configDebug,
+            debugOptions
         }
     },
     mounted() {
@@ -321,6 +338,18 @@ export default {
             },
             set(value) {
                 return this.configStartVisible = value;
+            }
+        },
+        debug: {
+            get() {
+                if (this.configDebug === null) {
+                    return false; // default
+                }
+
+                return this.configDebug;
+            },
+            set(value) {
+                return this.configDebug = value;
             }
         },
         updateReady: {
