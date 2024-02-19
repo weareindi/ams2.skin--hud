@@ -24,9 +24,6 @@
                             <SettingInputComponent icon="display" label="Tick Rate" v-model="tickRate" type="number" min="1" max="30" />
                         </div>
                         <div class="m-settings__item">
-                            <SettingInputComponent icon="scale" label="Scale" v-model="scale" type="number" min="50" max="200" step="0.1"  />
-                        </div>
-                        <div class="m-settings__item">
                             <SettingToggleComponent label="Display on" v-model="activeDisplay" :options="activeDisplayOptions" />
                         </div>
                     </div>
@@ -146,8 +143,7 @@ export default {
         const configPort = inject('configPort');
         const configTickRate = inject('configTickRate');
         const configActiveDisplay = inject('configActiveDisplay');
-        const configStartVisible = inject('configStartVisible');
-        const configScale = inject('configScale');        
+        const configStartVisible = inject('configStartVisible');    
         const isConnected = inject('isConnected');
         const isSettingsOpen = inject('isSettingsOpen');
 
@@ -192,7 +188,6 @@ export default {
             configTickRate,
             configActiveDisplay,
             configStartVisible,
-            configScale,
             isConnected,
             isSettingsOpen,
             primaryDisplay,
@@ -286,14 +281,6 @@ export default {
                 return this.configTickRate = value;
             }
         },
-        scale:{
-            get() {
-                return this.changeScale(this.configScale);
-            },
-            set(value) {
-                return this.configScale = this.changeScale(value);
-            }
-        },
         activeDisplay: {
             get() {
                 if (!this.configActiveDisplay) {
@@ -342,10 +329,6 @@ export default {
         changeDisplay(id) {
             electron.ipcRenderer.invoke('changeDisplay', id);
             return id;
-        },
-        changeScale(scale) {
-            document.documentElement.style.setProperty("--font-size", `${scale}%`);
-            return scale;
         },
         async hideSettings() {
             return this.open = false;

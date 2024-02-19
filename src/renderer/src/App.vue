@@ -24,18 +24,10 @@
 </style>
 
 <script>
-import { inject } from 'vue';
 import CustomVars from './assets/scss/_custom-vars.scss?inline';
 import localforage from 'localforage';
 
 export default {
-    setup() {
-        const configScale = inject('configScale');
-
-        return {
-            configScale
-        }
-    },
     async mounted() {
 
         // get config
