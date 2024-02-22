@@ -25,9 +25,6 @@
                                 <div class="m-settings__item">
                                     <SettingInputComponent icon="display" label="Tick Rate" v-model="tickRate" type="number" min="1" max="30" />
                                 </div>
-                                <div class="m-settings__item">
-                                    <SettingToggleComponent label="Display on" v-model="activeDisplay" :options="activeDisplayOptions" />
-                                </div>
                             </div>
                         </div>
                         <div class="m-settings__group">
@@ -49,6 +46,39 @@
                                 </div> 
                                 <div class="m-settings__item">
                                     <SettingButtonComponent label="Hide Settings" color="yellow" @click="hideSettings" />
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+                <hr class="m-settings__hr">
+                <div class="m-settings__row">
+                    <div class="m-settings__header">
+                        <h1 class="m-settings__heading">Main Display</h1>
+                    </div>
+                    <div class="m-settings__groups">
+                        <div class="m-settings__group">
+                            <div class="m-settings__items m-settings__items--prefs">
+                                <div class="m-settings__item">
+                                    <SettingToggleComponent icon="display" label="Display on" v-model="activeMainDisplay" :options="activeMainDisplayOptions" />
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+                <hr class="m-settings__hr">
+                <div class="m-settings__row">
+                    <div class="m-settings__header">
+                        <h1 class="m-settings__heading">Stream Display</h1>
+                    </div>
+                    <div class="m-settings__groups">
+                        <div class="m-settings__group">
+                            <div class="m-settings__items m-settings__items--prefs">
+                                <div class="m-settings__item">
+                                    <SettingToggleComponent icon="display" label="Enabled" v-model="enabledStreamDisplay" :options="enabledStreamDisplayOptions" />
+                                </div>
+                                <div class="m-settings__item" v-if="enabledStreamDisplay">
+                                    <SettingToggleComponent label="Display on" v-model="activeStreamDisplay" :options="activeStreamDisplayOptions" />
                                 </div>
                             </div>
                         </div>
@@ -101,14 +131,9 @@
     font-size: em(18);
 }
 
-.m-settings__rows {}
-
-.m-settings__row {}
-
 .m-settings__groups {
     display: flex;
-    align-items: center;
-    justify-content: space-around;
+    align-items: left;
     margin: 0 em(-32);
 }
 
@@ -171,7 +196,9 @@ export default {
         const configIp = inject('configIp');
         const configPort = inject('configPort');
         const configTickRate = inject('configTickRate');
-        const configActiveDisplay = inject('configActiveDisplay');
+        const configActiveMainDisplay = inject('configActiveMainDisplay');
+        const configEnabledStreamDisplay = inject('configEnabledStreamDisplay');
+        const configActiveStreamDisplay = inject('configActiveStreamDisplay');
         const configStartVisible = inject('configStartVisible');    
         const configDebug = inject('configDebug');    
         const isConnected = inject('isConnected');
@@ -190,14 +217,34 @@ export default {
         ];
 
         // display options
+        const enabledStreamDisplayOptions = [
+            {
+                label: 'Enabled',
+                value: true
+            },
+            {
+                label: 'Disabled',
+                value: false
+            }
+        ];
         const primaryDisplay = await electron.ipcRenderer.invoke('getPrimaryDisplay');
         const displays = await electron.ipcRenderer.invoke('getDisplays');
-        const activeDisplayOptions = displays.map((display) => {
+        const activeMainDisplayOptions = displays.map((display) => {
             return {
                 label: display.label,
                 value: display.id
             }
         });
+        const activeStreamDisplayOptions = displays.map((display) => {
+            return {
+                label: display.label,
+                value: display.id
+            }
+        });
+        activeStreamDisplayOptions.push({
+            label: 'Offscreen',
+            value: 'offscreen'
+        })
 
         // start options
         const startVisibleOptions = [
@@ -228,13 +275,17 @@ export default {
             configIp,
             configPort,
             configTickRate,
-            configActiveDisplay,
+            configActiveMainDisplay,
+            configEnabledStreamDisplay,
+            configActiveStreamDisplay,
             configStartVisible,
             isConnected,
             isSettingsOpen,
             primaryDisplay,
             externalCrestOptions,
-            activeDisplayOptions,
+            activeMainDisplayOptions,
+            enabledStreamDisplayOptions,
+            activeStreamDisplayOptions,
             startVisibleOptions,
             configDebug,
             debugOptions
@@ -325,23 +376,6 @@ export default {
                 return this.configTickRate = value;
             }
         },
-        activeDisplay: {
-            get() {
-                if (!this.configActiveDisplay) {
-                    return this.activeDisplay = this.primaryDisplay.id;
-                }
-
-                return this.changeDisplay(this.configActiveDisplay);
-            },
-            set(value) {
-                return this.configActiveDisplay = this.changeDisplay(value);
-            }
-        },
-        activeDisplayOptions: {
-            get() {
-                return this.activeDisplayOptions;
-            }
-        },
         startVisible: {
             get() {
                 if (this.configStartVisible === null) {
@@ -380,10 +414,56 @@ export default {
                 return this.isUpdateAvailable = value;
             }
         },
+        activeMainDisplay: {
+            get() {
+                if (!this.configActiveMainDisplay) {
+                    return this.activeMainDisplay = this.primaryDisplay.id;
+                }
+
+                return this.configActiveMainDisplay;
+            },
+            set(value) {
+                return this.configActiveMainDisplay = this.changeWindowDisplay('main', value);
+            }
+        },
+        activeMainDisplayOptions: {
+            get() {
+                return this.activeMainDisplayOptions;
+            }
+        },
+        enabledStreamDisplay: {
+            get() {
+                if (this.configEnabledStreamDisplay === null) {
+                    return this.configEnabledStreamDisplay = false;
+                }
+
+                return this.configEnabledStreamDisplay;
+            },
+            set(value) {
+                return this.configEnabledStreamDisplay = value;
+            }
+        },
+        activeStreamDisplay: {
+            get() {
+                if (!this.configActiveStreamDisplay) {
+                    return this.activeStreamDisplay = this.primaryDisplay.id;
+                }
+
+                return this.configActiveStreamDisplay;
+            },
+            set(value) {
+                return this.configActiveStreamDisplay = this.changeWindowDisplay('stream', value);
+            }
+        },
+        activeStreamDisplayOptions: {
+            get() {
+                return this.activeStreamDisplayOptions;
+            }
+        },
     },
     methods: {
-        changeDisplay(id) {
-            electron.ipcRenderer.invoke('changeDisplay', id);
+        changeWindowDisplay(win, id) {
+            electron.ipcRenderer.invoke('changeWindowDisplay', win, id);
             return id;
         },
         async hideSettings() {
