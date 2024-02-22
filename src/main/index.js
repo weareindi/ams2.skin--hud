@@ -368,8 +368,8 @@ class Main {
         });
 
         // open main window
-        ipcMain.handle('createMainWidndow', async (event) => {
-            await this.createMainWidndow();
+        ipcMain.handle('createMainWindow', async (event) => {
+            await this.createMainWindow();
             return;
         });
 
