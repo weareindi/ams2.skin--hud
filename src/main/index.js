@@ -2,6 +2,7 @@ import { app, Tray, Menu, screen, ipcMain, nativeTheme } from 'electron';
 import { electronApp, optimizer, is } from '@electron-toolkit/utils';
 import { execFile } from 'child_process';
 import fs from 'fs';
+import semver from 'semver';
 import iconTrayMac from '../../resources/iconTemplate.png?asset';
 import iconTrayWinLight from '../../resources/iconTemplate.png?asset';
 import iconTrayWinDark from '../../resources/iconTemplateDark.png?asset';
@@ -426,17 +427,17 @@ class Main {
             const json = await response.json();
 
             // get running app current version
-            let currentVersion = `v${app.getVersion()}`;
+            let localVersion = `v${app.getVersion()}`;
 
             // pprepare latest version for comparison
-            let latest_Version = currentVersion;
+            let latestRelease = localVersion;
             if ('tag_name' in json) {
                 // ... update latest version to found version from fetch request
-                latest_Version = json.tag_name;
+                latestRelease = json.tag_name;
             }
 
             // compare. if same version return false
-            if (currentVersion === latest_Version) {
+            if (semver.compare(localVersion, latestRelease) >= 0) {
                 return false;
             }
 
