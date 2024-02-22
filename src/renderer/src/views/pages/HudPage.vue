@@ -43,7 +43,8 @@ export default {
         const configIp = inject('configIp');
         const configPort = inject('configPort');
         const configTickRate = inject('configTickRate');
-        const configActiveDisplay = inject('configActiveDisplay');
+        const configActiveMainDisplay = inject('configActiveMainDisplay');
+        const configActiveStreamDisplay = inject('configActiveStreamDisplay');
         const configStartVisible = inject('configStartVisible');
 
         // game state
@@ -58,7 +59,8 @@ export default {
             configIp,
             configPort,
             configTickRate,
-            configActiveDisplay,
+            configActiveMainDisplay,
+            configActiveStreamDisplay,
             configStartVisible,
             mGameState,
             mSessionState,
@@ -87,7 +89,11 @@ export default {
                 return false;
             }
 
-            if (this.configActiveDisplay === null) {
+            if (this.configActiveMainDisplay === null) {
+                return false;
+            }
+
+            if (this.configActiveStreamDisplay === null) {
                 return false;
             }
 

@@ -1,17 +1,22 @@
-import { app, shell, BrowserWindow, Tray, Menu, screen, ipcMain, nativeTheme } from 'electron';
-import { join } from 'path';
+import { app, Tray, Menu, screen, ipcMain, nativeTheme } from 'electron';
 import { electronApp, optimizer, is } from '@electron-toolkit/utils';
 import { execFile } from 'child_process';
-import mkdirp from 'mkdirp';
 import fs from 'fs';
-import icon from '../../resources/icon.png?asset';
 import iconTrayMac from '../../resources/iconTemplate.png?asset';
 import iconTrayWinLight from '../../resources/iconTemplate.png?asset';
 import iconTrayWinDark from '../../resources/iconTemplateDark.png?asset';
 import crest2 from '../../resources/crest2/CREST2.exe?asset';
+import MainWindow from './MainWindow.js';
+import StreamWindow from './StreamWindow.js';
 
 class Main {
     constructor() {
+        this.isFirstInstance = app.requestSingleInstanceLock();
+        if (!this.isFirstInstance) { 
+            app.quit();
+            return;
+        }
+
         this.appID = 'skin.ams2.hud';
         this.appName = 'AMS2HUD';
         this.defaultWidth = 1920;
@@ -27,10 +32,10 @@ class Main {
             // wait for ready state
             await app.whenReady();
             await this.setElectronVars();
-            await this.registerAppListeners();
             await this.createTray();
-            await this.createMainWindow();
+            await this.registerAppListeners();
             await this.registerRendererListeners();
+            await this.createMainWindow();
         } catch (error) {
             console.log(error);
         }
@@ -53,14 +58,14 @@ class Main {
             optimizer.watchWindowShortcuts(window);
         });
 
-        // on activate
-        app.on('activate', () => {
-            // On macOS it's common to re-create a window in the app when the
-            // dock icon is clicked and there are no other windows open.
-            if (BrowserWindow.getAllWindows().length === 0) {
-                this.createMainWindow();
-            }
-        });
+        // // on activate
+        // app.on('activate', () => {
+        //     // On macOS it's common to re-create a window in the app when the
+        //     // dock icon is clicked and there are no other windows open.
+        //     if (BrowserWindow.getAllWindows().length === 0) {
+        //         this.createMainWindow();
+        //     }
+        // });
 
         // all windows closed?
         app.on('window-all-closed', () => {
@@ -120,24 +125,28 @@ class Main {
         const contextMenu = Menu.buildFromTemplate([
             {
                 label: 'Show Settings',
-                click: async () => {                    
+                click: async () => {
+                    const mainWindow = await this.mainWindow.getWindow();
+                    
                     if (process.platform === 'darwin') {
-                        this.mainWindow.maximize();
+                        mainWindow.maximize();
                     }
 
                     if (process.platform === 'win32') {
-                        this.mainWindow.setFullScreen(true);
+                        mainWindow.setFullScreen(true);
                     }
 
-                    this.mainWindow.show();
-                    this.mainWindow.setIgnoreMouseEvents(false);
-                    this.mainWindow.webContents.send('openSettings');
+                    mainWindow.show();
+                    mainWindow.setIgnoreMouseEvents(false);
+                    mainWindow.webContents.send('openSettings');
                 }
             },
             {
                 label: 'Quit',
                 click: async () => {
-                    this.mainWindow.close();
+                    const mainWindow = await this.mainWindow.getWindow();
+
+                    mainWindow.close();
                 }
             }
         ]);
@@ -150,72 +159,138 @@ class Main {
      * Create main window
      */
     async createMainWindow() {
-        // create main window
-        this.mainWindow = new BrowserWindow({
-            width: this.defaultWidth,
-            height: this.defaultHeight,
-            show: false,
-            autoHideMenuBar: true,
-            ...(process.platform === 'linux' ? { icon } : {}),
-            webPreferences: {
-                preload: join(__dirname, '../preload/index.js'),
-                sandbox: false
-            },
-            simpleFullscreen: true,
-            frame: false,
-            transparent: true,
-            alwaysOnTop: true,
-            hasShadow: false,
-        });
+        if (typeof this.mainWindow !== 'undefined') { 
+            await this.exitMainWindow();
+        }
+        
+        return this.mainWindow = new MainWindow();
+    }
 
-        // on resize
-        this.mainWindow.on('resize', () => {
-            if (process.platform === 'win32') {
-                // ... set to fullscreen
-                this.mainWindow.setFullScreen(true);
+    /**
+     * Exit main window
+     */
+    async exitMainWindow() {
+        this.mainWindow.exit();
+        delete this.mainWindow;
+        return;
+    }
 
-                // send resize event to renderer
-                this.mainWindow.webContents.send('resize');
-            }
-        });
-
-        // Open the DevTools on load
-        if (is.dev) {
-            this.mainWindow.webContents.openDevTools();
+    /**
+     * Create stream window
+     */
+    async createStreamWindow() {
+        if (typeof this.streamWindow !== 'undefined') { 
+            await this.exitStreamWindow();
         }
 
-        // show ontop of game at all times
-        this.mainWindow.setAlwaysOnTop(true, 'pop-up-menu');
+        this.streamWindow = new StreamWindow();
+    }
 
-        // disable mouse as default
-        this.mainWindow.setIgnoreMouseEvents(true);
+    /**
+     * Exit stream window
+     */
+    async exitStreamWindow() {
+        this.streamWindow.exit();
+        delete this.streamWindow;
+        return;
+    }
 
-        // built on a mac but is a windows app
-        this.mainWindow.on('ready-to-show', () => {
-            if (process.platform === 'darwin') {
-                this.mainWindow.maximize();
+    /**
+     * Get all displays
+     */
+    async getAllDisplays() {
+        const allDisplays = screen.getAllDisplays();
+        return allDisplays;
+    }
+
+    /**
+     * Open Crest2
+     */
+    async openCrest() {
+        if (process.platform === 'win32') {
+            try {
+                if (typeof this.crest !== 'undefined') {
+                    await this.closeCrest();
+                }
+
+                return this.crest = execFile(crest2, ['-p', '8180']);
+            } catch (error) {
+                console.error(error);
+                return null;
             }
-
-            if (process.platform === 'win32') {
-                this.mainWindow.setFullScreen(true);
-            }
-
-            this.mainWindow.show();
-        });
-
-        // on open
-        this.mainWindow.webContents.setWindowOpenHandler((details) => {
-            shell.openExternal(details.url);
-            return { action: 'deny' };
-        });
-
-        // HMR for renderer base on electron-vite cli.
-        // Load the remote URL for development or the local html file for production.
-        if (is.dev && process.env['ELECTRON_RENDERER_URL']) {
-            this.mainWindow.loadURL(process.env['ELECTRON_RENDERER_URL']);
-        } else {
-            this.mainWindow.loadFile(join(__dirname, '../renderer/index.html'));
         }
+    }
+
+    /**
+     * Close Crest2
+     */
+    async closeCrest() {
+        return this.crest.kill();
+    }
+
+    /**
+     * 
+     * @param {*} id 
+     * @returns 
+     */
+    async getRequestedDisplay(id) {
+        if (typeof id === 'undefined' || !id) { 
+            return await this.getPrimaryDisplay();
+        }
+
+        if (id === 'offscreen') { 
+            const primaryDisplay = await this.getPrimaryDisplay();
+
+            return {
+                id: 'offscreen',
+                bounds: { 
+                    x: primaryDisplay.bounds.x - primaryDisplay.bounds.width,
+                    y: primaryDisplay.bounds.y - primaryDisplay.bounds.height,
+                    width: primaryDisplay.bounds.width,
+                    height: primaryDisplay.bounds.height,
+                }
+            }
+        }
+
+        const allDisplays = await this.getAllDisplays();
+        const requestedDisplay = allDisplays.find((display) => {
+            return display.id === id;
+        });
+
+        if (!requestedDisplay) { 
+            return;
+        }
+
+        return requestedDisplay;
+    }
+
+    /**
+     * 
+     * @param {*} win 
+     * @returns 
+     */
+    async getRequestedWindow(win) {
+        if (typeof win === 'undefined' || !win) { 
+            return null;
+        }
+
+        if (win === 'main' && typeof this.mainWindow !== 'undefined' && this.mainWindow) { 
+            return this.mainWindow;
+        }
+
+        if (win === 'stream' && typeof this.streamWindow !== 'undefined' && this.streamWindow) { 
+            return this.streamWindow;
+        }
+
+        return null;
+    }
+
+    /**
+     * 
+     * @returns 
+     */
+    async getPrimaryDisplay() { 
+        return screen.getPrimaryDisplay();
     }
 
     /**
@@ -223,45 +298,55 @@ class Main {
      */
     async registerRendererListeners() {
         // get curretn array of displays (monitors)
-        ipcMain.handle('getDisplays', (event) => {
-            const allDisplays = screen.getAllDisplays();    
-            return allDisplays
+        ipcMain.handle('getDisplays', async (event) => {
+            return await this.getAllDisplays();
         });
 
         // get primary display
         ipcMain.handle('getPrimaryDisplay', async (event) => {
-            const primaryDisplay = screen.getPrimaryDisplay();
-            return primaryDisplay;
+            return await this.getPrimaryDisplay();
         });
 
         // change the display
-        ipcMain.handle('changeDisplay', async (event, id) => {
+        ipcMain.handle('changeWindowDisplay', async (event, win, id) => {
+            if (!win) { 
+                return;
+            }
+
             if (!id) {
                 return;
             }
 
-            const allDisplays = screen.getAllDisplays();
-            const requestedDisplay = allDisplays.find((display) => {
-                return display.id === id;
-            });
+            const requestedWindow = await this.getRequestedWindow(win);
+            if (!requestedWindow) { 
+                return;
+            }
 
-            // move display to requested display bounds
-            this.mainWindow.setBounds({
+            const requestedDisplay = await this.getRequestedDisplay(id);
+            if (!requestedDisplay) { 
+                return;
+            }
+           
+            await requestedWindow.setBounds({
                 x: requestedDisplay.bounds.x,
                 y: requestedDisplay.bounds.y,
-                width: requestedDisplay.workArea.width,
-                height: requestedDisplay.workArea.height
+                width: requestedDisplay.bounds.width,
+                height: requestedDisplay.bounds.height
             });
+
+            await requestedWindow.send('updateScale');
         });
 
         // enable pointer events
-        ipcMain.handle('enableMouse', (event) => {
-            this.mainWindow.setIgnoreMouseEvents(false);
+        ipcMain.handle('enableMouse', async (event) => {
+            const mainWindow = await this.mainWindow.getWindow();
+            mainWindow.setIgnoreMouseEvents(false);
         });
 
         // disable pointer events
-        ipcMain.handle('disableMouse', (event) => {
-            this.mainWindow.setIgnoreMouseEvents(true);
+        ipcMain.handle('disableMouse', async (event) => {
+            const mainWindow = await this.mainWindow.getWindow();
+            mainWindow.setIgnoreMouseEvents(true);
         });
 
         // quit app
@@ -282,11 +367,40 @@ class Main {
             return;
         });
 
+        // open main window
+        ipcMain.handle('createMainWindow', async (event) => {
+            await this.createMainWindow();
+            return;
+        });
+
+        // close main window
+        ipcMain.handle('closeMainWindow', async (event) => {
+            await this.closeMainWindow();
+            return;
+        });
+
+        // open stream window
+        ipcMain.handle('createStreamWindow', async (event) => {
+            await this.createStreamWindow();
+            return;
+        });
+
+        // close stream window
+        ipcMain.handle('exitStreamWindow', async (event) => {
+            await this.exitStreamWindow();
+            return;
+        });
+
         // update scale
-        ipcMain.handle('getScale', async (event) => {
-            const primaryDisplay = screen.getPrimaryDisplay();
-            const {width} = primaryDisplay.bounds;
-            return (width / this.defaultWidth) * 100;
+        ipcMain.handle('getScale', async (event, id) => {
+            const requestedDisplay = await this.getRequestedDisplay(id);
+            if (!requestedDisplay) {
+                return 100;
+            }
+
+            const {width} = requestedDisplay.bounds;
+            const scale = (width / this.defaultWidth) * 100;
+            return scale;
         });
 
         // get version
@@ -354,31 +468,6 @@ class Main {
             fs.mkdir(dir, { recursive: true }, (err) => err && console.error(err));
             fs.writeFileSync(path, data, 'utf-8', (err) => err && console.error(err));
         });
-    }
-
-    /**
-     * Open Crest2
-     */
-    async openCrest() {
-        if (process.platform === 'win32') {
-            try {
-                if (typeof this.crest !== 'undefined') {
-                    await this.closeCrest();
-                }
-
-                return this.crest = execFile(crest2, ['-p', '8180']);
-            } catch (error) {
-                console.error(error);
-                return null;
-            }
-        }
-    }
-
-    /**
-     * Close Crest2
-     */
-    async closeCrest() {
-        return this.crest.kill();
     }
 }
 

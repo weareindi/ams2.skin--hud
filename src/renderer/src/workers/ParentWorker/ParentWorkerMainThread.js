@@ -42,7 +42,10 @@ export default class ParentWorkerMainThread {
         this.app.provide('configIp', ref(null));
         this.app.provide('configPort', ref(null));
         this.app.provide('configTickRate', ref(null));
-        this.app.provide('configActiveDisplay', ref(null));
+        // this.app.provide('configEnabledMainDisplay', ref(null));
+        this.app.provide('configActiveMainDisplay', ref(null));
+        this.app.provide('configEnabledStreamDisplay', ref(null));
+        this.app.provide('configActiveStreamDisplay', ref(null));
         this.app.provide('configStartVisible', ref(null));
         this.app.provide('configDebug', ref(null));
         this.app.provide('isConnected', ref(null));
@@ -154,9 +157,21 @@ export default class ParentWorkerMainThread {
         if (!('configTickRate' in config)) { 
             config.configTickRate = 24;
         }
+
+        // if (!('configEnabledMainDisplay' in config)) { 
+        //     config.configEnabledMainDisplay = true;
+        // }
         
-        if (!('configActiveDisplay' in config)) { 
-            config.configActiveDisplay = false;
+        if (!('configActiveMainDisplay' in config)) { 
+            config.configActiveMainDisplay = false;
+        }
+
+        if (!('configEnabledStreamDisplay' in config)) { 
+            config.configEnabledStreamDisplay = false;
+        }
+        
+        if (!('configActiveStreamDisplay' in config)) { 
+            config.configActiveStreamDisplay = false;
         }
 
         if (!('configStartVisible' in config)) { 
@@ -172,7 +187,10 @@ export default class ParentWorkerMainThread {
         this.app._context.provides.configIp.value = config.configIp;
         this.app._context.provides.configPort.value = config.configPort;
         this.app._context.provides.configTickRate.value = config.configTickRate;
-        this.app._context.provides.configActiveDisplay.value = config.configActiveDisplay;
+        // this.app._context.provides.configEnabledMainDisplay.value = config.configEnabledMainDisplay;
+        this.app._context.provides.configActiveMainDisplay.value = config.configActiveMainDisplay;
+        this.app._context.provides.configEnabledStreamDisplay.value = config.configEnabledStreamDisplay;
+        this.app._context.provides.configActiveStreamDisplay.value = config.configActiveStreamDisplay;
         this.app._context.provides.configStartVisible.value = config.configStartVisible;
         this.app._context.provides.configDebug.value = config.configDebug;
 
@@ -192,7 +210,10 @@ export default class ParentWorkerMainThread {
             this.app._context.provides.configIp,
             this.app._context.provides.configPort,
             this.app._context.provides.configTickRate,
-            this.app._context.provides.configActiveDisplay,
+            // this.app._context.provides.configEnabledMainDisplay,
+            this.app._context.provides.configActiveMainDisplay,
+            this.app._context.provides.configEnabledStreamDisplay,
+            this.app._context.provides.configActiveStreamDisplay,
             this.app._context.provides.configStartVisible,
             this.app._context.provides.configDebug,
         ], async ([
@@ -200,7 +221,10 @@ export default class ParentWorkerMainThread {
             configIp,
             configPort,
             configTickRate,
-            configActiveDisplay,
+            // configEnabledMainDisplay,
+            configActiveMainDisplay,
+            configEnabledStreamDisplay,
+            configActiveStreamDisplay,
             configStartVisible,
             configDebug,
         ], [
@@ -208,7 +232,10 @@ export default class ParentWorkerMainThread {
             prevConfigIp,
             prevConfigPort,
             prevConfigTickRate,
-            prevConfigActiveDisplay,
+            // prevConfigEnabledMainDisplay,
+            prevConfigActiveMainDisplay,
+            prevConfigEnabledStreamDisplay,
+            prevConfigActiveStreamDisplay,
             prevConfigStartVisible,
             prevConfigDebug,
         ]) => {
@@ -217,7 +244,10 @@ export default class ParentWorkerMainThread {
             config.configIp = configIp;
             config.configPort = configPort;
             config.configTickRate = configTickRate;
-            config.configActiveDisplay = configActiveDisplay;
+            // config.configEnabledMainDisplay = configEnabledMainDisplay;
+            config.configActiveMainDisplay = configActiveMainDisplay;
+            config.configEnabledStreamDisplay = configEnabledStreamDisplay;
+            config.configActiveStreamDisplay = configActiveStreamDisplay;
             config.configStartVisible = configStartVisible;
             config.configDebug = configDebug;
 
@@ -231,6 +261,11 @@ export default class ParentWorkerMainThread {
             if (configExternalCrest !== prevConfigExternalCrest) {
                 await this.toggleCrest();
             }
+
+            // toggle stream window
+            if (configEnabledStreamDisplay !== prevConfigEnabledStreamDisplay) {
+                await this.toggleStreamDisplay();
+            }
         });
     }
 
@@ -243,6 +278,17 @@ export default class ParentWorkerMainThread {
         }
 
         return await electron.ipcRenderer.invoke('closeCrest');
+    }
+
+    /**
+     * Toggle the opening/closing of stream window
+     */
+    async toggleStreamDisplay() {
+        if (!this.app._context.provides.configEnabledStreamDisplay.value) {
+            return await electron.ipcRenderer.invoke('exitStreamWindow');
+        }
+
+        return await electron.ipcRenderer.invoke('createStreamWindow');
     }
 
     /**

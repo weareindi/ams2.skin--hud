@@ -152,14 +152,12 @@ export default {
         }
     },
     mounted() {
-        debounce(0, () => {
-            this.triggerAutosize();
-        })();
-    },
-    watch: {
-        model: () => {
-            this.triggerAutosize();
-        }
+        this.triggerAutosize();
+
+        // has scale been changed?
+        electron.ipcRenderer.on('updateScale', async () => {
+            await this.triggerAutosize();
+        });
     },
     methods: {
         inputfocus(event) {
@@ -206,7 +204,7 @@ export default {
         },
         triggerAutosize() {
             // delay the autosize on content change from "outside" as it triggers before the content has actually changed
-            debounce(0, () => {
+            debounce(100, () => {
                 const valueSurface = this.$el.querySelector('.c-settings-input__value');
                 autosize(valueSurface);
             })();
