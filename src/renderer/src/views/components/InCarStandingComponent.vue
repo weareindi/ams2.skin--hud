@@ -1,32 +1,109 @@
 <template>
-    <div class="c-in-car-standing" :status="standing.status">
-        <div class="c-in-car-standing__items">
-            <div class="c-in-car-standing__item c-in-car-standing__item--position">
-                <div class="c-in-car-standing__position">{{ standing.mRacePosition }}</div>
+    <div class="c-in-car-standing">
+        <div class="c-in-car-standing__rows">
+            <div class="c-in-car-standing__row">
+                <div class="c-in-car-standing__frame" :status="standing.status">
+                    <div class="c-in-car-standing__items">
+                        <div class="c-in-car-standing__item c-in-car-standing__item--position">
+                            <div class="c-in-car-standing__position">{{ standing.mRacePosition }}</div>
+                        </div>
+                        <div class="c-in-car-standing__item c-in-car-standing__item--car">
+                            <div class="c-in-car-standing__car">{{ standing.mCarClassNames }}</div>
+                        </div>
+                        <div class="c-in-car-standing__item c-in-car-standing__item--name">
+                            <div class="c-in-car-standing__name">{{ standing.mName }}</div>
+                        </div>
+                        <div class="c-in-car-standing__item c-in-car-standing__item--distance" v-if="!standing.isUser">
+                            <div class="c-in-car-standing__distance">{{ standing.distance }}</div>
+                        </div>
+                    </div>
+                </div>
             </div>
-            <div class="c-in-car-standing__item c-in-car-standing__item--car">
-                <div class="c-in-car-standing__car">{{ standing.mCarClassNames }}</div>
+            <div class="c-in-car-standing__row" v-if="standing.mBestLapTime">
+                <div class="c-in-car-standing__frame">
+                    <div class="c-in-car-standing__items">
+                        <div class="c-in-car-standing__item c-in-car-standing__item--label">
+                            <div class="c-in-car-standing__label">Best</div>
+                        </div>
+                        <div class="c-in-car-standing__item c-in-car-standing__item--time">
+                            <div class="c-in-car-standing__time">{{ standing.mBestLapTime }}</div>
+                        </div>
+                    </div>
+                </div>
             </div>
-            <div class="c-in-car-standing__item c-in-car-standing__item--name">
-                <div class="c-in-car-standing__name">{{ standing.mName }}</div>
+            <div class="c-in-car-standing__row" v-if="standing.mLastLapTime">
+                <div class="c-in-car-standing__frame">
+                    <div class="c-in-car-standing__items">
+                        <div class="c-in-car-standing__item c-in-car-standing__item--label">
+                            <div class="c-in-car-standing__label">Last</div>
+                        </div>
+                        <div class="c-in-car-standing__item c-in-car-standing__item--time">
+                            <div class="c-in-car-standing__time">{{ standing.mLastLapTime }}</div>
+                        </div>
+                    </div>
+                </div>
             </div>
-            <div class="c-in-car-standing__item c-in-car-standing__item--distance">
-                <div class="c-in-car-standing__distance">{{ standing.distance }}</div>
+            <div class="c-in-car-standing__row" v-if="standing.mCurrentTime">
+                <div class="c-in-car-standing__frame">
+                    <div class="c-in-car-standing__items">
+                        <div class="c-in-car-standing__item c-in-car-standing__item--label">
+                            <div class="c-in-car-standing__label">Current</div>
+                        </div>
+                        <div class="c-in-car-standing__item c-in-car-standing__item--time">
+                            <div class="c-in-car-standing__time">{{ standing.mCurrentTime }}</div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+            <div class="c-in-car-standing__row" v-if="standing.deltaVisible">
+                <div class="c-in-car-standing__frame" :status="standing.deltaStatus">
+                    <div class="c-in-car-standing__items">
+                        <div class="c-in-car-standing__item c-in-car-standing__item--label">
+                            <div class="c-in-car-standing__label">Delta</div>
+                        </div>
+                        <div class="c-in-car-standing__item c-in-car-standing__item--delta">
+                            <div class="c-in-car-standing__delta">{{ standing.delta }}</div>
+                        </div>
+                    </div>
+                </div>
             </div>
         </div>
     </div>
 </template>
 
 <style lang="scss">
-.c-in-car-standing {
-    @include color('background-color', 'white', 0.2);
+.c-in-car-standing {}
+
+.c-in-car-standing__rows {}
+
+.c-in-car-standing__row {
+    ~ .c-in-car-standing__row {
+        margin-top: em(2);
+    }
+
+    &:nth-of-type(1) {
+        .c-in-car-standing__frame {
+            border-top-left-radius: 0;
+            border-top-right-radius: 0;
+        }
+    }
+}
+
+.c-in-car-standing__frame {
+    @include color('background-color', 'pitbox', 0.8);
 
     position: relative;
     padding: em(4) em(12);
     border-radius: em(4);
-    margin: 0 0 em(4);
+    // margin: 0 0 em(4);
 
-    &[status] {
+    &[status="hot"],
+    &[status="out"],
+    &[status="racing"],
+    &[status="ahead"],
+    &[status="behind"],
+    &[status="backmarker"],
+    &[status="leader"] {
         border-bottom-left-radius: 0;
         border-bottom-right-radius: 0;
 
@@ -73,6 +150,18 @@
             @include color('background-color', 'red', 1);
         }
     }
+    
+    &[status="negative"] {
+        .c-in-car-standing__delta {
+            @include color('color', 'green');
+        }
+    }
+
+    &[status="positive"] {
+        .c-in-car-standing__delta {
+            @include color('color', 'red');
+        }
+    }
 }
 
 .c-in-car-standing__items {
@@ -116,6 +205,26 @@
     flex-basis: auto;
 }
 
+.c-in-car-standing__item--label {
+    flex-grow: 1;
+    flex-shrink: 0;
+    flex-basis: auto;
+}
+
+.c-in-car-standing__item--time {
+    flex-grow: 1;
+    flex-shrink: 0;
+    flex-basis: auto;
+    text-align: right;
+}
+
+.c-in-car-standing__item--delta {
+    flex-grow: 1;
+    flex-shrink: 0;
+    flex-basis: auto;
+    text-align: right;
+}
+
 .c-in-car-standing__position {
     width: 2ch;
     font-size: em(22);
@@ -147,6 +256,18 @@
     padding: 0 0 0 em(32);
     font-family: 'firacode', monospace;
     font-size: em(16);
+    line-height: 1em;
+}
+
+.c-in-car-standing__label {
+    opacity: 0.5;
+}
+
+.c-in-car-standing__label,
+.c-in-car-standing__time,
+.c-in-car-standing__delta {
+    font-family: 'firacode', monospace;
+    font-size: em(14);
     line-height: 1em;
 }
 </style>
