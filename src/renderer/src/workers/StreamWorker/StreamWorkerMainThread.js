@@ -1,9 +1,9 @@
-import ParentWorker from './ParentWorker.js?worker';
+import StreamWorker from './StreamWorker.js?worker';
 import { ref, watch } from 'vue';
-import localforage from 'localforage';
 
-export default class ParentWorkerMainThread {
+export default class StreamWorkerMainThread {
     install(app) {
+
         this.app = app;
         this.init();
     }
@@ -24,11 +24,31 @@ export default class ParentWorkerMainThread {
      */
     async startWorker() {
         await this.provideRefs();
-        await this.registerConfig();
-        await this.registerConfigWatch();
         await this.createWorker();
         await this.registerListeners();
-        await this.create();
+    }
+
+    /**
+     * Create the stream worker
+     */
+    async createWorker() {
+        return this.worker = new StreamWorker();
+    }
+
+    /**
+     * Listen for messages from parent worker
+     */
+    async registerListeners() {
+        return this.worker.onmessage = async (event) => {
+            if (typeof event.data === 'undefined') {
+                return console.error('No message supplied');
+            }
+
+            // if (event.data.name === 'createcomplete') {
+            //     await this.updateConfig();
+            //     await this.toggleCrest();
+            // }
+        };
     }
 
     /**
@@ -37,20 +57,6 @@ export default class ParentWorkerMainThread {
      * .. no extra work or searching within objects
      */
     async provideRefs() {
-        // settings vars
-        this.app.provide('configExternalCrest', ref(null));
-        this.app.provide('configIp', ref(null));
-        this.app.provide('configPort', ref(null));
-        this.app.provide('configTickRate', ref(null));
-        // this.app.provide('configEnabledMainDisplay', ref(null));
-        this.app.provide('configActiveMainDisplay', ref(null));
-        this.app.provide('configEnabledStreamDisplay', ref(null));
-        this.app.provide('configActiveStreamDisplay', ref(null));
-        this.app.provide('configStartVisible', ref(null));
-        this.app.provide('configDebug', ref(null));
-        this.app.provide('isConnected', ref(null));
-        this.app.provide('isSettingsOpen', ref(null));
-
         // game vars
         this.app.provide('mGameState', ref(null));
         this.app.provide('mSessionState', ref(null));
@@ -128,269 +134,6 @@ export default class ParentWorkerMainThread {
         this.app.provide('isTractionControlActiveDisplay', ref(null));
     }
 
-    /**
-     * Create the initial config
-     */
-    async registerConfig() {
-        // Inflate with exisiting data
-        let config = await localforage.getItem('config');
-
-        // ... no data stored?
-        if (!config) {
-            // ... create empty object
-            config = {}
-        }
-
-        // set defaults if data doesnt exist
-        if (!('configExternalCrest' in config)) { 
-            config.configExternalCrest = false;
-        }
-
-        if (!('configIp' in config)) { 
-            config.configIp = '127.0.0.1';
-        }
-
-        if (!('configPort' in config)) { 
-            config.configPort = 8180;
-        }
-        
-        if (!('configTickRate' in config)) { 
-            config.configTickRate = 24;
-        }
-
-        // if (!('configEnabledMainDisplay' in config)) { 
-        //     config.configEnabledMainDisplay = true;
-        // }
-        
-        if (!('configActiveMainDisplay' in config)) { 
-            config.configActiveMainDisplay = false;
-        }
-
-        if (!('configEnabledStreamDisplay' in config)) { 
-            config.configEnabledStreamDisplay = false;
-        }
-        
-        if (!('configActiveStreamDisplay' in config)) { 
-            config.configActiveStreamDisplay = false;
-        }
-
-        if (!('configStartVisible' in config)) { 
-            config.configStartVisible = true;
-        }
-
-        if (!('configDebug' in config)) { 
-            config.configDebug = false;
-        }
-
-        // update reactive data with what we had stored
-        this.app._context.provides.configExternalCrest.value = config.configExternalCrest;
-        this.app._context.provides.configIp.value = config.configIp;
-        this.app._context.provides.configPort.value = config.configPort;
-        this.app._context.provides.configTickRate.value = config.configTickRate;
-        // this.app._context.provides.configEnabledMainDisplay.value = config.configEnabledMainDisplay;
-        this.app._context.provides.configActiveMainDisplay.value = config.configActiveMainDisplay;
-        this.app._context.provides.configEnabledStreamDisplay.value = config.configEnabledStreamDisplay;
-        this.app._context.provides.configActiveStreamDisplay.value = config.configActiveStreamDisplay;
-        this.app._context.provides.configStartVisible.value = config.configStartVisible;
-        this.app._context.provides.configDebug.value = config.configDebug;
-
-        // update stored config for future use
-        await localforage.setItem('config', config);
-    }
-
-    /**
-     * Watch the config settings reactive values for changes.
-     * Making is nice an easy to change values in the settings component (SettingsModalComponent.vue) and have them stored here
-     */
-    async registerConfigWatch() {
-        let config = await localforage.getItem('config');
-
-        watch([
-            this.app._context.provides.configExternalCrest,
-            this.app._context.provides.configIp,
-            this.app._context.provides.configPort,
-            this.app._context.provides.configTickRate,
-            // this.app._context.provides.configEnabledMainDisplay,
-            this.app._context.provides.configActiveMainDisplay,
-            this.app._context.provides.configEnabledStreamDisplay,
-            this.app._context.provides.configActiveStreamDisplay,
-            this.app._context.provides.configStartVisible,
-            this.app._context.provides.configDebug,
-        ], async ([
-            configExternalCrest,
-            configIp,
-            configPort,
-            configTickRate,
-            // configEnabledMainDisplay,
-            configActiveMainDisplay,
-            configEnabledStreamDisplay,
-            configActiveStreamDisplay,
-            configStartVisible,
-            configDebug,
-        ], [
-            prevConfigExternalCrest,
-            prevConfigIp,
-            prevConfigPort,
-            prevConfigTickRate,
-            // prevConfigEnabledMainDisplay,
-            prevConfigActiveMainDisplay,
-            prevConfigEnabledStreamDisplay,
-            prevConfigActiveStreamDisplay,
-            prevConfigStartVisible,
-            prevConfigDebug,
-        ]) => {
-            // get watched vars
-            config.configExternalCrest = configExternalCrest;
-            config.configIp = configIp;
-            config.configPort = configPort;
-            config.configTickRate = configTickRate;
-            // config.configEnabledMainDisplay = configEnabledMainDisplay;
-            config.configActiveMainDisplay = configActiveMainDisplay;
-            config.configEnabledStreamDisplay = configEnabledStreamDisplay;
-            config.configActiveStreamDisplay = configActiveStreamDisplay;
-            config.configStartVisible = configStartVisible;
-            config.configDebug = configDebug;
-
-            // update stored config
-            await localforage.setItem('config', config);
-
-            // update config in workers
-            await this.updateConfig();
-
-            // toggle crest if required
-            if (configExternalCrest !== prevConfigExternalCrest) {
-                await this.toggleCrest();
-            }
-
-            // toggle stream window
-            if (configEnabledStreamDisplay !== prevConfigEnabledStreamDisplay) {
-                await this.toggleStreamDisplay();
-            }
-        });
-    }
-
-    /**
-     * Toggle the opening/closing of crest
-     */
-    async toggleCrest() {
-        if (!this.app._context.provides.configExternalCrest.value) {
-            return await electron.ipcRenderer.invoke('openCrest');
-        }
-
-        return await electron.ipcRenderer.invoke('closeCrest');
-    }
-
-    /**
-     * Toggle the opening/closing of stream window
-     */
-    async toggleStreamDisplay() {
-        if (!this.app._context.provides.configEnabledStreamDisplay.value) {
-            return await electron.ipcRenderer.invoke('exitStreamWindow');
-        }
-
-        return await electron.ipcRenderer.invoke('createStreamWindow');
-    }
-
-    /**
-     * Create the parent worker
-     */
-    async createWorker() {
-        return this.worker = new ParentWorker();
-    }
-
-    /**
-     * Listen for messages from parent worker
-     */
-    async registerListeners() {
-        return this.worker.onmessage = async (event) => {
-            if (typeof event.data === 'undefined') {
-                return console.error('No message supplied');
-            }
-
-            if (event.data.name === 'createcomplete') {
-                await this.updateConfig();
-                await this.toggleCrest();
-            }
-
-            if (event.data.name === 'updateconfigcomplete') {
-                await this.start();
-            }
-
-            if (event.data.name === 'update-connectedstate') {
-                await this.updateConnectedState(event.data.data);
-                // await this.toStream(event.data.data);
-            }
-
-            if (event.data.name === 'update-gamestates') {
-                await this.updateGlobalVars(event.data.data);
-                await this.toStream(event.data.data);
-            }
-
-            if (event.data.name === 'updateview-dashdata') {
-                await this.updateGlobalVars(event.data.data);
-                await this.toStream(event.data.data);
-            }
-
-            if (event.data.name === 'updateview-lapdata') {
-                await this.updateGlobalVars(event.data.data);
-                await this.toStream(event.data.data);
-            }
-
-            if (event.data.name === 'updateview-standingsdata') {
-                await this.updateGlobalVars(event.data.data);
-                await this.toStream(event.data.data);
-            }
-
-            if (event.data.name === 'updateview-carstatedata') {
-                await this.updateGlobalVars(event.data.data);
-                await this.toStream(event.data.data);
-            }
-
-            if (event.data.name === 'reset') {
-                await this.resetGameVars();
-            }
-
-            if (event.data.name === 'dump') {
-                await this.dump(event.data.data);
-            }
-        };
-    }
-
-    /**
-     * Send data to stream window
-     * @param {*} data 
-     */
-    async toStream(data) {
-        await electron.ipcRenderer.invoke('toStream', data);
-    }
-
-    /**
-     * Send data back to main process/electron
-     * @param {*} data 
-     */
-    async dump(data) {
-        // check we have debug enabled
-        let config = await localforage.getItem('config');
-
-        if (!('debug' in config)) { 
-            return null;
-        }
-
-        if (config.debug !== true) { 
-            return null;
-        }
-
-        // if we got here, send send data back to main process
-        await electron.ipcRenderer.invoke('dump', data);
-    }
-
-    /**
-     * Update connected state reactive value
-     * @param {*} state 
-     */
-    async updateConnectedState(state) {
-        this.app._context.provides.isConnected.value = state;
-    }
 
     /**
      * Any data that comes back from the workers gets pushed into our prepared refs here
@@ -495,44 +238,5 @@ export default class ParentWorkerMainThread {
 
         // update hasreset var
         this.hasreset = true;
-    }
-
-    /**
-     * Send the create message
-     */
-    async create() {
-        return await this.postMessage('create');
-    }
-
-    /**
-     * Send the update config message
-     */
-    async updateConfig() {
-        return await this.postMessage('updateconfig');
-    }
-
-    /**
-     * Send the start message
-     */
-    async start() {
-        return await this.postMessage('start');
-    }
-
-    /**
-     * Easy method to send a message to parent worker with/without additional data
-     * @param {*} name 
-     * @param {*} data 
-     */
-    async postMessage(name, data = null) {
-        if (!data) {
-            return this.worker.postMessage({
-                name
-            });
-        }
-
-        return this.worker.postMessage({
-            name,
-            data
-        });
     }
 }
