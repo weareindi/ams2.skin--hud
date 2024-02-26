@@ -151,7 +151,7 @@ export default class ParentWorkerMainThread {
         }
 
         if (!('configPort' in config)) { 
-            config.configPort = 8180;
+            config.configPort = 8880;
         }
         
         if (!('configTickRate' in config)) { 
