@@ -628,6 +628,14 @@ class DashWorker {
      * @returns number
      */
     async mGearDisplay(mGear) {
+        if (mGear === 0) {
+            return 'N';
+        }
+
+        if (mGear < 0) {
+            return 'R';
+        }
+
         return mGear;
     }
 
