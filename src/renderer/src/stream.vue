@@ -33,6 +33,11 @@ export default {
         electron.ipcRenderer.on('updateScale', async () => {
             await this.updateScale();
         });
+
+        // data
+        electron.ipcRenderer.on('data', async (event, data) => {
+            // console.log(data);
+        });
         
         //
         // View

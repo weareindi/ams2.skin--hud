@@ -469,6 +469,15 @@ class Main {
             fs.mkdir(dir, { recursive: true }, (err) => err && console.error(err));
             fs.writeFileSync(path, data, 'utf-8', (err) => err && console.error(err));
         });
+
+        // send to stream
+        ipcMain.handle('toStream', async (event, data) => {
+            if (typeof this.streamWindow === 'undefined' && !this.streamWindow) { 
+                return;
+            }
+
+            await this.streamWindow.send('data', data);
+        });
     }
 }
 
