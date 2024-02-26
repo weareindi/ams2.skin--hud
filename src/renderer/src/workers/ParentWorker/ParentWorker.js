@@ -413,6 +413,7 @@ class ParentWorker {
             mParticipantInfo: data.participants.mParticipantInfo,
             mSessionState: data.gameStates.mSessionState,
             mTrackLength: data.eventInformation.mTrackLength,
+            timings: data.timings
         });
     }
 

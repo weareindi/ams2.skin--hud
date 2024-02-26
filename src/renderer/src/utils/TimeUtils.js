@@ -3,8 +3,16 @@
  * @param {*} n 
  */
 export function millisecondsToTime(n) {
+    let prefix = '±';
+    if (n < 0) { 
+        prefix = '-';
+    }
+    if (n > 0) { 
+        prefix = '+';
+    }
+
     // convert to total milliseconds
-    const totalmilliseconds = n * 1000;
+    const totalmilliseconds = Math.abs(n) * 1000;
 
     // milliseconds
     let milliseconds = Math.round((totalmilliseconds % 1000));
@@ -26,10 +34,10 @@ export function millisecondsToTime(n) {
     
     // return time without hours
     if (hours === 0) {
-        return `${minutesDisplay}:${secondsDisplay}.${millisecondsDisplay}`;
+        return `${prefix}${minutesDisplay}:${secondsDisplay}.${millisecondsDisplay}`;
     }
 
     // if we got here, we've got hours
-    return `${hoursDisplay}:${minutesDisplay}:${secondsDisplay}.${millisecondsDisplay}`;
+    return `${prefix}${hoursDisplay}:${minutesDisplay}:${secondsDisplay}.${millisecondsDisplay}`;
 }
 
