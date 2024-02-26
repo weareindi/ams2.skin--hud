@@ -25,7 +25,7 @@
                         <div class="c-in-car-standing__item c-in-car-standing__item--label">
                             <div class="c-in-car-standing__label">Best</div>
                         </div>
-                        <div class="c-in-car-standing__item c-in-car-standing__item--time">
+                        <div class="c-in-car-standing__item c-in-car-standing__item--time c-in-car-standing__item--best">
                             <div class="c-in-car-standing__time">{{ standing.mBestLapTime }}</div>
                         </div>
                     </div>
@@ -37,7 +37,7 @@
                         <div class="c-in-car-standing__item c-in-car-standing__item--label">
                             <div class="c-in-car-standing__label">Last</div>
                         </div>
-                        <div class="c-in-car-standing__item c-in-car-standing__item--time">
+                        <div class="c-in-car-standing__item c-in-car-standing__item--time c-in-car-standing__item--last">
                             <div class="c-in-car-standing__time">{{ standing.mLastLapTime }}</div>
                         </div>
                     </div>
@@ -49,7 +49,7 @@
                         <div class="c-in-car-standing__item c-in-car-standing__item--label">
                             <div class="c-in-car-standing__label">Current</div>
                         </div>
-                        <div class="c-in-car-standing__item c-in-car-standing__item--time">
+                        <div class="c-in-car-standing__item c-in-car-standing__item--time c-in-car-standing__item--current">
                             <div class="c-in-car-standing__time">{{ standing.mCurrentTime }}</div>
                         </div>
                     </div>
@@ -216,6 +216,13 @@
     flex-shrink: 0;
     flex-basis: auto;
     text-align: right;
+}
+
+.c-in-car-standing__item--best,
+.c-in-car-standing__item--last {
+    .c-in-car-standing__time {
+        opacity: 0.5;
+    }
 }
 
 .c-in-car-standing__item--delta {
