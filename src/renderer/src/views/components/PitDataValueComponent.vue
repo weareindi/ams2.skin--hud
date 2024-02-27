@@ -1,7 +1,7 @@
 <template>
     <div class="c-pit-data-value">
-        <span class="c-pit-data-value__label">{{ label }}</span>
-        <span class="c-pit-data-value__value">{{ value }} <span class="c-pit-data-value__suffix" v-if="suffix">{{ suffix }}</span></span>
+        <span class="c-pit-data-value__label" v-if="data.label !== null">{{ data.label }}</span>
+        <span class="c-pit-data-value__value" v-if="data.value !== null">{{ data.value }} <span class="c-pit-data-value__suffix" v-if="data.suffix !== null">{{ data.suffix }}</span></span>
     </div>
 </template>
 
@@ -39,30 +39,7 @@
 
 export default {
     props: {
-        data: {},
-    },
-    computed: {
-        label() {
-            if (typeof this.data.label === 'undefined') {
-                return null;
-            }
-
-            return this.data.label;
-        },
-        value() {
-            if (typeof this.data.value === 'undefined') {
-                return null;
-            }
-
-            return this.data.value;
-        },
-        suffix() {
-            if (typeof this.data.suffix === 'undefined') {
-                return null;
-            }
-
-            return this.data.suffix;
-        },
+        data: null,
     }
 }
 </script>

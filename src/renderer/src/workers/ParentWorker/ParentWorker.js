@@ -133,7 +133,7 @@ class ParentWorker {
                 const paused = await this.isPaused(event.data.data);
                 if (paused) {
                     // just stop everything. keep data still and dont reset
-                    return null;
+                    // return null;
                 }
 
                 // are we ready?
@@ -309,17 +309,11 @@ class ParentWorker {
             mUnfilteredThrottle: data.unfilteredInput.mUnfilteredThrottle,
             mBrake: data.carState.mBrake,
             mClutch: data.carState.mClutch,
-            mClutchOverheated: data.carState.mClutchOverheated,
-            mClutchSlipping: data.carState.mClutchSlipping,
-            mClutchTemp: data.carState.mClutchTemp,
-            mClutchWear: data.carState.mClutchWear,
             mNumGears: data.carState.mNumGears,
-            mOilTempCelsius: data.carState.mOilTempCelsius,
             mSpeed: data.carState.mSpeed,
             mGear: data.carState.mGear,
             mRpm: data.carState.mRpm,
             mMaxRPM: data.carState.mMaxRPM,
-            mWaterTempCelsius: data.carState.mWaterTempCelsius,
             mRainDensity: data.weather.mRainDensity,
         });
     }
@@ -468,6 +462,12 @@ class ParentWorker {
             mBrakeTempCelsius: data.wheelsAndTyres.mBrakeTempCelsius,
             mAirPressure: data.wheelsAndTyres.mAirPressure,
             mTyreCompound: data.wheelsAndTyres.mTyreCompound,
+            mClutchOverheated: data.carState.mClutchOverheated,
+            mClutchSlipping: data.carState.mClutchSlipping,
+            mClutchTemp: data.carState.mClutchTemp,
+            mClutchWear: data.carState.mClutchWear,
+            mWaterTempCelsius: data.carState.mWaterTempCelsius,
+            mOilTempCelsius: data.carState.mOilTempCelsius,
         });
     }
 

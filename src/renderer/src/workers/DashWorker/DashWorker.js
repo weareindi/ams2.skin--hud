@@ -1,3 +1,5 @@
+import { display } from "../../utils/DataUtils";
+
 class DashWorker {
     constructor() {
         this.init();
@@ -64,22 +66,6 @@ class DashWorker {
             return null;
         }
 
-        if (!('mClutchOverheated' in data)) {
-            return null;
-        }
-
-        if (!('mClutchSlipping' in data)) {
-            return null;
-        }
-
-        if (!('mClutchTemp' in data)) {
-            return null;
-        }
-
-        if (!('mClutchWear' in data)) {
-            return null;
-        }
-
         if (!('mDrsState' in data)) {
             return null;
         }
@@ -101,10 +87,6 @@ class DashWorker {
         }
 
         if (!('mNumGears' in data)) {
-            return null;
-        }
-
-        if (!('mOilTempCelsius' in data)) {
             return null;
         }
 
@@ -132,8 +114,6 @@ class DashWorker {
             return null;
         }
 
-        const temperatureData = await this.getTemperatureData(data);
-        const temperatureDataDisplay = await this.getTemperatureDataForDisplay(temperatureData);
         const settingsData = await this.getSettingsData(data);
         const settingsDataDisplay = await this.getSettingsDataForDisplay(settingsData);
         const inputsData = await this.getInputsData(data);
@@ -141,52 +121,7 @@ class DashWorker {
         const speedometerData = await this.getSpeedometerData(data);
         const speedometerDataDisplay = await this.getSpeedometerDataForDisplay(speedometerData);
 
-        return {...temperatureDataDisplay, ...settingsDataDisplay, ...inputsDataDisplay, ...speedometerDataDisplay}
-    }
-
-    /**
-     * Get car tempaerature data
-     * @param {*} data 
-     * @returns object
-     */
-    async getTemperatureData(data) {
-        return {
-            mOilTempCelsius: data.mOilTempCelsius,
-            mWaterTempCelsius: data.mWaterTempCelsius,
-        };
-    }
-
-    /**
-     * Get car tempaerature data prepared for the view
-     * @param {*} temperatureData 
-     * @returns object
-     */
-    async getTemperatureDataForDisplay(temperatureData) {
-        const mOilTempCelsiusDisplay = await this.mOilTempCelsiusDisplay(temperatureData.mOilTempCelsius);
-        const mWaterTempCelsiusDisplay = await this.mWaterTempCelsiusDisplay(temperatureData.mWaterTempCelsius);
-
-        return {
-            mOilTempCelsiusDisplay,
-            mWaterTempCelsiusDisplay,
-        };
-    }
-
-    /**
-     * Get car oil temp prepared for the view
-     * @param {*} mOilTempCelsius 
-     * @returns number
-     */
-    async mOilTempCelsiusDisplay(mOilTempCelsius) {
-        return Math.round(mOilTempCelsius);
-    }
-
-    /**
-     * Get car water temp prepared for the view
-     * @param {*} mWaterTempCelsius 
-     * @returns number
-     */
-    async mWaterTempCelsiusDisplay(mWaterTempCelsius) {
-        return Math.round(mWaterTempCelsius);
+        return {...settingsDataDisplay, ...inputsDataDisplay, ...speedometerDataDisplay}
     }
 
     /**
@@ -461,10 +396,6 @@ class DashWorker {
         return {
             mBrake: data.mBrake,
             mClutch: data.mClutch,
-            mClutchOverheated: data.mClutchOverheated,
-            mClutchSlipping: data.mClutchSlipping,
-            mClutchTemp: data.mClutchTemp,
-            mClutchWear: data.mClutchWear,
             mThrottle: data.mThrottle,
         };
     }
@@ -477,19 +408,11 @@ class DashWorker {
     async getInputsDataForDisplay(inputsData) {
         const mBrakeDisplay = await this.mBrakeDisplay(inputsData.mBrake);
         const mClutchDisplay = await this.mClutchDisplay(inputsData.mClutch);
-        const mClutchOverheatedDisplay = await this.mClutchOverheatedDisplay(inputsData.mClutchOverheated);
-        const mClutchSlippingDisplay = await this.mClutchSlippingDisplay(inputsData.mClutchSlipping);
-        const mClutchTempDisplay = await this.mClutchTempDisplay(inputsData.mClutchTemp);
-        const mClutchWearDisplay = await this.mClutchWearDisplay(inputsData.mClutchWear);
         const mThrottleDisplay = await this.mThrottleDisplay(inputsData.mThrottle);
 
         return {
             mBrakeDisplay,
             mClutchDisplay,
-            mClutchOverheatedDisplay,
-            mClutchSlippingDisplay,
-            mClutchTempDisplay,
-            mClutchWearDisplay,
             mThrottleDisplay,
         };
     }
@@ -501,7 +424,7 @@ class DashWorker {
      */
     async mBrakeDisplay(mBrake) {
         // ensuring its a string as no input (0) is a still a valid value
-        return `${Math.round(mBrake * 100)}`;
+        return display(`${Math.round(mBrake * 100)}`, 3);
     }
 
     /**
@@ -511,43 +434,7 @@ class DashWorker {
      */
     async mClutchDisplay(mClutch) {
         // ensuring its a string as no input (0) is a still a valid value
-        return `${Math.round(mClutch * 100)}`;
-    }
-
-    /**
-     * Get clutch overheating value prepared for the view
-     * @param {*} mClutchOverheated 
-     * @returns 
-     */
-    async mClutchOverheatedDisplay(mClutchOverheated) {
-        return mClutchOverheated;
-    }
-
-    /**
-     * Get clutch slipping value prepared for the view
-     * @param {*} mClutchSlipping 
-     * @returns 
-     */
-    async mClutchSlippingDisplay(mClutchSlipping) {
-        return mClutchSlipping;
-    }
-
-    /**
-     * Get clutch temp prepared for the view
-     * @param {*} mClutchTemp 
-     * @returns number
-     */
-    async mClutchTempDisplay(mClutchTemp) {
-        return mClutchTemp;
-    }
-
-    /**
-     * Get clutch wear prepared for the view
-     * @param {*} mClutchWear 
-     * @returns number
-     */
-    async mClutchWearDisplay(mClutchWear) {
-        return mClutchWear;
+        return display(`${Math.round(mClutch * 100)}`, 3);
     }
 
     /**
@@ -557,7 +444,7 @@ class DashWorker {
      */
     async mThrottleDisplay(mThrottle) {
         // ensuring its a string as no input (0) is a still a valid value
-        return `${Math.round(mThrottle * 100)}`;
+        return display(`${Math.round(mThrottle * 100)}`, 3);
     }
 
     /**

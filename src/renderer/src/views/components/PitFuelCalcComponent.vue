@@ -5,13 +5,13 @@
         </div>
         <div class="c-pit-fuel-calc__items">
             <div class="c-pit-fuel-calc__item">
-                <PitDataValueComponent :data="fuelPerLap" />
+                <PitDataValueComponent :data="fuelPerLapDisplay" />
             </div>
             <div class="c-pit-fuel-calc__item">
-                <PitDataValueComponent :data="fuelToEndSession" />
+                <PitDataValueComponent :data="fuelToEndSessionDisplay" />
             </div>
             <div class="c-pit-fuel-calc__item">
-                <PitDataValueComponent :data="pitsToEndSession" />
+                <PitDataValueComponent :data="pitsToEndSessionDisplay" />
             </div>
         </div>
     </div>
@@ -50,25 +50,29 @@ import PitDataValueComponent from '../components/PitDataValueComponent.vue';
 
 export default {
     setup() {
-        const fuelCapacityDisplay = inject('fuelCapacityDisplay');
-        const fuelDisplay = inject('fuelDisplay');
+        // const fuelCapacityDisplay = inject('fuelCapacityDisplay');
+        // const fuelDisplay = inject('fuelDisplay');
         const fuelPerLapDisplay = inject('fuelPerLapDisplay');
         const fuelToEndSessionDisplay = inject('fuelToEndSessionDisplay');
         const pitsToEndSessionDisplay = inject('pitsToEndSessionDisplay');
 
-        const skeleton = {
-            label: null,
-            value: null,
-            suffix: null
-        }
+        console.log(fuelPerLapDisplay);
+        console.log(fuelToEndSessionDisplay);
+        console.log(pitsToEndSessionDisplay);
+
+        // const skeleton = {
+        //     label: null,
+        //     value: null,
+        //     suffix: null
+        // }
 
         return {
-            fuelCapacityDisplay,
-            fuelDisplay,
+            // fuelCapacityDisplay,
+            // fuelDisplay,
             fuelPerLapDisplay,
             fuelToEndSessionDisplay,
             pitsToEndSessionDisplay,
-            skeleton,
+            // skeleton,
         };
     },
     components: {
@@ -76,53 +80,53 @@ export default {
         PitDataValueComponent
     },
     computed: {
-        fuelPerLap() {
-            let data = JSON.parse(JSON.stringify(this.skeleton));
+        // fuelPerLap() {
+        //     let data = JSON.parse(JSON.stringify(this.skeleton));
 
-            data.label = 'Per Lap';
+        //     data.label = 'Per Lap';
 
-            if (!this.fuelPerLapDisplay) {
-                data.value = 'N/A';
-            }
+        //     if (!this.fuelPerLapDisplay) {
+        //         data.value = 'N/A';
+        //     }
 
-            if (this.fuelPerLapDisplay) {
-                data.value = this.fuelPerLapDisplay;
-                data.suffix = 'L';
-            }
+        //     if (this.fuelPerLapDisplay) {
+        //         data.value = this.fuelPerLapDisplay;
+        //         data.suffix = 'L';
+        //     }
 
-            return data;
-        },
-        fuelToEndSession() {
-            let data = JSON.parse(JSON.stringify(this.skeleton));
+        //     return data;
+        // },
+        // fuelToEndSession() {
+        //     let data = JSON.parse(JSON.stringify(this.skeleton));
 
-            data.label = 'Session';
+        //     data.label = 'Session';
 
-            if (!this.fuelToEndSessionDisplay) {
-                data.value = 'N/A';
-            }
-            if (this.fuelToEndSessionDisplay) {
-                data.value = this.fuelToEndSessionDisplay;
-                data.suffix = 'L';
-            }
+        //     if (!this.fuelToEndSessionDisplay) {
+        //         data.value = 'N/A';
+        //     }
+        //     if (this.fuelToEndSessionDisplay) {
+        //         data.value = this.fuelToEndSessionDisplay;
+        //         data.suffix = 'L';
+        //     }
 
-            return data;
+        //     return data;
 
-        },
-        pitsToEndSession() {
-            let data = JSON.parse(JSON.stringify(this.skeleton));
+        // },
+        // pitsToEndSession() {
+        //     let data = JSON.parse(JSON.stringify(this.skeleton));
 
-            data.label = 'Min. Stops';
+        //     data.label = 'Min. Stops';
 
-            if (this.pitsToEndSessionDisplay >= 0) {
-                data.value = `${this.pitsToEndSessionDisplay}`;
-            }
+        //     if (this.pitsToEndSessionDisplay >= 0) {
+        //         data.value = `${this.pitsToEndSessionDisplay}`;
+        //     }
 
-            if (this.pitsToEndSessionDisplay === null) {
-                data.value = 'N/A';
-            }
+        //     if (this.pitsToEndSessionDisplay === null) {
+        //         data.value = 'N/A';
+        //     }
 
-            return data;
-        },
+        //     return data;
+        // },
     },
 }
 </script>

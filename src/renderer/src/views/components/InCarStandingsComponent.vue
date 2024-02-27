@@ -18,7 +18,7 @@
         width: 100vw;
         justify-content: center;
         align-items: flex-start;
-        margin: em(-8);
+        margin: em(-2);
     }
 
     .c-in-car-standings__item {
