@@ -1,7 +1,6 @@
 <template>
-    <div class="c-in-car-gear" v-if="mGearDisplay !== null">
-        <span class="c-in-car-gear__zerofill" v-if="zerofill">{{ zerofill }}</span>
-        <span class="c-in-car-gear__value">{{ mGearDisplay }}</span>
+    <div class="c-in-car-gear" v-if="mGearDisplay">
+        <span class="c-in-car-gear__value" v-if="mGearDisplay.value">{{ mGearDisplay.value }}</span>
     </div>
 </template>
 
@@ -9,8 +8,6 @@
 .c-in-car-gear {
     display: flex;
     align-items: center;
-    padding: em(12);
-    border-radius: em(3);
 }
 
 .c-in-car-gear__zerofill {
@@ -20,7 +17,7 @@
 .c-in-car-gear__zerofill,
 .c-in-car-gear__value {
     font-family: 'firacode', monospace;
-    font-size: em(58);
+    font-size: em(54);
     line-height: 0.8;
 }
 </style>
@@ -35,14 +32,6 @@ export default {
         return {
             mGearDisplay,
         }
-    },
-    computed: {
-        zerofill: {
-            get() {
-                const valueString = `${this.mGearDisplay}`;
-                return ('0').substring(0, 1).slice(valueString.length);
-            }
-        },
     }
 }
 </script>

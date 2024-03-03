@@ -93,6 +93,7 @@ class ParentWorker {
      * Do a reset
      */
     async reset() {
+        await this.resetDashWorkerData();
         await this.resetLapWorkerData();
         await this.resetData();
     }
@@ -138,6 +139,7 @@ class ParentWorker {
 
                 // are we ready?
                 const ready = await this.isReady(event.data.data);
+
                 // ... no?
                 if (!ready) {
                     await this.reset();
@@ -309,19 +311,20 @@ class ParentWorker {
             mUnfilteredThrottle: data.unfilteredInput.mUnfilteredThrottle,
             mBrake: data.carState.mBrake,
             mClutch: data.carState.mClutch,
-            mClutchOverheated: data.carState.mClutchOverheated,
-            mClutchSlipping: data.carState.mClutchSlipping,
-            mClutchTemp: data.carState.mClutchTemp,
-            mClutchWear: data.carState.mClutchWear,
             mNumGears: data.carState.mNumGears,
-            mOilTempCelsius: data.carState.mOilTempCelsius,
             mSpeed: data.carState.mSpeed,
             mGear: data.carState.mGear,
             mRpm: data.carState.mRpm,
             mMaxRPM: data.carState.mMaxRPM,
-            mWaterTempCelsius: data.carState.mWaterTempCelsius,
             mRainDensity: data.weather.mRainDensity,
         });
+    }
+
+    /**
+     * Send message to dash worker to reset the stored lap data
+     */
+    async resetDashWorkerData() {
+        return await this.postMessage(this.DashWorker, 'reset');
     }
 
     /**
@@ -468,6 +471,12 @@ class ParentWorker {
             mBrakeTempCelsius: data.wheelsAndTyres.mBrakeTempCelsius,
             mAirPressure: data.wheelsAndTyres.mAirPressure,
             mTyreCompound: data.wheelsAndTyres.mTyreCompound,
+            mClutchOverheated: data.carState.mClutchOverheated,
+            mClutchSlipping: data.carState.mClutchSlipping,
+            mClutchTemp: data.carState.mClutchTemp,
+            mClutchWear: data.carState.mClutchWear,
+            mWaterTempCelsius: data.carState.mWaterTempCelsius,
+            mOilTempCelsius: data.carState.mOilTempCelsius,
         });
     }
 

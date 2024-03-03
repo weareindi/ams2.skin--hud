@@ -7,7 +7,7 @@
         </div>
         <div class="p__hud">
             <PitHudComponent v-if="isHudPitComponentVisible" />
-            <DashHudComponent v-if="isHudDashComponentVisible" />
+            <InCarHudComponent v-if="isInCarComponentVisible" />
         </div>
     </div>
 </template>
@@ -35,7 +35,7 @@
 import { inject } from 'vue';
 import SettingsModalComponent from '../modals/SettingsModalComponent.vue';
 import PitHudComponent from '../huds/PitHudComponent.vue';
-import DashHudComponent from '../huds/DashHudComponent.vue';
+import InCarHudComponent from '../huds/InCarHudComponent.vue';
 
 export default {
     setup() {
@@ -73,7 +73,7 @@ export default {
     components: {
         SettingsModalComponent,
         PitHudComponent,
-        DashHudComponent,
+        InCarHudComponent,
     },
     computed: {
         isSettingsReady() {
@@ -112,17 +112,17 @@ export default {
                 return false;
             }
 
-            if (!this.mEventTimeRemainingDisplay && !this.mLapsInEventDisplay) {
-                return false;
-            }
+            // if (!this.mEventTimeRemainingDisplay && !this.mLapsInEventDisplay) {
+            //     return false;
+            // }
 
-            if (this.mRaceState !== 1 && this.mRaceState !== 3) {
+            if (this.mRaceState !== 1 && this.mRaceState !== 2 && this.mRaceState !== 3) {
                 return false;
             }
 
             return true;
         },
-        isHudDashComponentVisible() {
+        isInCarComponentVisible() {
             if (!this.mGameState) {
                 return false;
             }
