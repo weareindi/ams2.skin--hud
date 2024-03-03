@@ -13,7 +13,7 @@ A custom HUD for AMS2.
 AMS2HUD has a system tray tool which is where you can open the settings menu when you need to.
 
 ## Settings
-IP address and port are for connecting to the Crest service. Crest is built into this app. running on the default Crest port `8180` but you can also run it externally if you prefer.  
+IP address and port are for connecting to the Crest service. Crest is built into this app. running on port `8880` but you can also run it externally if you prefer.  
 You'll find the standalone package below.
 
 ### Windows System Tray Bug
