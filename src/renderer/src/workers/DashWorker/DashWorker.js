@@ -2,6 +2,9 @@ import { display } from "../../utils/DataUtils";
 
 class DashWorker {
     constructor() {
+        this.ersHasBeen = null;
+        this.previousMBoostAmountA = null;
+        this.previousMBoostAmountB = null;
         this.init();
     }
 
@@ -29,7 +32,21 @@ class DashWorker {
                 const data = await this.prepareData(event.data.data);
                 await this.returnMessage('updateview', data);
             }
+
+            if (event.data.name === 'reset') {
+                await this.reset();
+                await this.returnMessage('resetcomplete');
+            }
         };
+    }
+
+    /**
+     * Reset vars used at start of each event
+     */
+    async reset() {
+        this.ersHasBeen = null;
+        this.previousMBoostAmountA = null;
+        this.previousMBoostAmountB = null;
     }
     
     /**
@@ -154,75 +171,56 @@ class DashWorker {
     async getSettingsDataForDisplay(settingsData) {
         const mAntiLockActiveDisplay = await this.mAntiLockActiveDisplay(settingsData.mAntiLockActive);
         const mAntiLockSettingDisplay = await this.mAntiLockSettingDisplay(settingsData.mAntiLockSetting);
+        const mAntiLockHighlight = await this.mAntiLockHighlight(settingsData.mAntiLockActive);
+        const mBrakeBiasDisplay = await this.mBrakeBiasDisplay(settingsData.mBrakeBias);
         const mBoostActiveDisplay = await this.mBoostActiveDisplay(settingsData.mBoostActive);
         const mBoostAmountDisplay = await this.mBoostAmountDisplay(settingsData.mBoostAmount);
-        const mBrakeBiasDisplay = await this.mBrakeBiasDisplay(settingsData.mBrakeBias);
-        const mDrsStateDisplay = await this.mDrsStateDisplay(settingsData.mDrsState);
-        const isDrsAvailableDisplay = await this.isDrsAvailableDisplay(settingsData.mDrsState);
         const mErsAutoModeEnabledDisplay = await this.mErsAutoModeEnabledDisplay(settingsData.mErsAutoModeEnabled);
         const mErsDeploymentModeDisplay = await this.mErsDeploymentModeDisplay(settingsData.mErsDeploymentMode);
-        const isErsAvailableDisplay = await this.isErsAvailableDisplay(settingsData.mBoostAmount);
-        const isTractionControlActiveDisplay = await this.isTractionControlActiveDisplay(settingsData.mThrottle, settingsData.mUnfilteredThrottle, settingsData.mGear);
+        const mErsStatus = await this.mErsStatus(settingsData.mBoostAmount);
+        const mErsHighlight = await this.mErsHighlight(settingsData.mBoostAmount, settingsData.mBoostActive);
+        const mDrsStateDisplay = await this.mDrsStateDisplay(settingsData.mDrsState);
+        const mDrsStatus = await this.mDrsStatus(settingsData.mDrsState);
+        const mDrsHighlight = await this.mDrsHighlight(settingsData.mDrsState);
         const mTractionControlSettingDisplay = await this.mTractionControlSettingDisplay(settingsData.mTractionControlSetting);
-        const boostStatusDisplay = await this.boostStatusDisplay(settingsData.mBoostAmount);
+        const mTractionControlHighlight = await this.mTractionControlHighlight(settingsData.mThrottle, settingsData.mUnfilteredThrottle, settingsData.mGear);
 
         return {
             mAntiLockActiveDisplay,
             mAntiLockSettingDisplay,
+            mAntiLockHighlight,
+            mBrakeBiasDisplay,
             mBoostActiveDisplay,
             mBoostAmountDisplay,
-            mBrakeBiasDisplay,
-            mDrsStateDisplay,
-            isDrsAvailableDisplay,
             mErsAutoModeEnabledDisplay,
             mErsDeploymentModeDisplay,
-            isErsAvailableDisplay,
-            isTractionControlActiveDisplay,
+            mErsStatus,
+            mErsHighlight,
+            mDrsStateDisplay,
+            mDrsStatus,
+            mDrsHighlight,
             mTractionControlSettingDisplay,
-            boostStatusDisplay,
+            mTractionControlHighlight,
         };
     }
 
     /**
-     * Is Traction Control Active?
-     * Unlike ABS, there is no data from the game to say "TC is active" so lets create a psuedo event
-     * @param {*} mThrottle 
-     * @param {*} mUnfilteredThrottle 
-     * @returns boolean
-     */
-    async isTractionControlActiveDisplay(mThrottle, mUnfilteredThrottle, mGear) {
-        // If the raw input is being filtered by the game, we're assuming that's traction control in effect
-        if (mThrottle === mUnfilteredThrottle) {
-            return false;
-        }
-
-        // ... we'll also assume auto-blip effects the above so we'll also say TC is working when in gear
-        if (!mGear) {
-            return false;
-        }
-
-        return true;
-    }
-
-    /**
-     * Is DRS available?
-     * @param {*} mDrsState 
-     * @returns boolean
-     */
-    async isDrsAvailableDisplay(mDrsState) {
-        return mDrsState;
-    }
-
-    /**
-     * Is ERS available?
+     * Get ers status
      * @param {*} mBoostAmount 
-     * @returns boolean
+     * @returns object
      */
-    async isErsAvailableDisplay(mBoostAmount) {
-        if (typeof this.ersHasBeen === 'undefined') {
-            this.ersHasBeen = false;
-        }
+    async mErsStatus(mBoostAmount) {
+        const mErsStatus = await this.getErsStatus(mBoostAmount);
 
+        return mErsStatus;
+    }
+
+    /**
+     * Get ers status based on boost amount
+     * @param {*} mBoostAmount 
+     * @returns 
+     */
+    async getErsStatus(mBoostAmount) {
         // if the boost amount at any point is higher than zero, we probably have ers available
         // boost is full in the pits and race start so this is quite a safe thing to test against
         if (mBoostAmount > 0) {
@@ -233,12 +231,149 @@ class DashWorker {
     }
 
     /**
+     * Get ers highlight
+     * @param {*} mBoostAmount 
+     * @param {*} mBoostActive
+     * @returns object
+     */
+    async mErsHighlight(mBoostAmount, mBoostActive) {
+        const mErsHighlight = await this.getErsHighlight(mBoostAmount, mBoostActive);
+
+        return mErsHighlight;
+    }
+
+    /**
+     * Get ers highlight based on boost amount
+     * @param {*} mBoostAmount 
+     * @param {*} mBoostActive 
+     * @returns 
+     */
+    async getErsHighlight(mBoostAmount, mBoostActive) {
+        if (!this.previousMBoostAmountA) {
+            this.previousMBoostAmountA = mBoostAmount;
+        }
+
+        if (!this.previousMBoostAmountB) {
+            this.previousMBoostAmountB = mBoostAmount;
+        }
+
+        // charge state
+        let state = null
+
+        // ... charging?
+        if (this.previousMBoostAmountB <= mBoostAmount) {
+            state = 2; // charging
+        }
+
+        // is is going down?
+        if (this.previousMBoostAmountB > mBoostAmount) {
+            state = 1; // depleating
+        }
+
+        // is it full?
+        if (mBoostAmount === 100) {
+            state = 0; // full
+        }
+
+        // update scoped vars for future reference
+        this.previousMBoostAmountB = this.previousMBoostAmountA;
+        this.previousMBoostAmountA = mBoostAmount;
+
+        // work out highlight state
+        if (mBoostActive === false && state === 2) {
+            return 'disabled-charging';
+        }
+        
+        if (mBoostActive === false && state === 1) {
+            return 'disabled-depleating';
+        }
+        
+        if (mBoostActive === false && state === 0) {
+            return 'disabled-full';
+        }
+
+        if (mBoostActive === true && state === 2) {
+            return 'enabled-charging';
+        }
+
+        if (mBoostActive === true && state === 1) {
+            return 'enabled-depleating';
+        }
+
+        if (mBoostActive === true && state === 0) {
+            return 'enabled-full';
+        }
+
+        return null;
+    }
+
+    /**
+     * Get drs status
+     * @param {*} mDrsState 
+     * @returns object
+     */
+    async mDrsStatus(mDrsState) {
+        const mDrsStatus = await this.getDrsStatus(mDrsState);
+
+        return mDrsStatus;
+    }
+
+    /**
+     * Get drs status
+     * @param {*} mDrsState 
+     * @returns 
+     */
+    async getDrsStatus(mDrsState) {
+        if (mDrsState === 0) {
+            return null;
+        }
+
+        return mDrsState;
+    }
+
+    /**
+     * Get drs highlight
+     * @param {*} mDrsState 
+     * @returns object
+     */
+    async mDrsHighlight(mDrsState) {
+        const mDrsHighlight = await this.getDrsHighlight(mDrsState);
+
+        return mDrsHighlight;
+    }
+
+    /**
+     * Get drs Highlight
+     * @param {*} mDrsState 
+     * @returns 
+     */
+    async getDrsHighlight(mDrsState) {
+        if (mDrsState === 1) {
+            return 'disabled';
+        }
+
+        if (mDrsState === 3) {
+            return 'enabled';
+        }
+
+        if (mDrsState === 11) {
+            return 'inactive';
+        }
+
+        if (mDrsState === 17 || mDrsState === 27) {
+            return 'active';
+        }
+
+        return null;
+    }
+
+    /**
      * Is antilock currently doing it's thing?
      * @param {*} mAntiLockActive 
      * @returns boolean
      */
     async mAntiLockActiveDisplay(mAntiLockActive) {
-        return mAntiLockActive;
+        return display(mAntiLockActive);
     }
 
     /**
@@ -251,7 +386,31 @@ class DashWorker {
             return null;
         }
         
-        return `${mAntiLockSetting}`;
+        return display(mAntiLockSetting, 2);
+    }
+
+    /**
+     * Get abs highlight
+     * @param {*} mAntiLockActive 
+     * @returns object
+     */
+    async mAntiLockHighlight(mAntiLockActive) {
+        const mAntiLockHighlight = await this.getAntiLockHighlight(mAntiLockActive);
+
+        return mAntiLockHighlight;
+    }
+
+    /**
+     * Get abs highlight state
+     * @param {*} active 
+     * @returns 
+     */
+    async getAntiLockHighlight(mAntiLockActive) {
+        if (mAntiLockActive) {
+            return 2;
+        }
+
+        return null;
     }
 
     /**
@@ -260,7 +419,7 @@ class DashWorker {
      * @returns boolean
      */
     async mBoostActiveDisplay(mBoostActive) {
-        return mBoostActive;
+        return display(mBoostActive);
     }
 
     /**
@@ -269,7 +428,7 @@ class DashWorker {
      * @returns number
      */
     async mBoostAmountDisplay(mBoostAmount) {
-        return Math.round(mBoostAmount);
+        return display(Math.round(mBoostAmount));
     }
 
     /**
@@ -278,7 +437,7 @@ class DashWorker {
      * @returns number
      */
     async mBrakeBiasDisplay(mBrakeBias) {
-        return mBrakeBias;
+        return display(mBrakeBias);
     }
 
     /**
@@ -287,7 +446,7 @@ class DashWorker {
      * @returns string
      */
     async mDrsStateDisplay(mDrsState) {
-        return mDrsState;
+        return display(mDrsState);
     }
 
     /**
@@ -296,7 +455,7 @@ class DashWorker {
      * @returns boolean
      */
     async mErsAutoModeEnabledDisplay(mErsAutoModeEnabled) {
-        return mErsAutoModeEnabled;
+        return display(mErsAutoModeEnabled);
     }
 
     /**
@@ -306,30 +465,30 @@ class DashWorker {
      */
     async mErsDeploymentModeDisplay(mErsDeploymentMode) {
         if (mErsDeploymentMode === 0) {
-            return 'Auto';
+            return display('Auto');
         }
 
         if (mErsDeploymentMode === 1) {
-            return 'Off';
+            return display('Off');
         }
 
         if (mErsDeploymentMode === 2) {
-            return 'Build';
+            return display('Build');
         }
 
         if (mErsDeploymentMode === 3) {
-            return 'Balanced';
+            return display('Balanced');
         }
 
         if (mErsDeploymentMode === 4) {
-            return 'Attack';
+            return display('Attack');
         }
 
         if (mErsDeploymentMode === 5) {
-            return 'Qualify';
+            return display('Qualify');
         }
 
-        return mErsDeploymentMode;
+        return null;
     }
 
     /**
@@ -343,48 +502,43 @@ class DashWorker {
             return null;
         }
         
-        return `${mTractionControlSetting}`;
+        return display(mTractionControlSetting, 2);
     }
 
     /**
-     * Get boost status prepared for the view
-     * Boost data is a little unreliable, sometimes from tick-to-tick the data hasn't updated fast enough.
-     * .. so I'm using previousMBoostAmountA (1 tick) and previousMBoostAmountB (2 ticks) for comparison
-     * @param {*} mBoostAmount 
-     * @returns number
+     * Get tc highlight
+     * @param {*} mThrottle 
+     * @param {*} mUnfilteredThrottle 
+     * @param {*} mGear 
+     * @returns object
      */
-    async boostStatusDisplay(mBoostAmount) {
-        if (typeof this.previousMBoostAmountA === 'undefined') {
-            this.previousMBoostAmountA = mBoostAmount;
-        }
-        if (typeof this.previousMBoostAmountB === 'undefined') {
-            this.previousMBoostAmountB = mBoostAmount;
-        }
+    async mTractionControlHighlight(mThrottle, mUnfilteredThrottle, mGear) {
+        const mTractionControlHighlight = await this.getTractionControlHighlight(mThrottle, mUnfilteredThrottle, mGear);
 
-        // value
-        let value = null
+        return mTractionControlHighlight;
+    }
 
-        // ... charging?
-        if (this.previousMBoostAmountB <= mBoostAmount) {
-            value = 2; // charging
-        }
-
-        // is is going down?
-        if (this.previousMBoostAmountB > mBoostAmount) {
-            value = 1; // depleating
+    /**
+     * Get tc highlight state
+     * @param {*} active 
+     * @returns 
+     */
+    async getTractionControlHighlight(mThrottle, mUnfilteredThrottle, mGear) {
+        // If the raw input is being filtered by the game, we're assuming that's traction control in effect
+        // throttle matches input?
+        if (mThrottle === mUnfilteredThrottle) {
+            // ... return null
+            return null;
         }
 
-        // is it full?
-        if (mBoostAmount === 100) {
-            value = 0; // full
+        // ... we'll also assume auto-blip effects the above so we'll also say TC is working only when in gear
+        // not in gear?
+        if (!mGear) {
+            // ... return null
+            return null;
         }
 
-        // update scoped var for future reference
-        this.previousMBoostAmountB = this.previousMBoostAmountA;
-        this.previousMBoostAmountA = mBoostAmount;
-
-        // return value
-        return value;
+        return 3; // 3 is green
     }
 
     /**
@@ -468,14 +622,16 @@ class DashWorker {
      */
     async getSpeedometerDataForDisplay(speedometerData) {
         const mSpeedDisplay = await this.mSpeedDisplay(speedometerData.mSpeed);
-        const mRpmDisplay = await this.mRpmDisplay(speedometerData.mRpm);
+        const mRpmDisplay = await this.mRpmDisplay(speedometerData.mRpm, speedometerData.mMaxRPM);
         const mRpmPercentage = await this.mRpmPercentage(speedometerData.mRpm, speedometerData.mMaxRPM);
+        const mRpmHighlight = await this.mRpmHighlight(speedometerData.mRpm, speedometerData.mMaxRPM);
         const mGearDisplay = await this.mGearDisplay(speedometerData.mGear);
 
         return {
             mSpeedDisplay,
             mRpmDisplay,
             mRpmPercentage,
+            mRpmHighlight,
             mGearDisplay,
         };
     }
@@ -486,7 +642,9 @@ class DashWorker {
      * @returns number
      */
     async mSpeedDisplay(mSpeed) {
-        return Math.floor(mSpeed * 3.6);
+        let value = Math.floor(mSpeed * 3.6);
+
+        return display(value, 3, 'KPH');
     }
 
     /**
@@ -495,8 +653,8 @@ class DashWorker {
      * @param {*} mMaxRPM 
      * @returns number
      */
-    async mRpmDisplay(mRpm) {
-        return Math.round(mRpm);
+    async mRpmDisplay(mRpm, mMaxRPM) {
+        return display(Math.round(mRpm), `${mMaxRPM}`.length);
     }
 
     /**
@@ -506,7 +664,34 @@ class DashWorker {
      * @returns number
      */
     async mRpmPercentage(mRpm, mMaxRPM) {
-        return Math.round((mRpm / mMaxRPM) * 100);
+        return display(Math.round((mRpm / mMaxRPM) * 100));
+    }
+
+    /**
+     * Get rpm highlight
+     * @param {*} mRpm
+     * @param {*} mMaxRPM
+     * @returns object
+     */
+    async mRpmHighlight(mRpm, mMaxRPM) {
+        const mRpmHighlight = await this.getRpmHighlight(mRpm, mMaxRPM);
+
+        return mRpmHighlight;
+    }
+
+    /**
+     * Get rpm highlight state
+     * @param {*} mRpmPercentage
+     * @returns 
+     */
+    async getRpmHighlight(mRpm, mMaxRPM) {
+        const percent = (mRpm / mMaxRPM) * 100;
+
+        if (percent >= 97) {
+            return 1;
+        }
+
+        return null;
     }
 
     /**
@@ -515,15 +700,16 @@ class DashWorker {
      * @returns number
      */
     async mGearDisplay(mGear) {
+        let value = mGear;
         if (mGear === 0) {
-            return 'N';
+            value = 'N';
         }
 
         if (mGear < 0) {
-            return 'R';
+            value = 'R';
         }
 
-        return mGear;
+        return display(value);
     }
 
     /**

@@ -1,50 +1,36 @@
 <template>
     <div class="c-in-car-tachometer" v-if="mRpmDisplay !== null">
         <div class="c-in-car-tachometer__body">
-            <span class="c-in-car-tachometer__value">
-                <span class="c-in-car-tachometer__zerofill">{{ zerofill }}</span>
-                <span class="c-in-car-tachometer__amount">{{ mRpmDisplay }}</span>
-            </span>
             <span class="c-in-car-tachometer__ui" v-if="mRpmPercentage !== null">
                 <span class="c-in-car-tachometer__ui-bg"></span>
-                <span class="c-in-car-tachometer__ui-amount" :style="{ clipPath: `rect(0 ${ mRpmPercentage }% 100% 0)` }"></span>
-                <span class="c-in-car-tachometer__ui-limit" :style="{ clipPath: `rect(0 ${ mRpmPercentage }% 100% 0)`, opacity: `${mRpmPercentage}%` }"></span>
-                <span class="c-in-car-tachometer__ui-over" v-if="mRpmPercentage >= 97" :style="{ clipPath: `rect(0 ${ mRpmPercentage }% 100% 0)`, opacity: `${mRpmPercentage}%` }"></span>
+                <span class="c-in-car-tachometer__ui-amount" :style="{ clipPath: `rect(0 ${ mRpmPercentage.value }% 100% 0)` }"></span>
+                <span class="c-in-car-tachometer__ui-limit" :style="{ clipPath: `rect(0 ${ mRpmPercentage.value }% 100% 0)`, opacity: `${mRpmPercentage.value}%` }"></span>
+                <span class="c-in-car-tachometer__ui-over" v-if="mRpmHighlight" :style="{ clipPath: `rect(0 ${ mRpmPercentage.value }% 100% 0)`, opacity: `${mRpmPercentage.value}%` }"></span>
+            </span>
+            <span class="c-in-car-tachometer__value">
+                <span class="c-in-car-tachometer__zerofill">{{ mRpmDisplay.zerofill }}</span>
+                <span class="c-in-car-tachometer__amount">{{ mRpmDisplay.value }}</span>
             </span>
         </div>
     </div>
 </template>
 
 <style lang="scss">
-.c-in-car-tachometer {
-    display: flex;
-    align-items: center;
-    border-radius: em(3);
-}
+.c-in-car-tachometer {}
 
 .c-in-car-tachometer__body {
-    position: relative;
-    padding: em(4);
+    display: flex;
+    flex-direction: column;
+    justify-content: flex-end;
+    align-items: flex-end;
 }
-
-.c-in-car-tachometer__value {
-    position: absolute;
-    top: em(4);
-    left: em(4);
-}
-
-.c-in-car-tachometer__zerofill {
-    opacity: 0.1;
-}
-
-.c-in-car-tachometer__amount {}
 
 .c-in-car-tachometer__ui {
     position: relative;
     display: block;
-    width: em(198);
-    height: em(52);
-    mask-image: url('@public/ui/ui--tachometer--198x52.svg');
+    width: em(310);
+    height: em(20);
+    mask-image: url('@public/ui/mask--tachometer--604x32.svg');
     mask-size: 100% 100%;
 }
 
@@ -101,6 +87,24 @@
         50ms opacity 0ms linear;
     will-change: auto;
 }
+
+.c-in-car-tachometer__value {
+    display: block;
+    
+}
+
+.c-in-car-tachometer__zerofill {
+    opacity: 0.1;
+}
+
+.c-in-car-tachometer__amount,
+.c-in-car-tachometer__zerofill {
+    font-family: 'firecode', monospace;
+    font-size: em(12);
+    line-height: 1em;
+}
+
+.c-in-car-tachometer__amount {}
 </style>
 
 <script>
@@ -110,17 +114,14 @@ export default {
     setup() {
         const mRpmDisplay = inject('mRpmDisplay');
         const mRpmPercentage = inject('mRpmPercentage');
-
+        const mRpmHighlight = inject('mRpmHighlight');
+        
         return {
             mRpmDisplay,
             mRpmPercentage,
+            mRpmHighlight,
         }
     },
-    computed: {
-        zerofill() {
-            return ('00000').substring(0, 5).slice(`${this.mRpmDisplay}`.length);
-        }
-    }
 }
 </script>
 

@@ -112,9 +112,9 @@ export default {
                 return false;
             }
 
-            if (!this.mEventTimeRemainingDisplay && !this.mLapsInEventDisplay) {
-                return false;
-            }
+            // if (!this.mEventTimeRemainingDisplay && !this.mLapsInEventDisplay) {
+            //     return false;
+            // }
 
             if (this.mRaceState !== 1 && this.mRaceState !== 2 && this.mRaceState !== 3) {
                 return false;

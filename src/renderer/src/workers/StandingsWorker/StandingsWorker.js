@@ -231,7 +231,15 @@ class StandingsWorker {
     /**
      */
     async deltaDisplay(delta) {
-        return millisecondsToTime(delta);
+        let prefix = '±';
+        if (delta < 0) { 
+            prefix = '-';
+        }
+        if (delta > 0) { 
+            prefix = '+';
+        }
+
+        return `${prefix}${millisecondsToTime(delta)}`;
     }
 
     /**
@@ -481,24 +489,6 @@ class StandingsWorker {
         diff = Math.abs(diff);
 
         return `${symbol}${diff.toFixed(2)}m`;
-    }
-
-    /**
-     * Can we hide the participant at index
-     * @param {*} participant 
-     * @param {*} user 
-     * @returns boolean
-     */
-    async visibilityDisplay(index, participantData, userIndex, user) {
-        // if (user.mCurrentLap === participantData.mCurrentLap && index < userIndex) {
-        //     // return false;
-        // }
-
-        // if (participantData.mCurrentLapDistance === 0 && participantData !== user) {
-        //     // return false;
-        // }
-
-        return true;
     }
 
     /**

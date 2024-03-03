@@ -13,25 +13,29 @@
         </div>
         <div class="c-in-car-hud__lower">
             <div class="c-in-car-hud__rows">
-                <div class="c-in-car-hud__row">
+                <div class="c-in-car-hud__row c-in-car-hud__row--center">
                     <div class="c-in-car-hud__items">
                         <div class="c-in-car-hud__item">
-                            <!-- <div class="c-in-car-hud__data c-in-car-hud__data--speedometer"><InCarSpeedometerComponent /></div> -->
+                            <div class="c-in-car-hud__data c-in-car-hud__data--speedometer"><InCarSpeedometerComponent /></div>
                         </div>
                     </div>
                 </div>
-                <div class="c-in-car-hud__row">
-                    <div class="c-in-car-hud__items">
-                        <div class="c-in-car-hud__item">
-                            <div class="c-in-car-hud__data c-in-car-hud__data--session"><InCarSessionComponent /></div>
-                        </div>
-                        <div class="c-in-car-hud__item ">
-                            <div class="c-in-car-hud__data c-in-car-hud__data--fuel"><InCarFuelComponent /></div>
-                        </div>
-                        <div class="c-in-car-hud__item">
-                           <div class="c-in-car-hud__data c-in-car-hud__data--status"><InCarStatusComponent /></div>
-                        </div>
-                    </div>
+            </div>
+        </div>
+        <div class="c-in-car-hud__float c-in-car-hud__float--bl">
+            <div class="c-in-car-hud__items">
+                <div class="c-in-car-hud__item">
+                    <div class="c-in-car-hud__data c-in-car-hud__data--session"><InCarSessionComponent /></div>
+                </div>
+            </div>
+            <div class="c-in-car-hud__items">
+                <div class="c-in-car-hud__item ">
+                    <div class="c-in-car-hud__data c-in-car-hud__data--fuel"><InCarFuelComponent /></div>
+                </div>
+            </div>
+            <div class="c-in-car-hud__items">
+                <div class="c-in-car-hud__item">
+                    <div class="c-in-car-hud__data c-in-car-hud__data--status"><InCarStatusComponent /></div>
                 </div>
             </div>
         </div>
@@ -84,7 +88,20 @@
 }
 
 .c-in-car-hud__row {
+    display: flex;
     padding: em(4);
+}
+
+.c-in-car-hud__row--center {
+    justify-content: center;
+}
+
+.c-in-car-hud__row--left {
+    justify-content: flex-start;
+}
+
+.c-in-car-hud__row--right {
+    justify-content: flex-end;
 }
 
 .c-in-car-hud__items {
@@ -105,6 +122,11 @@
 
 .c-in-car-hud__float {
     position: fixed;
+    margin: em(-2);
+
+    .c-in-car-hud__items {
+        padding: em(2);
+    }
 }
 
 .c-in-car-hud__float--tr {

@@ -1,13 +1,13 @@
 <template>
-    <div class="c-in-car-ers" :state="state" v-if="isErsAvailableDisplay">
+    <div class="c-in-car-ers" v-if="mErsStatus && mErsHighlight" :status="mErsStatus" :highlight="mErsHighlight">
         <div class="c-in-car-ers__widget">
             <div class="c-in-car-ers__label">ERS</div>
-            <div class="c-in-car-ers__state" v-if="mErsDeploymentModeDisplay != 'Auto'">
+            <div class="c-in-car-ers__state" v-if="mErsDeploymentModeDisplay.value != 'Auto'">
                 <span class="c-in-car-ers__state-icon"><SvgComponent svg="icon--power" /></span>
-                <span class="c-in-car-ers__state-text">{{ mErsDeploymentModeDisplay }}</span>
+                <span class="c-in-car-ers__state-text">{{ mErsDeploymentModeDisplay.value }}</span>
             </div>
         </div>
-        <div class="c-in-car-ers__amount" :style="{ width: `${mBoostAmountDisplay}%` }"></div>
+        <div class="c-in-car-ers__amount" v-if="mBoostAmountDisplay" :style="{ width: `${mBoostAmountDisplay.value}%` }"></div>
     </div>
 </template>
 
@@ -18,8 +18,7 @@
     flex-direction: column;
     align-items: flex-start;
     justify-content: center;
-    padding: em(12);
-    border-radius: em(3);
+    height: 100%;
     overflow: hidden;
 
     &:before {
@@ -28,16 +27,15 @@
         content: '';
         position: absolute;
         z-index: 1;
-        top: em(4);
-        right: em(4);
-        bottom: em(4);
-        left: em(4);
-        border-radius: em(2);
+        top: 0;
+        right: 0;
+        bottom: 0;
+        left: 0;
         opacity: 0;
         transition: 300ms opacity 0ms linear;
     }
 
-    &[state="disabled-charging"] {
+    &[highlight="disabled-charging"] {
         .c-in-car-ers__amount {
             @include color('background-color', 'blue', 0.4);
 
@@ -52,13 +50,12 @@
         }
     }
 
-    &[state="enabled-charging"] {
+    &[highlight="enabled-charging"] {
         &:before {
             opacity: 1;
         }
 
         .c-in-car-ers__widget {
-            // @include color('border-color', 'blue', 0);
             @include color('color', 'white', 1);
         }
 
@@ -84,18 +81,13 @@
         }
     }
 
-    &[state="disabled-depleating"] {
+    &[highlight="disabled-depleating"] {
         &:before {
             opacity: 1;
         }
 
         .c-in-car-ers__widget {
             @include color('color', 'white', 1);
-
-            // &:before {
-            //     opacity: 0;
-            //     transform: scale(1);
-            // }
         }
 
         svg {
@@ -121,18 +113,13 @@
         }
     }
 
-    &[state="enabled-depleating"] {
+    &[highlight="enabled-depleating"] {
         &:before {
             opacity: 1;
         }
 
         .c-in-car-ers__widget {
             @include color('color', 'white', 1);
-
-            // &:before {
-            //     opacity: 0;
-            //     transform: scale(1);
-            // }
         }
 
         svg {
@@ -158,7 +145,7 @@
         }
     }
 
-    &[state="enabled-full"] {
+    &[highlight="enabled-full"] {
         &:before {
             opacity: 1;
         }
@@ -193,7 +180,7 @@
     justify-content: center;
     padding: em(4) em(10); 
     width: em(120);
-    height: em(48);
+    // height: em(48);
 }
 
 .c-in-car-ers__label {
@@ -241,7 +228,6 @@
     overflow: hidden;
     width: 100%;
     height: em(4);
-    border-radius: em(2);
     transform: translateX(-50%) translateY(0) scaleX(1);
     transition:
         150ms transform 0ms linear,
@@ -276,48 +262,16 @@ export default {
         const mBoostAmountDisplay = inject('mBoostAmountDisplay');
         const mErsAutoModeEnabledDisplay = inject('mErsAutoModeEnabledDisplay');
         const mErsDeploymentModeDisplay = inject('mErsDeploymentModeDisplay');
-        const boostStatusDisplay = inject('boostStatusDisplay');
-        const isErsAvailableDisplay = inject('isErsAvailableDisplay');
-
-
+        const mErsStatus = inject('mErsStatus');
+        const mErsHighlight = inject('mErsHighlight');
+        
         return {
             mBoostActiveDisplay,
             mBoostAmountDisplay,
             mErsAutoModeEnabledDisplay,
             mErsDeploymentModeDisplay,
-            boostStatusDisplay,
-            isErsAvailableDisplay,
-        }
-    },
-    computed: {
-        state() {
-            let state = null;
-            
-            if (this.mBoostActiveDisplay === false && this.boostStatusDisplay === 2) {
-                state = 'disabled-charging';
-            }
-            
-            if (this.mBoostActiveDisplay === false && this.boostStatusDisplay === 1) {
-                state = 'disabled-depleating';
-            }
-            
-            if (this.mBoostActiveDisplay === false && this.boostStatusDisplay === 0) {
-                state = 'disabled-full';
-            }
-
-            if (this.mBoostActiveDisplay === true && this.boostStatusDisplay === 2) {
-                state = 'enabled-charging';
-            }
-
-            if (this.mBoostActiveDisplay === true && this.boostStatusDisplay === 1) {
-                state = 'enabled-depleating';
-            }
-
-            if (this.mBoostActiveDisplay === true && this.boostStatusDisplay === 0) {
-                state = 'enabled-full';
-            }
-
-            return state;
+            mErsStatus,
+            mErsHighlight
         }
     },
 }

@@ -93,6 +93,7 @@ class ParentWorker {
      * Do a reset
      */
     async reset() {
+        await this.resetDashWorkerData();
         await this.resetLapWorkerData();
         await this.resetData();
     }
@@ -133,11 +134,12 @@ class ParentWorker {
                 const paused = await this.isPaused(event.data.data);
                 if (paused) {
                     // just stop everything. keep data still and dont reset
-                    // return null;
+                    return null;
                 }
 
                 // are we ready?
                 const ready = await this.isReady(event.data.data);
+
                 // ... no?
                 if (!ready) {
                     await this.reset();
@@ -316,6 +318,13 @@ class ParentWorker {
             mMaxRPM: data.carState.mMaxRPM,
             mRainDensity: data.weather.mRainDensity,
         });
+    }
+
+    /**
+     * Send message to dash worker to reset the stored lap data
+     */
+    async resetDashWorkerData() {
+        return await this.postMessage(this.DashWorker, 'reset');
     }
 
     /**

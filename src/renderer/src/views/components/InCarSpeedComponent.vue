@@ -1,27 +1,36 @@
 <template>
-    <div class="c-in-car-speed" v-if="mSpeedDisplay !== null">
-        <span class="c-in-car-speed__zerofill" v-if="zerofill">{{ zerofill }}</span>
-        <span class="c-in-car-speed__value">{{ mSpeedDisplay }}</span>
+    <div class="c-in-car-speed" v-if="mSpeedDisplay">
+        <div class="c-in-car-speed__amount">
+            <span class="c-in-car-speed__zerofill" v-if="mSpeedDisplay.zerofill">{{ mSpeedDisplay.zerofill }}</span>
+            <span class="c-in-car-speed__value" v-if="mSpeedDisplay.value">{{ mSpeedDisplay.value }}</span>
+        </div>
+        <div class="c-in-car-speed__suffix" v-if="mSpeedDisplay.suffix">{{ mSpeedDisplay.suffix }}</div>
     </div>
 </template>
 
 <style lang="scss">
 .c-in-car-speed {
     display: flex;
-    align-items: center;
-    padding: em(12);
-    border-radius: em(3);
+    flex-direction: column;
+    align-items: flex-end;
 }
 
-.c-in-car-speed__zerofill {
-    opacity: 0.2;
-}
+.c-in-car-speed__amount {}
 
 .c-in-car-speed__zerofill,
 .c-in-car-speed__value {
     font-family: 'firacode', monospace;
     font-size: em(32);
     line-height: 1em;
+}
+
+.c-in-car-speed__zerofill {
+    opacity: 0.1;
+}
+
+.c-in-car-speed__suffix {
+    font-size: em(12);
+    opacity: 0.4;
 }
 </style>
 
@@ -33,14 +42,8 @@ export default {
         const mSpeedDisplay = inject('mSpeedDisplay');
 
         return {
-            mSpeedDisplay,
+            mSpeedDisplay
         }
     },
-    computed: {
-        zerofill() {
-            const valueString = `${this.mSpeedDisplay}`;
-            return ('00000').substring(0, 3).slice(valueString.length);
-        },
-    }
 }
 </script>

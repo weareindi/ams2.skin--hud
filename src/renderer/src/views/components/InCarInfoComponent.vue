@@ -107,7 +107,10 @@
     }
 }
 
-.c-in-car-info__visual {}
+.c-in-car-info__visual {
+    position: relative;
+    z-index: 1;
+}
 
 .c-in-car-info__icon {
     width: em(24);
@@ -118,10 +121,11 @@
 
 .c-in-car-info__values {
     display: flex;
+    margin: em(-4);
 }
 
 .c-in-car-info__value {
-    // padding: em(8);
+    padding: em(4);
 }
 
 .c-in-car-info__value--a {}
@@ -158,6 +162,14 @@
 
 .c-in-car-info__highlight {
     position: absolute;
+    z-index: 2;
+    top: em(-8);
+    left: em(-8);
+    right: em(-8);
+    bottom: em(-8);
+    border-radius: em(2);
+    opacity: 0.25;
+    mix-blend-mode: hard-light;
 }
 </style>
 

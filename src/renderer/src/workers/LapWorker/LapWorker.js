@@ -112,6 +112,10 @@ class LapWorker {
             return null;
         }
 
+        if (!('mSessionAdditionalLaps' in data)) {
+            return null;
+        }        
+
         // is the user on the circuit?
         const onCircuit = await this.isOnCircuit(data);
 
@@ -219,15 +223,6 @@ class LapWorker {
         return display(value, null, null, `Pos`);
     }
 
-    // /**
-    //  * Get number of participants prepared for view
-    //  * @param {*} mNumParticipants 
-    //  * @returns number
-    //  */
-    // async mNumParticipantsDisplay(mNumParticipants) {
-    //     return display(mNumParticipants, 2);
-    // }
-
     /**
      * Get time remaining prepared for view
      * @param {*} mEventTimeRemaining 
@@ -249,15 +244,15 @@ class LapWorker {
     async mSessionAdditionalLapsDisplay(mSessionAdditionalLaps, mLapsInEvent, mSessionState) {
         // the game engine provides this value regardless of it not being required. We only ever need it in the race (mSessionState = 5)
         if (mSessionState !== 5) {
-            return 0;
+            return null;
         }
 
         // ...this is already a lapped based race, the additional doesn't count
         if (mLapsInEvent > 0) {
-            return 0;
+            return null;
         }
 
-        return display(mSessionAdditionalLaps, null, null, 'Laps');
+        return display(`+${mSessionAdditionalLaps}`, null, null, 'Laps');
     }
 
     /**
@@ -322,19 +317,6 @@ class LapWorker {
         };
     }
 
-    // /**
-    //  * Get fuel capacity prepared for the view
-    //  * @param {*} fuelCapacity 
-    //  * @returns number
-    //  */
-    // async fuelCapacityDisplay(fuelCapacity) {
-    //     if (!isFinite(fuelCapacity)) {
-    //         return null;
-    //     }
-
-    //     return display(Math.round(fuelCapacity * 10000) / 100);
-    // }
-
     /**
      * Get current fuel prepared for view
      * @param {*} fuel 
@@ -354,11 +336,19 @@ class LapWorker {
      * @returns number
      */
     async fuelPerLapDisplay(fuelCapacity, fuelPerLap) {
-        if (!isFinite(fuelPerLap)) {
-            return null;
+        let value = 0;
+        let suffix = null;
+
+        if (!isFinite(fuelCapacity) || fuelCapacity === null || !isFinite(fuelPerLap) || fuelPerLap === null) {
+            value = 'N/A';
         }
 
-        return display(Math.round((fuelCapacity * fuelPerLap) * 10000) / 100, null, 'L', 'Per Lap');
+        if (isFinite(fuelCapacity) && fuelCapacity !== null && isFinite(fuelPerLap) && fuelPerLap !== null) {
+            value = Math.round((fuelCapacity * fuelPerLap) * 10000) / 100;
+            suffix = 'L';
+        }
+
+        return display(value, null, suffix, 'Per Lap');
     }
 
     /**
@@ -367,11 +357,19 @@ class LapWorker {
      * @returns string
      */
     async fuelToEndSessionDisplay(fuelCapacity, fuelToEndSession) {
-        if (!isFinite(fuelToEndSession)) {
-            return null;
+        let value = 0;
+        let suffix = null;
+
+        if (!isFinite(fuelCapacity) || fuelCapacity === null || !isFinite(fuelToEndSession) || fuelToEndSession === null) {
+            value = 'N/A';
         }
 
-        return display(Math.round((fuelCapacity * fuelToEndSession) * 10000) / 100, null, 'L', 'To End');
+        if (isFinite(fuelCapacity) && fuelCapacity !== null && isFinite(fuelToEndSession) && fuelToEndSession !== null) {
+            value = Math.round((fuelCapacity * fuelToEndSession) * 10000) / 100;
+            suffix = 'L';
+        }
+
+        return display(value, null, suffix, 'To End');
     }
 
     /**
@@ -380,11 +378,17 @@ class LapWorker {
      * @returns 
      */
     async pitsToEndSessionDisplay(pitsToEndSession) {
-        if (!isFinite(pitsToEndSession)) {
-            return null;
+        let value = 0;
+
+        if (!isFinite(pitsToEndSession) || pitsToEndSession === null) {
+            value = 'N/A';
         }
 
-        return display(pitsToEndSession, null, null, 'Min. Stops');
+        if (isFinite(pitsToEndSession) && pitsToEndSession !== null) {
+            value = pitsToEndSession;
+        }
+
+        return display(value, null, null, 'Min. Stops');
     }
 
     /**
@@ -460,6 +464,7 @@ class LapWorker {
 
         // race by time
         if (mEventTimeRemaining > 0) {
+
             const averageLaptime = await this.getAverageLapTime(runLapGroups);
 
             // get max expected laps, add additional lap if required
@@ -544,8 +549,9 @@ class LapWorker {
         let pitsToEndSession = 0;
 
         const fuelToEndSessionLitres = fuelCapacity * fuelToEndSession;
+
         if (fuel < fuelToEndSessionLitres) {
-            pitsToEndSession =  Math.ceil((fuelCapacity / 100) * (fuelCapacity / (fuelToEndSession - fuel)));
+            pitsToEndSession = Math.ceil( (fuelToEndSessionLitres - fuel) / fuelCapacity );
         }
 
         return pitsToEndSession;

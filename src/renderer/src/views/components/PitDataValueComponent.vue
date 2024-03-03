@@ -1,5 +1,5 @@
 <template>
-    <div class="c-pit-data-value">
+    <div class="c-pit-data-value" v-if="data">
         <span class="c-pit-data-value__label" v-if="data.label !== null">{{ data.label }}</span>
         <span class="c-pit-data-value__value" v-if="data.value !== null">{{ data.value }} <span class="c-pit-data-value__suffix" v-if="data.suffix !== null">{{ data.suffix }}</span></span>
     </div>

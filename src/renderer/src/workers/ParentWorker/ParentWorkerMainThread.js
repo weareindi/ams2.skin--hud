@@ -55,22 +55,32 @@ export default class ParentWorkerMainThread {
         this.app.provide('mGameState', ref(null));
         this.app.provide('mSessionState', ref(null));
         this.app.provide('mSessionIsPrivate', ref(null));
-        this.app.provide('mRaceState', ref(null));        
+        this.app.provide('mRaceState', ref(null));
+
         this.app.provide('mOilTempCelsiusDisplay', ref(null));
         this.app.provide('mWaterTempCelsiusDisplay', ref(null));
         this.app.provide('mAntiLockActiveDisplay', ref(null));
         this.app.provide('mAntiLockSettingDisplay', ref(null));
+        this.app.provide('mAntiLockHighlight', ref(null));
+
         this.app.provide('mBoostActiveDisplay', ref(null));
         this.app.provide('mBoostAmountDisplay', ref(null));
         this.app.provide('mBrakeBiasDisplay', ref(null));
         this.app.provide('mDrsStateDisplay', ref(null));
-        this.app.provide('isDrsAvailableDisplay', ref(null));
+        this.app.provide('mDrsStatus', ref(null));
+        this.app.provide('mDrsHighlight', ref(null));
+
         this.app.provide('mErsAutoModeEnabledDisplay', ref(null));
         this.app.provide('mErsDeploymentModeDisplay', ref(null));
-        this.app.provide('isErsAvailableDisplay', ref(null));
+        this.app.provide('mErsStatus', ref(null));
+        this.app.provide('mErsHighlight', ref(null));
+
         this.app.provide('mTractionControlSettingDisplay', ref(null));
-        this.app.provide('mBrakeDisplay', ref(null));
+        this.app.provide('mTractionControlHighlight', ref(null));
+
         this.app.provide('mClutchDisplay', ref(null));
+        this.app.provide('mBrakeDisplay', ref(null));
+        this.app.provide('mThrottleDisplay', ref(null));
 
         this.app.provide('mClutchOverheatedDisplay', ref(null));
         this.app.provide('mClutchSlippingDisplay', ref(null));
@@ -79,8 +89,8 @@ export default class ParentWorkerMainThread {
         this.app.provide('mClutchStatus', ref(null));
         this.app.provide('mClutchHighlight', ref(null));
 
-        this.app.provide('mThrottleDisplay', ref(null));
         this.app.provide('standingsDisplay', ref(null));
+
         this.app.provide('mCurrentLapDisplay', ref(null));
         this.app.provide('mLapsInEventDisplay', ref(null));
         this.app.provide('mRacePositionDisplay', ref(null));
@@ -89,15 +99,18 @@ export default class ParentWorkerMainThread {
         this.app.provide('mFastestLapTimesDisplay', ref(null));
         this.app.provide('mLastLapTimesDisplay', ref(null));
         this.app.provide('mSessionAdditionalLapsDisplay', ref(null));
+
         this.app.provide('fuelCapacityDisplay', ref(null));
         this.app.provide('fuelDisplay', ref(null));
         this.app.provide('fuelPerLapDisplay', ref(null));
         this.app.provide('fuelToEndSessionDisplay', ref(null));
         this.app.provide('pitsToEndSessionDisplay', ref(null));
+
         this.app.provide('mSpeedDisplay', ref(null));
         this.app.provide('mGearDisplay', ref(null));
         this.app.provide('mRpmDisplay', ref(null));
         this.app.provide('mRpmPercentage', ref(null));
+        this.app.provide('mRpmHighlight', ref(null));
 
         this.app.provide('mAirPressureFrontLeftDisplay', ref(null));
         this.app.provide('mAirPressureFrontRightDisplay', ref(null));
@@ -171,9 +184,6 @@ export default class ParentWorkerMainThread {
         this.app.provide('mAeroDamageDisplay', ref(null));
         this.app.provide('mAeroStatus', ref(null));
         this.app.provide('mAeroHighlight', ref(null));
-
-        this.app.provide('boostStatusDisplay', ref(null));
-        this.app.provide('isTractionControlActiveDisplay', ref(null));
     }
 
     /**
@@ -469,22 +479,34 @@ export default class ParentWorkerMainThread {
         this.app._context.provides.mGameState.value = null;
         this.app._context.provides.mSessionState.value = null;
         this.app._context.provides.mSessionIsPrivate.value = null;
-        this.app._context.provides.mRaceState.value = null;        
+        this.app._context.provides.mRaceState.value = null;    
+
         this.app._context.provides.mOilTempCelsiusDisplay.value = null;
         this.app._context.provides.mWaterTempCelsiusDisplay.value = null;
+
         this.app._context.provides.mAntiLockActiveDisplay.value = null;
         this.app._context.provides.mAntiLockSettingDisplay.value = null;
+        this.app._context.provides.mAntiLockHighlight.value = null;
+
         this.app._context.provides.mBoostActiveDisplay.value = null;
         this.app._context.provides.mBoostAmountDisplay.value = null;
         this.app._context.provides.mBrakeBiasDisplay.value = null;
+
         this.app._context.provides.mDrsStateDisplay.value = null;
-        this.app._context.provides.isDrsAvailableDisplay.value = null;
+        this.app._context.provides.mDrsStatus.value = null;
+        this.app._context.provides.mDrsHighlight.value = null;
+
         this.app._context.provides.mErsAutoModeEnabledDisplay.value = null;
         this.app._context.provides.mErsDeploymentModeDisplay.value = null;
-        this.app._context.provides.isErsAvailableDisplay.value = null;
+        this.app._context.provides.mErsStatus.value = null;
+        this.app._context.provides.mErsHighlight.value = null;
+
         this.app._context.provides.mTractionControlSettingDisplay.value = null;
-        this.app._context.provides.mBrakeDisplay.value = null;
+        this.app._context.provides.mTractionControlHighlight.value = null;
+
         this.app._context.provides.mClutchDisplay.value = null;
+        this.app._context.provides.mBrakeDisplay.value = null;
+        this.app._context.provides.mThrottleDisplay.value = null;
         
         this.app._context.provides.mClutchOverheatedDisplay.value = null;
         this.app._context.provides.mClutchSlippingDisplay.value = null;
@@ -493,8 +515,8 @@ export default class ParentWorkerMainThread {
         this.app._context.provides.mClutchStatus.value = null;
         this.app._context.provides.mClutchHighlight.value = null;
 
-        this.app._context.provides.mThrottleDisplay.value = null;
         this.app._context.provides.standingsDisplay.value = null;
+
         this.app._context.provides.mCurrentLapDisplay.value = null;
         this.app._context.provides.mLapsInEventDisplay.value = null;
         this.app._context.provides.mRacePositionDisplay.value = null;
@@ -503,15 +525,19 @@ export default class ParentWorkerMainThread {
         this.app._context.provides.mFastestLapTimesDisplay.value = null;
         this.app._context.provides.mLastLapTimesDisplay.value = null;
         this.app._context.provides.mSessionAdditionalLapsDisplay.value = null;
+
         this.app._context.provides.fuelCapacityDisplay.value = null;
         this.app._context.provides.fuelDisplay.value = null;
         this.app._context.provides.fuelPerLapDisplay.value = null;
         this.app._context.provides.fuelToEndSessionDisplay.value = null;
         this.app._context.provides.pitsToEndSessionDisplay.value = null;
+
         this.app._context.provides.mSpeedDisplay.value = null;
         this.app._context.provides.mGearDisplay.value = null;
         this.app._context.provides.mRpmDisplay.value = null;
         this.app._context.provides.mRpmPercentage.value = null;
+        this.app._context.provides.mRpmHighlight.value = null;        
+
         this.app._context.provides.mAirPressureFrontLeftDisplay.value = null;
         this.app._context.provides.mAirPressureFrontRightDisplay.value = null;
         this.app._context.provides.mAirPressureRearLeftDisplay.value = null;
@@ -584,9 +610,6 @@ export default class ParentWorkerMainThread {
         this.app._context.provides.mAeroDamageDisplay.value = null;
         this.app._context.provides.mAeroStatus.value = null;
         this.app._context.provides.mAeroHighlight.value = null;
-
-        this.app._context.provides.boostStatusDisplay.value = null;
-        this.app._context.provides.isTractionControlActiveDisplay.value = null;
 
         // update hasreset var
         this.hasreset = true;

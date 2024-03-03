@@ -5,11 +5,11 @@
  * @returns 
  */
 export function zerofill(value = null, total = null) {
-    if (typeof value === 'undefined' || !value) {
+    if (typeof value === 'undefined' || value === null) {
         return null;
     }
 
-    if (typeof value === 'undefined' || !total) {
+    if (typeof value === 'undefined' || total === null) {
         return null;
     }
 
