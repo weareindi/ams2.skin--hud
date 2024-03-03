@@ -66,8 +66,8 @@
                         </div>
                     </div>
                 </div>
-                <hr class="m-settings__hr">
-                <div class="m-settings__row">
+                <hr class="m-settings__hr" v-show="false">
+                <div class="m-settings__row" v-show="false">
                     <div class="m-settings__header">
                         <h1 class="m-settings__heading">Stream Display</h1>
                     </div>
