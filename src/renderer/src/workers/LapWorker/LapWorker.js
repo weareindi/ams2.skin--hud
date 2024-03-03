@@ -1,5 +1,6 @@
 import { millisecondsToTime } from '../../utils/TimeUtils';
 import localforage from "localforage";
+import { display } from "../../utils/DataUtils";
 
 class LapWorker {
     constructor() {
@@ -35,10 +36,19 @@ class LapWorker {
             }
 
             if (event.data.name === 'reset') {
+                await this.dump();
                 await this.deleteLapData();
                 await this.returnMessage('resetcomplete');
             }
         };
+    }
+
+    /**
+     * Dump  data
+     */
+    async dump() {
+        const laps = await localforage.getItem('lapstore');
+        await this.returnMessage('dump', laps);
     }
 
     /**
@@ -102,6 +112,10 @@ class LapWorker {
             return null;
         }
 
+        if (!('mSessionAdditionalLaps' in data)) {
+            return null;
+        }        
+
         // is the user on the circuit?
         const onCircuit = await this.isOnCircuit(data);
 
@@ -141,8 +155,6 @@ class LapWorker {
             mRacePosition: data.user.mRacePosition,
             mNumParticipants: data.mNumParticipants,
             mEventTimeRemaining: data.mEventTimeRemaining,
-            mFastestLapTimes: data.mFastestLapTimes,
-            mLastLapTimes: data.mLastLapTimes,
             mSessionAdditionalLaps: data.mSessionAdditionalLaps,
             mSessionState: data.mSessionState,
         };
@@ -156,24 +168,16 @@ class LapWorker {
      * @returns object
      */
     async getLapDataForDisplay(lapData) {
-        const mCurrentLapDisplay = await this.mCurrentLapDisplay(lapData.mCurrentLap);
-        const mLapsInEventDisplay = await this.mLapsInEventDisplay(lapData.mLapsInEvent);
-        const mRacePositionDisplay = await this.mRacePositionDisplay(lapData.mRacePosition);
-        const mNumParticipantsDisplay = await this.mNumParticipantsDisplay(lapData.mNumParticipants);
+        const mCurrentLapDisplay = await this.mCurrentLapDisplay(lapData.mCurrentLap, lapData.mLapsInEvent);
+        const mRacePositionDisplay = await this.mRacePositionDisplay(lapData.mRacePosition, lapData.mNumParticipants);
         const mEventTimeRemainingDisplay = await this.mEventTimeRemainingDisplay(lapData.mEventTimeRemaining);
         const mSessionAdditionalLapsDisplay = await this.mSessionAdditionalLapsDisplay(lapData.mSessionAdditionalLaps, lapData.mLapsInEvent, lapData.mSessionState);
-        const mFastestLapTimesDisplay = await this.mFastestLapTimesDisplay(lapData.mFastestLapTimes);
-        const mLastLapTimesDisplay = await this.mLastLapTimesDisplay(lapData.mLastLapTimes);
 
         return {
             mCurrentLapDisplay,
-            mLapsInEventDisplay,
             mRacePositionDisplay,
-            mNumParticipantsDisplay,
             mEventTimeRemainingDisplay,
-            mSessionAdditionalLapsDisplay,
-            mFastestLapTimesDisplay,
-            mLastLapTimesDisplay,
+            mSessionAdditionalLapsDisplay
         };
     }
 
@@ -182,8 +186,13 @@ class LapWorker {
      * @param {*} mCurrentLap 
      * @returns number
      */
-    async mCurrentLapDisplay(mCurrentLap) {
-        return mCurrentLap;
+    async mCurrentLapDisplay(mCurrentLap, mLapsInEvent) {
+        let sessionLaps = null;
+        if (mLapsInEvent > 0) {
+            sessionLaps = `/${mLapsInEvent}`;
+        }
+
+        return display(mCurrentLap, null, sessionLaps, `Laps`);
     }
 
     /**
@@ -196,7 +205,7 @@ class LapWorker {
             return null;
         }
 
-        return mLapsInEvent;
+        return display(mLapsInEvent);
     }
 
     /**
@@ -204,17 +213,14 @@ class LapWorker {
      * @param {*} mRacePosition 
      * @returns number
      */
-    async mRacePositionDisplay(mRacePosition) {
-        return mRacePosition;
-    }
+    async mRacePositionDisplay(mRacePosition, mNumParticipants) {
 
-    /**
-     * Get number of participants prepared for view
-     * @param {*} mNumParticipants 
-     * @returns number
-     */
-    async mNumParticipantsDisplay(mNumParticipants) {
-        return mNumParticipants;
+        let value = mRacePosition;
+        if (mNumParticipants > 0) {
+            value = `${value}/${mNumParticipants}`;
+        }
+
+        return display(value, null, null, `Pos`);
     }
 
     /**
@@ -226,35 +232,8 @@ class LapWorker {
         if (!mEventTimeRemaining || mEventTimeRemaining < 0) {
             return null;
         }
-
-        return millisecondsToTime(mEventTimeRemaining);
-    }
-
-    /**
-     * Get fastest lap time prepared for view
-     * @param {*} mFastestLapTimes 
-     * @returns string
-     */
-    async mFastestLapTimesDisplay(mFastestLapTimes) {
-        if (!mFastestLapTimes || mFastestLapTimes < 0) {
-            return null;
-        }
-
-        return millisecondsToTime(mFastestLapTimes);
-    }
-
-    /**
-     * Get last lap time prepared for view
-     * @param {*} mLastLapTimes
-     * @returns string
-     */
-    async mLastLapTimesDisplay(mLastLapTimes) {
-        // last lap not defined/ready?
-        if (mLastLapTimes < 0) {
-            return null;
-        }
-
-        return millisecondsToTime(mLastLapTimes);
+        
+        return display(millisecondsToTime(mEventTimeRemaining), null, null, 'Remaining');
     }
 
     /**
@@ -265,15 +244,15 @@ class LapWorker {
     async mSessionAdditionalLapsDisplay(mSessionAdditionalLaps, mLapsInEvent, mSessionState) {
         // the game engine provides this value regardless of it not being required. We only ever need it in the race (mSessionState = 5)
         if (mSessionState !== 5) {
-            return 0;
+            return null;
         }
 
         // ...this is already a lapped based race, the additional doesn't count
         if (mLapsInEvent > 0) {
-            return 0;
+            return null;
         }
 
-        return mSessionAdditionalLaps;
+        return display(`+${mSessionAdditionalLaps}`, null, null, 'Laps');
     }
 
     /**
@@ -323,32 +302,19 @@ class LapWorker {
      * @returns object
      */
     async getFuelDataForDisplay(fuelData) {
-        const fuelCapacityDisplay = await this.fuelCapacityDisplay(fuelData.fuelCapacity);
+        // const fuelCapacityDisplay = await this.fuelCapacityDisplay(fuelData.fuelCapacity);
         const fuelDisplay = await this.fuelDisplay(fuelData.fuel);
         const fuelPerLapDisplay = await this.fuelPerLapDisplay(fuelData.fuelCapacity, fuelData.fuelPerLap);
         const fuelToEndSessionDisplay = await this.fuelToEndSessionDisplay(fuelData.fuelCapacity, fuelData.fuelToEndSession);
         const pitsToEndSessionDisplay = await this.pitsToEndSessionDisplay(fuelData.pitsToEndSession);
 
         return {
-            fuelCapacityDisplay,
+            // fuelCapacityDisplay,
             fuelDisplay,
             fuelPerLapDisplay,
             fuelToEndSessionDisplay,
             pitsToEndSessionDisplay,
         };
-    }
-
-    /**
-     * Get fuel capacity prepared for the view
-     * @param {*} fuelCapacity 
-     * @returns number
-     */
-    async fuelCapacityDisplay(fuelCapacity) {
-        if (!isFinite(fuelCapacity)) {
-            return null;
-        }
-
-        return Math.round(fuelCapacity * 10000) / 100;
     }
 
     /**
@@ -361,7 +327,7 @@ class LapWorker {
             return null;
         }
 
-        return (Math.round(fuel * 10000) / 100).toFixed(2);
+        return display((Math.round(fuel * 10000) / 100).toFixed(2), null, 'L', 'In Tank');
     }
 
     /**
@@ -370,11 +336,19 @@ class LapWorker {
      * @returns number
      */
     async fuelPerLapDisplay(fuelCapacity, fuelPerLap) {
-        if (!isFinite(fuelPerLap)) {
-            return null;
+        let value = 0;
+        let suffix = null;
+
+        if (!isFinite(fuelCapacity) || fuelCapacity === null || !isFinite(fuelPerLap) || fuelPerLap === null) {
+            value = 'N/A';
         }
 
-        return Math.round((fuelCapacity * fuelPerLap) * 10000) / 100;
+        if (isFinite(fuelCapacity) && fuelCapacity !== null && isFinite(fuelPerLap) && fuelPerLap !== null) {
+            value = Math.round((fuelCapacity * fuelPerLap) * 10000) / 100;
+            suffix = 'L';
+        }
+
+        return display(value, null, suffix, 'Per Lap');
     }
 
     /**
@@ -383,11 +357,19 @@ class LapWorker {
      * @returns string
      */
     async fuelToEndSessionDisplay(fuelCapacity, fuelToEndSession) {
-        if (!isFinite(fuelToEndSession)) {
-            return null;
+        let value = 0;
+        let suffix = null;
+
+        if (!isFinite(fuelCapacity) || fuelCapacity === null || !isFinite(fuelToEndSession) || fuelToEndSession === null) {
+            value = 'N/A';
         }
 
-        return Math.round((fuelCapacity * fuelToEndSession) * 10000) / 100;
+        if (isFinite(fuelCapacity) && fuelCapacity !== null && isFinite(fuelToEndSession) && fuelToEndSession !== null) {
+            value = Math.round((fuelCapacity * fuelToEndSession) * 10000) / 100;
+            suffix = 'L';
+        }
+
+        return display(value, null, suffix, 'To End');
     }
 
     /**
@@ -396,11 +378,17 @@ class LapWorker {
      * @returns 
      */
     async pitsToEndSessionDisplay(pitsToEndSession) {
-        if (!isFinite(pitsToEndSession)) {
-            return null;
+        let value = 0;
+
+        if (!isFinite(pitsToEndSession) || pitsToEndSession === null) {
+            value = 'N/A';
         }
 
-        return pitsToEndSession;
+        if (isFinite(pitsToEndSession) && pitsToEndSession !== null) {
+            value = pitsToEndSession;
+        }
+
+        return display(value, null, null, 'Min. Stops');
     }
 
     /**
@@ -476,6 +464,7 @@ class LapWorker {
 
         // race by time
         if (mEventTimeRemaining > 0) {
+
             const averageLaptime = await this.getAverageLapTime(runLapGroups);
 
             // get max expected laps, add additional lap if required
@@ -560,8 +549,9 @@ class LapWorker {
         let pitsToEndSession = 0;
 
         const fuelToEndSessionLitres = fuelCapacity * fuelToEndSession;
+
         if (fuel < fuelToEndSessionLitres) {
-            pitsToEndSession =  Math.ceil((fuelCapacity / 100) * (fuelCapacity / (fuelToEndSession - fuel)));
+            pitsToEndSession = Math.ceil( (fuelToEndSessionLitres - fuel) / fuelCapacity );
         }
 
         return pitsToEndSession;

@@ -7,7 +7,7 @@
         </div>
         <div class="p__hud">
             <PitHudComponent v-if="isHudPitComponentVisible" />
-            <DashHudComponent v-if="isHudDashComponentVisible" />
+            <InCarHudComponent v-if="isInCarComponentVisible" />
         </div>
     </div>
 </template>
@@ -35,7 +35,7 @@
 import { inject } from 'vue';
 import SettingsModalComponent from '../modals/SettingsModalComponent.vue';
 import PitHudComponent from '../huds/PitHudComponent.vue';
-import DashHudComponent from '../huds/DashHudComponent.vue';
+import InCarHudComponent from '../huds/InCarHudComponent.vue';
 
 export default {
     setup() {
@@ -43,7 +43,8 @@ export default {
         const configIp = inject('configIp');
         const configPort = inject('configPort');
         const configTickRate = inject('configTickRate');
-        const configActiveDisplay = inject('configActiveDisplay');
+        const configActiveMainDisplay = inject('configActiveMainDisplay');
+        const configActiveStreamDisplay = inject('configActiveStreamDisplay');
         const configStartVisible = inject('configStartVisible');
 
         // game state
@@ -58,7 +59,8 @@ export default {
             configIp,
             configPort,
             configTickRate,
-            configActiveDisplay,
+            configActiveMainDisplay,
+            configActiveStreamDisplay,
             configStartVisible,
             mGameState,
             mSessionState,
@@ -71,7 +73,7 @@ export default {
     components: {
         SettingsModalComponent,
         PitHudComponent,
-        DashHudComponent,
+        InCarHudComponent,
     },
     computed: {
         isSettingsReady() {
@@ -87,7 +89,11 @@ export default {
                 return false;
             }
 
-            if (this.configActiveDisplay === null) {
+            if (this.configActiveMainDisplay === null) {
+                return false;
+            }
+
+            if (this.configActiveStreamDisplay === null) {
                 return false;
             }
 
@@ -106,17 +112,17 @@ export default {
                 return false;
             }
 
-            if (!this.mEventTimeRemainingDisplay && !this.mLapsInEventDisplay) {
-                return false;
-            }
+            // if (!this.mEventTimeRemainingDisplay && !this.mLapsInEventDisplay) {
+            //     return false;
+            // }
 
-            if (this.mRaceState !== 1 && this.mRaceState !== 3) {
+            if (this.mRaceState !== 1 && this.mRaceState !== 2 && this.mRaceState !== 3) {
                 return false;
             }
 
             return true;
         },
-        isHudDashComponentVisible() {
+        isInCarComponentVisible() {
             if (!this.mGameState) {
                 return false;
             }

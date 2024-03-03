@@ -1,5 +1,14 @@
+import { millisecondsToTime } from '../../utils/TimeUtils';
+
 class StandingsWorker {
     constructor() {
+        this.storedSector = null;
+        this.storedDelta = null;
+        this.previousBestLapTime = null;
+        this.previousFastestSector1Time = null;
+        this.previousFastestSector2Time = null;
+        this.previousFastestSector3Time = null;
+        this.deltaDisplayThen = Date.now();
         this.init();
     }
 
@@ -57,13 +66,17 @@ class StandingsWorker {
             return null;
         }
 
+        if (!('timings' in data)) {
+            return null;
+        }
+
         let user = data.user;
         const sortedParticipantData = await this.getSortedParticipants(data.mParticipantInfo);
         const participantData = await this.setParticipantsIndexes(sortedParticipantData);      
         user = await this.updateUser(user, sortedParticipantData);
         const standingsData = await this.getStandingsData(user, participantData);
         const userIndex = standingsData.indexOf(user);
-        const standingsDataDisplay = await this.getStandingsDataForDisplay(user, userIndex, standingsData, data.mSessionState, data.mTrackLength);
+        const standingsDataDisplay = await this.getStandingsDataForDisplay(user, userIndex, standingsData, data.mSessionState, data.mTrackLength, data.timings);
         
         return {standingsDisplay: standingsDataDisplay};
     }
@@ -99,7 +112,7 @@ class StandingsWorker {
      * @param {*} mTrackLength 
      * @returns array
      */
-    async getStandingsDataForDisplay(user, userIndex, standingsData, mSessionState, mTrackLength) {
+    async getStandingsDataForDisplay(user, userIndex, standingsData, mSessionState, mTrackLength, timings) {
         // the number if total standings we want to return
         // they dont all show at once so lets limit the data that is returned to the view
         // ... this may be moved to a user defined option hense the use of this variable
@@ -110,29 +123,214 @@ class StandingsWorker {
             limit = 2 * Math.round(limit / 2);
         }
 
+
         // standings
         let standings = [];
         for (const index in standingsData) {
+            const standing = {};
             const participantData = standingsData[index];
             const status = await this.statusDisplay(index, participantData, userIndex, user, mSessionState);
             const distance = await this.distanceDisplay(index, participantData, userIndex, user, mTrackLength);
-            // const visible = await this.visibilityDisplay(index, participantData, userIndex, user);
             const mNameDisplay = await this.mNameDisplay(participantData.mName);
             const mCarClassNamesDisplay = await this.mCarClassNamesDisplay(participantData.mCarClassNames);
 
-            standings.push({
-                positionIndex: participantData.positionIndex,
-                status: status,
-                distance: distance,
-                // visible: visible,
-                mRacePosition: participantData.mRacePosition,
-                mName: participantData.mName,
-                mCarClassNames: mCarClassNamesDisplay,
-            });
+            // populate standing
+            standing.positionIndex = participantData.positionIndex;
+            standing.status = status;
+            standing.distance = distance;
+            standing.mRacePosition = participantData.mRacePosition;
+            standing.mName = mNameDisplay;
+            standing.mCarClassNames = mCarClassNamesDisplay;
+            standing.isUser = userIndex == index;
+
+            // user only values
+            if (userIndex == index) {
+                const delta = await this.delta(user.mCurrentSector, timings);
+                const deltaDisplay = await this.deltaDisplay(delta);
+                const deltaStatus = await this.deltaStatusDisplay(delta);
+                const deltaVisible = await this.deltaVisible(timings.mCurrentTime, delta, deltaStatus);
+                const mCurrentTimeDisplay = await this.mCurrentTimeDisplay(timings.mCurrentTime);
+                const mBestLapTimeDisplay = await this.mBestLapTimeDisplay(timings.mBestLapTime);
+                const mLastLapTimeDisplay = await this.mLastLapTimeDisplay(timings.mLastLapTime);
+
+                standing.delta = deltaDisplay;
+                standing.deltaStatus = deltaStatus;
+                standing.deltaVisible = deltaVisible;
+                standing.mCurrentTime = mCurrentTimeDisplay;
+                standing.mBestLapTime = mBestLapTimeDisplay;
+                standing.mLastLapTime = mLastLapTimeDisplay;
+            }
+
+            standings.push(standing);
         }
 
         // slice standings from the current users position, outwards as per limit
         return [].concat(standings.slice(userIndex - (limit / 2), userIndex), standings[userIndex], standings.slice(userIndex + 1, userIndex + 1 + (limit / 2)));
+    }
+
+    /**
+     * Delta is performance of current lap against session best lap
+     * @param {*} timings 
+     * @returns 
+     */
+    async delta(mCurrentSector, timings) {
+        if (!('mLastLapTime' in timings)) {
+            return null;
+        }
+
+        if (timings.mLastLapTime < 0) {
+            return null;
+        }
+
+        if (!('mBestLapTime' in timings)) {
+            return null;
+        }
+
+        if (timings.mBestLapTime < 0) {
+            return null;
+        }
+
+        if (mCurrentSector === this.storedSector && this.previousBestLapTime) {
+            return this.storedDelta;
+        }
+
+        // update store sector
+        this.storedSector = mCurrentSector;
+
+        // lap end/start
+        if (mCurrentSector === 0 && this.previousBestLapTime) {
+            this.storedDelta = timings.mCurrentSector3Time - this.previousFastestSector3Time;
+            // this.storedDelta = timings.mLastLapTime - this.previousBestLapTime;
+        }
+
+        // sector 0 end
+        if (mCurrentSector === 1) {
+            this.storedDelta = timings.mCurrentSector1Time - this.previousFastestSector1Time;
+            // this.storedDelta = timings.mCurrentSector1Time - timings.mFastestSector1Time;
+        }
+
+        // sector 1 end
+        if (mCurrentSector === 2) {
+            this.storedDelta = timings.mCurrentSector2Time - this.previousFastestSector2Time;
+            // this.storedDelta = timings.mCurrentSector2Time - timings.mFastestSector2Time;
+        }
+
+        // update previous best lap time.
+        // we store the previous best as mBestLapTime gets updated over the line when you
+        // improve so we can't calculate the difference any more
+        this.previousBestLapTime = timings.mBestLapTime;
+        this.previousFastestSector1Time = timings.mFastestSector1Time;
+        this.previousFastestSector2Time = timings.mFastestSector2Time;
+        this.previousFastestSector3Time = timings.mFastestSector3Time;
+
+        // reset delta display timeout
+        await this.resetDeltaDisplayTimeout();
+        await this.deltaDisplayTimeout();
+    }
+
+    /**
+     */
+    async deltaDisplay(delta) {
+        let prefix = '±';
+        if (delta < 0) { 
+            prefix = '-';
+        }
+        if (delta > 0) { 
+            prefix = '+';
+        }
+
+        return `${prefix}${millisecondsToTime(delta)}`;
+    }
+
+    /**
+     * 
+     */
+    async deltaVisible(mCurrentTime, delta, deltaStatus) { 
+        if (!mCurrentTime) {
+            return false;
+        } 
+
+        if (!delta) {
+            return false;
+        } 
+
+        if (!deltaStatus) {
+            return false;
+        }
+
+        return this.isDeltaVisible;
+    }
+    /**
+     * 
+     */
+    async resetDeltaDisplayTimeout() { 
+        return this.isDeltaVisible = true;
+    }
+
+    /**
+     */
+    async deltaDisplayTimeout() {
+        setTimeout(() => {
+            this.isDeltaVisible = false;
+        }, 5000);
+    }
+
+    /**
+     */
+    async deltaStatusDisplay(delta) {
+        if (!delta) { 
+            return null;
+        }
+
+        let status = 'zero';
+        if (delta > 0) {
+            status = 'positive';
+        }
+
+        if (delta < 0) {
+            status = 'negative';
+        }
+
+        return status;
+    }
+
+    /**
+     * Process current time for display
+     * @param {*} mCurrentTime 
+     * @returns string
+     */
+    async mCurrentTimeDisplay(mCurrentTime) {
+        if (mCurrentTime < 0) { 
+            return null;
+        }
+
+        return millisecondsToTime(mCurrentTime);
+    }
+
+    /**
+     * Process best time for display
+     * @param {*} mBestLapTime 
+     * @returns string
+     */
+    async mBestLapTimeDisplay(mBestLapTime) {
+        if (mBestLapTime < 0) { 
+            return null;
+        }
+
+        return millisecondsToTime(mBestLapTime);
+    }
+
+    /**
+     * Process last lap time for display
+     * @param {*} mLastLapTime 
+     * @returns string
+     */
+    async mLastLapTimeDisplay(mLastLapTime) {
+        if (mLastLapTime < 0) { 
+            return null;
+        }
+
+        return millisecondsToTime(mLastLapTime);
     }
 
     /**
@@ -291,24 +489,6 @@ class StandingsWorker {
         diff = Math.abs(diff);
 
         return `${symbol}${diff.toFixed(2)}m`;
-    }
-
-    /**
-     * Can we hide the participant at index
-     * @param {*} participant 
-     * @param {*} user 
-     * @returns boolean
-     */
-    async visibilityDisplay(index, participantData, userIndex, user) {
-        // if (user.mCurrentLap === participantData.mCurrentLap && index < userIndex) {
-        //     // return false;
-        // }
-
-        // if (participantData.mCurrentLapDistance === 0 && participantData !== user) {
-        //     // return false;
-        // }
-
-        return true;
     }
 
     /**

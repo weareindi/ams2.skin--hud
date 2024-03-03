@@ -4,7 +4,7 @@
  */
 export function millisecondsToTime(n) {
     // convert to total milliseconds
-    const totalmilliseconds = n * 1000;
+    const totalmilliseconds = Math.abs(n) * 1000;
 
     // milliseconds
     let milliseconds = Math.round((totalmilliseconds % 1000));

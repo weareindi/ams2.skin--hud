@@ -1,56 +1,87 @@
 <template>
     <div class="m-settings" v-if="open">
         <div class="m-settings__body">
-            <div class="m-settings__groups">
-                <div class="m-settings__group">
-                    <div class="m-settings__items m-settings__items--connections">
-                        <div class="m-settings__item">
-                            <SettingToggleComponent icon="auto" label="External Crest" v-model="externalCrest" :options="externalCrestOptions" />
+            <div class="m-settings__rows">
+                <div class="m-settings__row">
+                    <div class="m-settings__groups">
+                        <div class="m-settings__group">
+                            <div class="m-settings__items m-settings__items--connections">
+                                <div class="m-settings__item">
+                                    <SettingToggleComponent icon="auto" label="External Crest" v-model="externalCrest" :options="externalCrestOptions" />
+                                </div>
+                                <div class="m-settings__item" v-if="externalCrest">
+                                    <SettingInputComponent icon="network" label="IP" v-model="ip" />
+                                </div>
+                                <div class="m-settings__item" v-if="externalCrest">
+                                    <SettingInputComponent label="Port" v-model="port" />
+                                </div>
+                                <div class="m-settings__item">
+                                    <SettingInputComponent label="Connected" readonly="true" :valid="isConnected" v-model="isConnected" />
+                                </div>
+                            </div>
                         </div>
-                        <div class="m-settings__item" v-if="externalCrest">
-                            <SettingInputComponent icon="network" label="IP" v-model="ip" />
+                        <div class="m-settings__group">
+                            <div class="m-settings__items m-settings__items--prefs">
+                                <div class="m-settings__item">
+                                    <SettingInputComponent icon="display" label="Tick Rate" v-model="tickRate" type="number" min="1" max="30" />
+                                </div>
+                            </div>
                         </div>
-                        <div class="m-settings__item" v-if="externalCrest">
-                            <SettingInputComponent label="Port" v-model="port" />
+                        <div class="m-settings__group">
+                            <div class="m-settings__items m-settings__items--configs">
+                                <div class="m-settings__item">
+                                    <SettingToggleComponent icon="auto" label="Show settings on start" v-model="startVisible" :options="startVisibleOptions" />
+                                </div>
+                                <div class="m-settings__item">
+                                    <SettingToggleComponent label="Debug" v-model="debug" :options="debugOptions" />
+                                </div>
+                            </div>
                         </div>
-                        <div class="m-settings__item">
-                            <SettingInputComponent label="Connected" readonly="true" :valid="isConnected" v-model="isConnected" />
+                        <div class="m-settings__group">
+                            <div class="m-settings__items m-settings__items--buttons">
+                                <div class="m-settings__item">
+                                    <SettingButtonComponent label="Check for updates" color="blue" v-if="updateReady === null" @click="updateCheck" />
+                                    <SettingButtonComponent label="No update found" color="blue" v-if="updateReady === false" @click="updateCheck" :disabled="true" />
+                                    <SettingButtonComponent label="Download Available" color="green" v-if="updateReady === true" @click="gotoUpdate" />
+                                </div> 
+                                <div class="m-settings__item">
+                                    <SettingButtonComponent label="Hide Settings" color="yellow" @click="hideSettings" />
+                                </div>
+                            </div>
                         </div>
                     </div>
                 </div>
-                <div class="m-settings__group">
-                    <div class="m-settings__items m-settings__items--prefs">
-                        <div class="m-settings__item">
-                            <SettingInputComponent icon="display" label="Tick Rate" v-model="tickRate" type="number" min="1" max="30" />
-                        </div>
-                        <div class="m-settings__item">
-                            <SettingInputComponent icon="scale" label="Scale" v-model="scale" type="number" min="50" max="200" step="0.1"  />
-                        </div>
-                        <div class="m-settings__item">
-                            <SettingToggleComponent label="Display on" v-model="activeDisplay" :options="activeDisplayOptions" />
+                <hr class="m-settings__hr">
+                <div class="m-settings__row">
+                    <div class="m-settings__header">
+                        <h1 class="m-settings__heading">Main Display</h1>
+                    </div>
+                    <div class="m-settings__groups">
+                        <div class="m-settings__group">
+                            <div class="m-settings__items m-settings__items--prefs">
+                                <div class="m-settings__item">
+                                    <SettingToggleComponent icon="display" label="Display on" v-model="activeMainDisplay" :options="activeMainDisplayOptions" />
+                                </div>
+                            </div>
                         </div>
                     </div>
                 </div>
-                <div class="m-settings__group">
-                    <div class="m-settings__items m-settings__items--configs">
-                        <div class="m-settings__item">
-                            <SettingToggleComponent icon="auto" label="Show settings on start" v-model="startVisible" :options="startVisibleOptions" />
-                        </div>
+                <hr class="m-settings__hr" v-show="false">
+                <div class="m-settings__row" v-show="false">
+                    <div class="m-settings__header">
+                        <h1 class="m-settings__heading">Stream Display</h1>
                     </div>
-                </div>
-                <div class="m-settings__group">
-                    <div class="m-settings__items m-settings__items--buttons">
-                        <div class="m-settings__item">
-                            <SettingButtonComponent label="Check for updates" color="blue" v-if="updateReady === null" @click="updateCheck" />
-                            <SettingButtonComponent label="No update found" color="blue" v-if="updateReady === false" @click="updateCheck" :disabled="true" />
-                            <SettingButtonComponent label="Download Available" color="green" v-if="updateReady === true" @click="gotoUpdate" />
-                        </div> 
-                        <div class="m-settings__item">
-                            <SettingButtonComponent label="Hide Settings" color="yellow" @click="hideSettings" />
-                        </div> 
-                        <!-- <div class="m-settings__item">
-                            <SettingButtonComponent label="Exit Hud" color="red" @click="exitApp" />
-                        </div> -->
+                    <div class="m-settings__groups">
+                        <div class="m-settings__group">
+                            <div class="m-settings__items m-settings__items--prefs">
+                                <div class="m-settings__item">
+                                    <SettingToggleComponent icon="display" label="Enabled" v-model="enabledStreamDisplay" :options="enabledStreamDisplayOptions" />
+                                </div>
+                                <div class="m-settings__item" v-if="enabledStreamDisplay">
+                                    <SettingToggleComponent label="Display on" v-model="activeStreamDisplay" :options="activeStreamDisplayOptions" />
+                                </div>
+                            </div>
+                        </div>
                     </div>
                 </div>
             </div>
@@ -79,10 +110,30 @@
     flex-basis: auto;
 }
 
+.m-settings__hr {
+    @include color('background-color', 'white', 0.1);
+
+    margin: em(16) 0;
+    padding: 0;
+    border: 0;
+    height: 1px;
+}
+
+.m-settings__header {
+    ~ .m-settings__groups {
+        margin-top: em(8);
+    }
+}
+
+.m-settings__heading {
+    @include color('color', 'white', 1);
+
+    font-size: em(18);
+}
+
 .m-settings__groups {
     display: flex;
-    align-items: center;
-    justify-content: space-around;
+    align-items: left;
     margin: 0 em(-32);
 }
 
@@ -145,9 +196,11 @@ export default {
         const configIp = inject('configIp');
         const configPort = inject('configPort');
         const configTickRate = inject('configTickRate');
-        const configActiveDisplay = inject('configActiveDisplay');
-        const configStartVisible = inject('configStartVisible');
-        const configScale = inject('configScale');        
+        const configActiveMainDisplay = inject('configActiveMainDisplay');
+        const configEnabledStreamDisplay = inject('configEnabledStreamDisplay');
+        const configActiveStreamDisplay = inject('configActiveStreamDisplay');
+        const configStartVisible = inject('configStartVisible');    
+        const configDebug = inject('configDebug');    
         const isConnected = inject('isConnected');
         const isSettingsOpen = inject('isSettingsOpen');
 
@@ -164,14 +217,34 @@ export default {
         ];
 
         // display options
+        const enabledStreamDisplayOptions = [
+            {
+                label: 'Enabled',
+                value: true
+            },
+            {
+                label: 'Disabled',
+                value: false
+            }
+        ];
         const primaryDisplay = await electron.ipcRenderer.invoke('getPrimaryDisplay');
         const displays = await electron.ipcRenderer.invoke('getDisplays');
-        const activeDisplayOptions = displays.map((display) => {
+        const activeMainDisplayOptions = displays.map((display) => {
             return {
                 label: display.label,
                 value: display.id
             }
         });
+        const activeStreamDisplayOptions = displays.map((display) => {
+            return {
+                label: display.label,
+                value: display.id
+            }
+        });
+        activeStreamDisplayOptions.push({
+            label: 'Offscreen',
+            value: 'offscreen'
+        })
 
         // start options
         const startVisibleOptions = [
@@ -185,20 +258,37 @@ export default {
             }
         ];
 
+        // debug options
+        const debugOptions = [
+            {
+                label: 'Enabled',
+                value: true
+            },
+            {
+                label: 'Disabled',
+                value: false
+            }
+        ];
+
         return {
             configExternalCrest,
             configIp,
             configPort,
             configTickRate,
-            configActiveDisplay,
+            configActiveMainDisplay,
+            configEnabledStreamDisplay,
+            configActiveStreamDisplay,
             configStartVisible,
-            configScale,
             isConnected,
             isSettingsOpen,
             primaryDisplay,
             externalCrestOptions,
-            activeDisplayOptions,
-            startVisibleOptions
+            activeMainDisplayOptions,
+            enabledStreamDisplayOptions,
+            activeStreamDisplayOptions,
+            startVisibleOptions,
+            configDebug,
+            debugOptions
         }
     },
     mounted() {
@@ -286,31 +376,6 @@ export default {
                 return this.configTickRate = value;
             }
         },
-        scale:{
-            get() {
-                return this.changeScale(this.configScale);
-            },
-            set(value) {
-                return this.configScale = this.changeScale(value);
-            }
-        },
-        activeDisplay: {
-            get() {
-                if (!this.configActiveDisplay) {
-                    return this.activeDisplay = this.primaryDisplay.id;
-                }
-
-                return this.changeDisplay(this.configActiveDisplay);
-            },
-            set(value) {
-                return this.configActiveDisplay = this.changeDisplay(value);
-            }
-        },
-        activeDisplayOptions: {
-            get() {
-                return this.activeDisplayOptions;
-            }
-        },
         startVisible: {
             get() {
                 if (this.configStartVisible === null) {
@@ -321,6 +386,18 @@ export default {
             },
             set(value) {
                 return this.configStartVisible = value;
+            }
+        },
+        debug: {
+            get() {
+                if (this.configDebug === null) {
+                    return false; // default
+                }
+
+                return this.configDebug;
+            },
+            set(value) {
+                return this.configDebug = value;
             }
         },
         updateReady: {
@@ -337,15 +414,57 @@ export default {
                 return this.isUpdateAvailable = value;
             }
         },
+        activeMainDisplay: {
+            get() {
+                if (!this.configActiveMainDisplay) {
+                    return this.activeMainDisplay = this.primaryDisplay.id;
+                }
+
+                return this.configActiveMainDisplay;
+            },
+            set(value) {
+                return this.configActiveMainDisplay = this.changeWindowDisplay('main', value);
+            }
+        },
+        activeMainDisplayOptions: {
+            get() {
+                return this.activeMainDisplayOptions;
+            }
+        },
+        enabledStreamDisplay: {
+            get() {
+                if (this.configEnabledStreamDisplay === null) {
+                    return this.configEnabledStreamDisplay = false;
+                }
+
+                return this.configEnabledStreamDisplay;
+            },
+            set(value) {
+                return this.configEnabledStreamDisplay = value;
+            }
+        },
+        activeStreamDisplay: {
+            get() {
+                if (!this.configActiveStreamDisplay) {
+                    return this.activeStreamDisplay = this.primaryDisplay.id;
+                }
+
+                return this.configActiveStreamDisplay;
+            },
+            set(value) {
+                return this.configActiveStreamDisplay = this.changeWindowDisplay('stream', value);
+            }
+        },
+        activeStreamDisplayOptions: {
+            get() {
+                return this.activeStreamDisplayOptions;
+            }
+        },
     },
     methods: {
-        changeDisplay(id) {
-            electron.ipcRenderer.invoke('changeDisplay', id);
+        changeWindowDisplay(win, id) {
+            electron.ipcRenderer.invoke('changeWindowDisplay', win, id);
             return id;
-        },
-        changeScale(scale) {
-            document.documentElement.style.setProperty("--font-size", `${scale}%`);
-            return scale;
         },
         async hideSettings() {
             return this.open = false;

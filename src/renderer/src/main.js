@@ -1,9 +1,12 @@
 // App
 import { createApp } from 'vue';
-import App from './App.vue';
+import main from './main.vue';
 
 // Router
-import router from './router';
+import mainRouter from './router/mainRouter.js';
+
+// SVG Data
+import SvgCollection from './collections/SvgCollection.js';
 
 // Global Components
 import SvgComponent from './views/components/SvgComponent.vue';
@@ -15,8 +18,9 @@ import './assets/scss/_main.scss';
 import ParentWorkerMainThread from './workers/ParentWorker/ParentWorkerMainThread';
 
 // app
-const app = createApp(App);
-app.use(router);
+const app = createApp(main);
+app.use(mainRouter);
+app.use(new SvgCollection());
 app.use(new ParentWorkerMainThread());
 app.component('SvgComponent', SvgComponent);
-app.mount('#app');
+app.mount('#main');
