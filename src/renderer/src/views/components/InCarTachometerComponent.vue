@@ -2,10 +2,9 @@
     <div class="c-in-car-tachometer" v-if="mRpmDisplay !== null">
         <div class="c-in-car-tachometer__body">
             <span class="c-in-car-tachometer__ui" v-if="mRpmPercentage !== null">
-                <span class="c-in-car-tachometer__ui-bg"></span>
-                <span class="c-in-car-tachometer__ui-amount" :style="{ clipPath: `rect(0 ${ mRpmPercentage.value }% 100% 0)` }"></span>
-                <span class="c-in-car-tachometer__ui-limit" :style="{ clipPath: `rect(0 ${ mRpmPercentage.value }% 100% 0)`, opacity: `${mRpmPercentage.value}%` }"></span>
-                <span class="c-in-car-tachometer__ui-over" v-if="mRpmHighlight" :style="{ clipPath: `rect(0 ${ mRpmPercentage.value }% 100% 0)`, opacity: `${mRpmPercentage.value}%` }"></span>
+                <span class="c-in-car-tachometer__ui-bg"><SvgComponent svg="mask--tachometer" /></span>
+                <span class="c-in-car-tachometer__ui-amount"v-if="!mRpmHighlight" :style="{ clipPath: `inset(0 ${ 100 - mRpmPercentage.value }% 0 0)` }"><SvgComponent svg="mask--tachometer" /></span>
+                <span class="c-in-car-tachometer__ui-over" v-if="mRpmHighlight" :style="{ clipPath: `inset(0 ${ 100 - mRpmPercentage.value }% 0 0)` }"><SvgComponent svg="mask--tachometer" /></span>
             </span>
             <span class="c-in-car-tachometer__value">
                 <span class="c-in-car-tachometer__zerofill">{{ mRpmDisplay.zerofill }}</span>
@@ -28,64 +27,62 @@
 .c-in-car-tachometer__ui {
     position: relative;
     display: block;
-    width: em(310);
-    height: em(20);
-    mask-image: url('@public/ui/mask--tachometer--604x32.svg');
-    mask-size: 100% 100%;
+    width: em(312);
+    height: em(18);    
 }
 
 .c-in-car-tachometer__ui-bg {
-    @include color('background-color', 'white');
-
     position: absolute;
+    z-index: 1;
     top: 0;
     left: 0;
     width: 100%;
     height: 100%;
-    opacity: 0.1;
+    clip-path: inset(0 0 0 0);
+
+    svg {
+        path {
+            @include color('fill', 'white', 0.1);
+        }
+    }
 }
 
 .c-in-car-tachometer__ui-amount {
-    @include color('background-color', 'white');
-
     position: absolute;
+    z-index: 2;
     top: 0;
     left: 0;
     width: 100%;
     height: 100%;
-    clip-path: rect(0 0% 100% 0);
+    clip-path: inset(0 0 0 0);
     transition: 50ms clip-path 0ms linear;
     will-change: auto;
-}
 
-.c-in-car-tachometer__ui-limit {
-    @include linearGradient('blue', 0, 50%, 'blue', 1, 100%);
-
-    position: absolute;
-    top: 0;
-    left: 0;
-    width: 100%;
-    height: 100%;
-    clip-path: rect(0 0% 100% 0);
-    transition:
-        50ms clip-path 0ms linear,
-        50ms opacity 0ms linear;
-    will-change: auto;
+    svg {
+        path {
+            @include color('fill', 'white', 1);
+        }
+    }
 }
 
 .c-in-car-tachometer__ui-over {
-    @include color('background-color', 'red');
+    // @include color('background-color', 'red');
 
     position: absolute;
+    z-index: 4;
     top: 0;
     left: 0;
     width: 100%;
     height: 100%;
-    clip-path: rect(0 0% 100% 0);
-    transition:
-        50ms clip-path 0ms linear,
-        50ms opacity 0ms linear;
+    clip-path: inset(0 0 0 0);
+    transition: 50ms clip-path 0ms linear;
     will-change: auto;
+
+    svg {
+        path {
+            @include color('fill', 'red', 1);
+        }
+    }
 }
 
 .c-in-car-tachometer__value {
@@ -109,6 +106,7 @@
 
 <script>
 import { inject } from 'vue';
+import SvgComponent from './SvgComponent.vue';
 
 export default {
     setup() {
