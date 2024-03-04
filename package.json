@@ -1,6 +1,6 @@
 {
   "name": "ams2.skin--hud",
-  "version": "0.0.6",
+  "version": "0.0.7",
   "description": "A custom HUD for AMS2",
   "main": "./out/main/index.js",
   "author": {
