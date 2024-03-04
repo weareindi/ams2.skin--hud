@@ -7,19 +7,19 @@
 <style lang="scss">
 
 // svg sizing mixin
-@mixin svg($width, $height) {
-    @include impheight($width, $height);
+// @mixin svg($width, $height) {
+//     @include impheight($width, $height);
 
-    .c-svg__image {
-        $offset-x: -((math.div(100%, $width)));
-        $offset-y: -((math.div(100%, $height)));
+//     .c-svg__image {
+//         $offset-x: -((math.div(100%, $width)));
+//         $offset-y: -((math.div(100%, $height)));
 
-        top: $offset-y;
-        right: $offset-x;
-        bottom: $offset-y;
-        left: $offset-x;
-    }
-}
+//         top: $offset-y;
+//         right: $offset-x;
+//         bottom: $offset-y;
+//         left: $offset-x;
+//     }
+// }
 
 .c-svg {
     position: relative;
@@ -63,7 +63,8 @@ export default {
         }
     },
     props: {
-        svg: null
+        svg: null,
+        fill: false,
     },
     computed: {
         item: {
