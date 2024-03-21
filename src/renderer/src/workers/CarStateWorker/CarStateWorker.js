@@ -491,7 +491,7 @@ class CarStateWorker {
      * @returns 
      */
     async getBrakeStatus(damage, temperature) {
-        if (damage >= 0.1) {
+        if (damage >= 0) {
             return 1;
         }
 
@@ -586,7 +586,7 @@ class CarStateWorker {
      * @returns 
      */
     async getSuspensionStatus(damage) {
-        if (damage >= 0.1) {
+        if (damage >= 0) {
             return 1;
         }
 
@@ -689,7 +689,7 @@ class CarStateWorker {
      * @returns 
      */
     async getEngineStatus( damage) {
-        if (damage >= 0.1) {
+        if (damage >= 0) {
             return 1;
         }
 
@@ -931,7 +931,7 @@ class CarStateWorker {
      * @returns 
      */
     async getAeroStatus(damage) {
-        if (damage >= 0.1) {
+        if (damage > 0) {
             return 1;
         }
 
