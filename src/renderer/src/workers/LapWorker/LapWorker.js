@@ -7,6 +7,7 @@ class LapWorker {
         this.runID = Date.now();
         this.lap = {};
         this.lastlap = {}
+        this.initialEventTimeRemaining = null;
         this.init();
     }
 
@@ -148,16 +149,33 @@ class LapWorker {
      * @returns object
      */
     async getLapData(data) {
+        const mEventTimeRemaining = await this.getEventTimeRemaining(data.mEventTimeRemaining, data.mCurrentTime);
+
         return {
             mCurrentLap: data.user.mCurrentLap,
             mLapsInvalidated: data.mLapsInvalidated,
             mLapsInEvent: data.mLapsInEvent,
             mRacePosition: data.user.mRacePosition,
             mNumParticipants: data.mNumParticipants,
-            mEventTimeRemaining: data.mEventTimeRemaining,
+            mEventTimeRemaining: mEventTimeRemaining,
             mSessionAdditionalLaps: data.mSessionAdditionalLaps,
             mSessionState: data.mSessionState,
         };
+    }
+
+    /**
+     * 
+     */
+    async getEventTimeRemaining(mEventTimeRemaining, mCurrentTime) {
+        if (mCurrentTime < 0 && !this.initialEventTimeRemaining) {
+            return this.initialEventTimeRemaining = mEventTimeRemaining;
+        }
+
+        if (mCurrentTime < 0 && this.initialEventTimeRemaining) {
+            return this.initialEventTimeRemaining;
+        }
+
+        return mEventTimeRemaining;
     }
 
     /**
@@ -269,12 +287,15 @@ class LapWorker {
             laps = [];
         }
 
+        // get process vars
+        const mEventTimeRemaining = await this.getEventTimeRemaining(data.mEventTimeRemaining, data.mCurrentTime);
+
         // get session laps
         const runLapGroups = await this.getRunLapGroups(laps);
         const fuelCapacity = data.mFuelCapacity / 100;
         const fuel = await this.getFuel(fuelCapacity, data.mFuelLevel);
         const fuelPerLap = await this.getMaxFuelPerLap(runLapGroups);
-        const fuelToEndSession = await this.getFuelToEndSession(runLapGroups, fuel, fuelPerLap, data.mLapsInEvent, data.mLapsCompleted, data.mEventTimeRemaining, data.mSessionAdditionalLaps, data.mCurrentTime);
+        const fuelToEndSession = await this.getFuelToEndSession(runLapGroups, fuel, fuelPerLap, data.mLapsInEvent, data.mLapsCompleted, mEventTimeRemaining, data.mSessionAdditionalLaps, data.mCurrentTime);
         const pitsToEndSession = await this.getPitsToEndSession(fuelCapacity, fuel, fuelToEndSession);
 
         return {
@@ -464,7 +485,6 @@ class LapWorker {
 
         // race by time
         if (mEventTimeRemaining > 0) {
-
             const averageLaptime = await this.getAverageLapTime(runLapGroups);
 
             // get max expected laps, add additional lap if required
