@@ -87,7 +87,7 @@
             .c-in-car-stat__svg {
                 svg {
                     path {
-                        @include color('fill', 'red', 1);
+                        @include color('fill', 'green', 1);
                     }
                 }
             }
@@ -97,7 +97,7 @@
             .c-in-car-stat__svg {
                 svg {
                     path {
-                        @include color('fill', 'red', 1);
+                        @include color('fill', 'yellow', 1);
                     }
                 }
             }
