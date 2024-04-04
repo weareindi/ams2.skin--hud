@@ -437,7 +437,11 @@ class DashWorker {
      * @returns number
      */
     async mBrakeBiasDisplay(mBrakeBias) {
-        return display(mBrakeBias);
+
+        const front = Math.round((1 - mBrakeBias) * 100);
+        const rear = Math.round(mBrakeBias * 100);
+
+        return display(front, null, null, rear);
     }
 
     /**
