@@ -7,6 +7,7 @@ class LapWorker {
         this.runID = Date.now();
         this.lap = {};
         this.lastlap = {}
+        this.initialEventTimeRemaining = null;
         this.init();
     }
 
@@ -148,16 +149,33 @@ class LapWorker {
      * @returns object
      */
     async getLapData(data) {
+        const mEventTimeRemaining = await this.getEventTimeRemaining(data.mEventTimeRemaining, data.mCurrentTime, data.mSessionState);
+
         return {
             mCurrentLap: data.user.mCurrentLap,
             mLapsInvalidated: data.mLapsInvalidated,
             mLapsInEvent: data.mLapsInEvent,
             mRacePosition: data.user.mRacePosition,
             mNumParticipants: data.mNumParticipants,
-            mEventTimeRemaining: data.mEventTimeRemaining,
+            mEventTimeRemaining: mEventTimeRemaining,
             mSessionAdditionalLaps: data.mSessionAdditionalLaps,
             mSessionState: data.mSessionState,
         };
+    }
+
+    /**
+     * 
+     */
+    async getEventTimeRemaining(mEventTimeRemaining, mCurrentTime, mSessionState) {
+        if (mCurrentTime < 0 && !this.initialEventTimeRemaining && mSessionState === 5) {
+            return this.initialEventTimeRemaining = mEventTimeRemaining;
+        }
+
+        if (mCurrentTime < 0 && this.initialEventTimeRemaining && mSessionState === 5) {
+            return this.initialEventTimeRemaining;
+        }
+
+        return mEventTimeRemaining;
     }
 
     /**
@@ -269,12 +287,15 @@ class LapWorker {
             laps = [];
         }
 
+        // get process vars
+        const mEventTimeRemaining = await this.getEventTimeRemaining(data.mEventTimeRemaining, data.mCurrentTime, data.mSessionState);
+
         // get session laps
         const runLapGroups = await this.getRunLapGroups(laps);
         const fuelCapacity = data.mFuelCapacity / 100;
         const fuel = await this.getFuel(fuelCapacity, data.mFuelLevel);
         const fuelPerLap = await this.getMaxFuelPerLap(runLapGroups);
-        const fuelToEndSession = await this.getFuelToEndSession(runLapGroups, fuel, fuelPerLap, data.mLapsInEvent, data.mLapsCompleted, data.mEventTimeRemaining, data.mSessionAdditionalLaps, data.mCurrentTime);
+        const fuelToEndSession = await this.getFuelToEndSession(runLapGroups, fuel, fuelPerLap, data.mLapsInEvent, data.mLapsCompleted, mEventTimeRemaining, data.mSessionAdditionalLaps, data.mCurrentTime, data.user.mFastestLapTimes);
         const pitsToEndSession = await this.getPitsToEndSession(fuelCapacity, fuel, fuelToEndSession);
 
         return {
@@ -444,7 +465,7 @@ class LapWorker {
      * @param {*} mCurrentTime 
      * @returns number
      */
-    async getFuelToEndSession(runLapGroups, fuel, fuelPerLap, mLapsInEvent, mLapsCompleted, mEventTimeRemaining, mSessionAdditionalLaps, mCurrentTime) {
+    async getFuelToEndSession(runLapGroups, fuel, fuelPerLap, mLapsInEvent, mLapsCompleted, mEventTimeRemaining, mSessionAdditionalLaps, mCurrentTime, mFastestLapTimes) {
         let fuelToEndSession = 0;
 
         // race by laps
@@ -464,8 +485,7 @@ class LapWorker {
 
         // race by time
         if (mEventTimeRemaining > 0) {
-
-            const averageLaptime = await this.getAverageLapTime(runLapGroups);
+            const averageLaptime = await this.getAverageLapTime(runLapGroups, mFastestLapTimes);
 
             // get max expected laps, add additional lap if required
             let maxLaps = Math.ceil(mEventTimeRemaining / averageLaptime) + mSessionAdditionalLaps;
@@ -485,9 +505,10 @@ class LapWorker {
     /**
      * Get average lap time
      * @param {*} runLapGroups 
+     * @param {*} mFastestLapTimes 
      * @returns number
      */
-    async getAverageLapTime(runLapGroups) {
+    async getAverageLapTime(runLapGroups, mFastestLapTimes) {
         // loop through laps and compile array of valid lap times
         const laptimes = [];
         for (const runID in runLapGroups) {
@@ -503,6 +524,11 @@ class LapWorker {
 
                 // skip invalidated
                 if (runLap.mLapsInvalidated === 1) {
+                    continue;
+                }
+
+                // skip if not fastest lap or slower
+                if (runLap.mCurrentTime < mFastestLapTimes) {
                     continue;
                 }
 
