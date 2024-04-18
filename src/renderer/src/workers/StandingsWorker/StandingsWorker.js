@@ -512,21 +512,28 @@ class StandingsWorker {
         // split name at capitals
         const parts = mCarClassNames.match(/[A-Z][a-z]+|[A-Z]|[0-9]+/g);
 
-        // create shortname from first 3 characters of first item
-        let shortname = parts[0].slice(0, 3);
-
-        // remove first part as we've used it
-        parts.shift();
-
-        // any more parts? add the first character from the next part only
-        if (parts.length) {
-            if (shortname.length === 1) {
-                shortname += parts[0].slice(0, 3);
-            } else {
-                shortname += parts[0].slice(0, 1);
-            }
+        let name = mCarClassNames;
+        if (parts) {
+            name = parts[0];
         }
 
+        // // create shortname from first 3 characters of first item
+        let shortname = name.slice(0, 3);
+
+        if (parts) {
+            // remove first part as we've used it
+            parts.shift();
+
+            // any more parts? add the first character from the next part only
+            if (parts.length) {
+                if (shortname.length === 1) {
+                    shortname += parts[0].slice(0, 3);
+                } else {
+                    shortname += parts[0].slice(0, 1);
+                }
+            }
+        }
+        
         // make it uppercase
         return shortname.toUpperCase();        
     }
