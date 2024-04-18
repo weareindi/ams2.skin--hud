@@ -24,7 +24,7 @@ import localforage from 'localforage';
 export default {
     async mounted() {
         // get config
-        const config = await localforage.getItem('config');
+        // const config = await localforage.getItem('config');
 
         await this.changeWindow();
 
@@ -32,11 +32,6 @@ export default {
         await this.updateScale();
         electron.ipcRenderer.on('updateScale', async () => {
             await this.updateScale();
-        });
-
-        // data
-        electron.ipcRenderer.on('data', async (event, data) => {
-            // console.log(data);
         });
         
         //

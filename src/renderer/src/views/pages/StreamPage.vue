@@ -1,6 +1,8 @@
 <template>
     <div class="p">
-        <div class="p__stream"></div>
+        <div class="p__stream">
+            <StreamComponent />
+        </div>
     </div>
 </template>
 
@@ -14,6 +16,16 @@
 </style>
 
 <script>
-export default {}
+import StreamComponent from '../huds/StreamComponent.vue';
+
+export default {
+    setup() {        
+        return {}
+    },
+    components: {
+        StreamComponent,
+    },
+}
+
 </script>
 

@@ -14,6 +14,14 @@
     src: url('@public/fonts/firacode/FiraCode-Bold.ttf') format('truetype');
 }
 
+@font-face {
+    font-family: "qanelassoft";
+    font-style: normal;
+    font-weight: bold;
+    font-display: swap;
+    src: url('@public/fonts/qanelassoft/QanelasSoft-Bold.ttf') format('truetype');
+}
+
 body {
     *,
     *:before,
