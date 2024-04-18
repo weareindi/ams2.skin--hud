@@ -38,6 +38,7 @@ class LapWorker {
 
             if (event.data.name === 'reset') {
                 await this.dump();
+                await this.deleteDriverData();
                 await this.deleteLapData();
                 await this.returnMessage('resetcomplete');
             }
@@ -53,6 +54,13 @@ class LapWorker {
     }
 
     /**
+     * Delete the driverid
+     */
+    async deleteDriverData() {
+        await localforage.removeItem('driverid');
+    }
+
+    /**
      * Delete the lapstore
      */
     async deleteLapData() {
@@ -65,7 +73,7 @@ class LapWorker {
      * @returns object Prepared data
      */
     async prepareData(data) {
-        if (!('user' in data)) {
+        if (!('driver' in data)) {
             return null;
         }
 
@@ -115,7 +123,9 @@ class LapWorker {
 
         if (!('mSessionAdditionalLaps' in data)) {
             return null;
-        }        
+        }
+        
+        
 
         // is the user on the circuit?
         const onCircuit = await this.isOnCircuit(data);
@@ -152,10 +162,10 @@ class LapWorker {
         const mEventTimeRemaining = await this.getEventTimeRemaining(data.mEventTimeRemaining, data.mCurrentTime, data.mSessionState);
 
         return {
-            mCurrentLap: data.user.mCurrentLap,
+            mCurrentLap: data.driver.mCurrentLap,
             mLapsInvalidated: data.mLapsInvalidated,
             mLapsInEvent: data.mLapsInEvent,
-            mRacePosition: data.user.mRacePosition,
+            mRacePosition: data.driver.mRacePosition,
             mNumParticipants: data.mNumParticipants,
             mEventTimeRemaining: mEventTimeRemaining,
             mSessionAdditionalLaps: data.mSessionAdditionalLaps,
@@ -295,7 +305,7 @@ class LapWorker {
         const fuelCapacity = data.mFuelCapacity / 100;
         const fuel = await this.getFuel(fuelCapacity, data.mFuelLevel);
         const fuelPerLap = await this.getMaxFuelPerLap(runLapGroups);
-        const fuelToEndSession = await this.getFuelToEndSession(runLapGroups, fuel, fuelPerLap, data.mLapsInEvent, data.mLapsCompleted, mEventTimeRemaining, data.mSessionAdditionalLaps, data.mCurrentTime, data.user.mFastestLapTimes);
+        const fuelToEndSession = await this.getFuelToEndSession(runLapGroups, fuel, fuelPerLap, data.mLapsInEvent, data.mLapsCompleted, mEventTimeRemaining, data.mSessionAdditionalLaps, data.mCurrentTime, data.driver.mFastestLapTimes);
         const pitsToEndSession = await this.getPitsToEndSession(fuelCapacity, fuel, fuelToEndSession);
 
         return {
@@ -702,11 +712,11 @@ class LapWorker {
      * @returns boolean
      */
     async isOnCircuit(data) {
-        if (!data.user) {
+        if (!data.driver) {
             return false;
         }
 
-        if (data.user.mPitModes) {
+        if (data.driver.mPitModes) {
             return false;
         }
 

@@ -26,7 +26,8 @@
                             <div class="c-in-car-standing__label">Best</div>
                         </div>
                         <div class="c-in-car-standing__item c-in-car-standing__item--time c-in-car-standing__item--best">
-                            <div class="c-in-car-standing__time">{{ standing.mBestLapTime }}</div>
+                            <span class="c-in-car-standing__delta" v-if="standing.bestLapSectorDeltaVisible" :positive="standing.bestLapSectorDeltaPositive ? true : false">{{ standing.bestLapSectorDelta }}</span>
+                            <span class="c-in-car-standing__time">{{ standing.mBestLapTime }}</span>
                         </div>
                     </div>
                 </div>
@@ -38,7 +39,8 @@
                             <div class="c-in-car-standing__label">Last</div>
                         </div>
                         <div class="c-in-car-standing__item c-in-car-standing__item--time c-in-car-standing__item--last">
-                            <div class="c-in-car-standing__time">{{ standing.mLastLapTime }}</div>
+                            <span class="c-in-car-standing__delta" v-if="standing.lastLapSectorDeltaVisible" :positive="standing.lastLapSectorDeltaPositive ? true : false">{{ standing.lastLapSectorDelta }}</span>
+                            <span class="c-in-car-standing__time">{{ standing.mLastLapTime }}</span>
                         </div>
                     </div>
                 </div>
@@ -55,7 +57,7 @@
                     </div>
                 </div>
             </div>
-            <div class="c-in-car-standing__row" v-if="standing.deltaVisible">
+            <!-- <div class="c-in-car-standing__row" v-if="standing.deltaVisible">
                 <div class="c-in-car-standing__frame" :status="standing.deltaStatus">
                     <div class="c-in-car-standing__items">
                         <div class="c-in-car-standing__item c-in-car-standing__item--label">
@@ -66,7 +68,7 @@
                         </div>
                     </div>
                 </div>
-            </div>
+            </div> -->
         </div>
     </div>
 </template>
@@ -272,10 +274,20 @@
 
 .c-in-car-standing__label,
 .c-in-car-standing__time,
-.c-in-car-standing__delta {
+.c-in-car-standing__delta, {
     font-family: 'firacode', monospace;
     font-size: em(14);
     line-height: 1em;
+}
+
+.c-in-car-standing__delta {
+    @include color('color', 'green');
+
+    margin-right: em(16);
+
+    &[positive="true"] {
+        @include color('color', 'red');
+    }
 }
 </style>
 
