@@ -73,6 +73,10 @@ class LapWorker {
      * @returns object Prepared data
      */
     async prepareData(data) {
+        if (!('viewingDriver' in data)) {
+            return null;
+        }
+
         if (!('driver' in data)) {
             return null;
         }
@@ -81,23 +85,7 @@ class LapWorker {
             return null;
         }
 
-        if (!('mCurrentLap' in data)) {
-            return null;
-        }
-
-        if (!('mCurrentLapDistance' in data)) {
-            return null;
-        }
-
         if (!('mCurrentTime' in data)) {
-            return null;
-        }
-
-        if (!('mLapsInvalidated' in data)) {
-            return null;
-        }
-
-        if (!('mLastLapTimes' in data)) {
             return null;
         }
 
@@ -117,16 +105,10 @@ class LapWorker {
             return null;
         }
 
-        if (!('mLapsCompleted' in data)) {
-            return null;
-        }
-
         if (!('mSessionAdditionalLaps' in data)) {
             return null;
         }
         
-        
-
         // is the user on the circuit?
         const onCircuit = await this.isOnCircuit(data);
 
@@ -163,9 +145,9 @@ class LapWorker {
 
         return {
             mCurrentLap: data.driver.mCurrentLap,
-            mLapsInvalidated: data.mLapsInvalidated,
-            mLapsInEvent: data.mLapsInEvent,
+            mLapsInvalidated: data.driver.mLapsInvalidated,
             mRacePosition: data.driver.mRacePosition,
+            mLapsInEvent: data.mLapsInEvent,
             mNumParticipants: data.mNumParticipants,
             mEventTimeRemaining: mEventTimeRemaining,
             mSessionAdditionalLaps: data.mSessionAdditionalLaps,
@@ -712,6 +694,10 @@ class LapWorker {
      * @returns boolean
      */
     async isOnCircuit(data) {
+        if (!data.viewingDriver) {
+            return false;
+        }
+
         if (!data.driver) {
             return false;
         }
@@ -733,8 +719,8 @@ class LapWorker {
         const lap = {
             runID: runID,
             mSessionState: data.mSessionState,
-            mLapsInvalidated: data.mLapsInvalidated,
-            mCurrentLap: data.mCurrentLap,
+            mLapsInvalidated: data.driver.mLapsInvalidated,
+            mCurrentLap: data.driver.mCurrentLap,
             mCurrentTime: data.mCurrentTime,
             mFuelLevel: data.mFuelLevel
         };
