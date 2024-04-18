@@ -11,6 +11,7 @@ class ParentWorker {
         this.fetching = false;
         this.config = {};
         this.isConnected = false;
+        this.mSessionState = null;
         this.then = Date.now();
         this.init();
 
@@ -95,7 +96,15 @@ class ParentWorker {
     async reset() {
         await this.resetDashWorkerData();
         await this.resetLapWorkerData();
+        await this.resetStandingsWorkerData();
         await this.resetData();
+    }
+
+    /**
+     * Do a restart
+     */
+    async restart() {
+        await this.resetStandingsWorkerData();
     }
 
     /**
@@ -134,7 +143,7 @@ class ParentWorker {
                 const paused = await this.isPaused(event.data.data);
                 if (paused) {
                     // just stop everything. keep data still and dont reset
-                    return null;
+                    // return null;
                 }
 
                 // are we ready?
@@ -146,16 +155,36 @@ class ParentWorker {
                     return null;
                 }
 
+                // is new session?
+                const newSession = await this.isNewSession(event.data.data);
+
+                // ... yes?
+                if (newSession) {
+                    await this.restart();
+                }
+
                 // get user
+                const userId = await this.getUserId(event.data.data);
                 const user = await this.getUser(event.data.data);
                 if (!user) {
                     return null;
                 }
 
-                this.processDashWorkerData(user, event.data.data); 
-                this.processLapWorkerData(user, event.data.data);
+                this.processDashWorkerData(event.data.data); 
+                this.processCarStateWorkerData(event.data.data);
+
+                // user is whoever we're looking at, not nessasarily the driver
                 this.processStandingsWorkerData(user, event.data.data);
-                this.processCarStateWorkerData(user, event.data.data);
+
+
+                // get driver
+                const driverId = await this.getDriverId(event.data.data);
+                const driver = await this.getDriver(event.data.data);
+
+                // dont contaminate lap data with viewed user data
+                if (userId === driverId) {
+                    this.processLapWorkerData(driver, event.data.data);
+                }
             }
 
             if (event.data.name === 'connectionfailed') {
@@ -166,6 +195,64 @@ class ParentWorker {
                 return;
             }
         };
+    }
+
+    /**
+     * 
+     * @param {*} data 
+     * @returns 
+     */
+    async getDriverId(data) {
+        if (data.participants.mViewedParticipantIndex < 0) {
+            return null;
+        }
+
+        let driverid = null; 
+
+        // any user input updates the driver id
+        if (data.unfilteredInput.mUnfilteredThrottle > 0) {
+            driverid = data.participants.mViewedParticipantIndex;
+        }
+        if (data.unfilteredInput.mUnfilteredSteering > 0) {
+            driverid = data.participants.mViewedParticipantIndex;
+        }
+        if (data.unfilteredInput.mUnfilteredBrake < 1) {
+            driverid = data.participants.mViewedParticipantIndex;
+        }
+        if (data.unfilteredInput.mUnfilteredClutch > 1) {
+            driverid = data.participants.mViewedParticipantIndex;
+        }
+
+        // save driver id if driverid is found/applied
+        if (driverid !== null) {
+            await localforage.setItem('driverid', driverid);
+        }
+
+        // return whatever id is stored
+        return await localforage.getItem('driverid');
+    }
+
+    /**
+     * 
+     * @param {*} data 
+     * @returns 
+     */
+    async getDriver(data) {
+        const driverId = await this.getDriverId(data);
+
+        if (driverId === null) {
+            return null;
+        }
+
+        if (!('participants' in data)) {
+            return null;
+        }
+
+        if (!('mParticipantInfo' in data.participants)) {
+            return null;
+        }
+
+        return data.participants.mParticipantInfo[driverId];
     }
 
     /**
@@ -221,6 +308,21 @@ class ParentWorker {
         if (data.gameStates.mGameState === 1 && !data.gameStates.mSessionState && !data.gameStates.mRaceState) {
             return false;
         }
+
+        return true;
+    }
+
+    /**
+     * Has the session restarted or changed?
+     * @param {*} data 
+     * @returns boolean
+     */
+    async isNewSession(data) {
+        if (this.mSessionState === data.gameStates.mSessionState) {
+            return false;
+        }
+
+        this.mSessionState = data.gameStates.mSessionState;
 
         return true;
     }
@@ -293,10 +395,9 @@ class ParentWorker {
 
     /**
      * Post relevant data to the dash worker for processing
-     * @param {*} user 
      * @param {*} data 
      */
-    async processDashWorkerData(user, data) {
+    async processDashWorkerData(data) {
         return await this.postMessage(this.DashWorker, 'process', {
             mAntiLockActive: data.carState.mAntiLockActive,
             mAntiLockSetting: data.carState.mAntiLockSetting,
@@ -356,24 +457,24 @@ class ParentWorker {
     /**
      * Post relevant data to the lap worker for processing
      */
-    async processLapWorkerData(user, data) {
+    async processLapWorkerData(driver, data) {
         return await this.postMessage(this.LapWorker, 'process', {
-            user: user,
+            driver: driver,
             mSessionState: data.gameStates.mSessionState,
-            mCurrentLap: user.mCurrentLap,
-            mCurrentLapDistance: user.mCurrentLapDistance,
-            mLapsInvalidated: user.mLapsInvalidated,
-            mLapsCompleted: user.mLapsCompleted,
-            mLastLapTimes: user.mLastLapTimes,
+            mCurrentLap: driver.mCurrentLap,
+            mCurrentLapDistance: driver.mCurrentLapDistance,
+            mLapsInvalidated: driver.mLapsInvalidated,
+            mLapsCompleted: driver.mLapsCompleted,
+            mLastLapTimes: driver.mLastLapTimes,
             mFuelCapacity: data.carState.mFuelCapacity,
             mFuelLevel: data.carState.mFuelLevel,
             mCurrentTime: data.timings.mCurrentTime,
             mLapsInEvent: data.eventInformation.mLapsInEvent,
             mEventTimeRemaining: data.timings.mEventTimeRemaining,
             mSessionAdditionalLaps: data.eventInformation.mSessionAdditionalLaps,
-            mFastestLapTimes: user.mFastestLapTimes,
+            mFastestLapTimes: driver.mFastestLapTimes,
             mNumParticipants: data.participants.mNumParticipants,
-            mRacePosition: user.mRacePosition,
+            mRacePosition: driver.mRacePosition,
         });
     }
 
@@ -421,16 +522,37 @@ class ParentWorker {
     }
 
     /**
+     * Send message to lap worker to reset the stored lap data
+     */
+    async resetStandingsWorkerData() {
+        return await this.postMessage(this.StandingsWorker, 'reset');
+    }
+
+    /**
+     * 
+     * @param {*} data 
+     * @returns 
+     */
+    async getUserId(data) {
+        if (data.participants.mViewedParticipantIndex < 0) {
+            return null;
+        }
+
+        return data.participants.mViewedParticipantIndex;
+    }
+
+    /**
      * Get currently viewed user data
      * @param {*} data 
      * @returns object
      */
     async getUser(data) {
-        if (data.participants.mViewedParticipantIndex < 0) {
+        const userID = await this.getUserId(data);
+        if (userID === null) {
             return null;
         }
 
-        return data.participants.mParticipantInfo[data.participants.mViewedParticipantIndex];
+        return data.participants.mParticipantInfo[userID];
     }
 
     /**
@@ -457,10 +579,9 @@ class ParentWorker {
 
     /**
      * Post relavant data to the car state worker for processing
-     * @param {*} user 
      * @param {*} data 
      */
-    async processCarStateWorkerData(user, data) {
+    async processCarStateWorkerData(data) {
         return await this.postMessage(this.CarStateWorker, 'process', {
             mAeroDamage: data.carDamage.mAeroDamage,
             mEngineDamage: data.carDamage.mEngineDamage,
