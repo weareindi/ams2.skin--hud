@@ -381,27 +381,38 @@ export default class ParentWorkerMainThread {
 
             if (event.data.name === 'update-gamestates') {
                 await this.updateGlobalVars(event.data.data);
-                await this.toStream(event.data.data);
+                // await this.toStream(event.data.data);
             }
 
             if (event.data.name === 'updateview-dashdata') {
                 await this.updateGlobalVars(event.data.data);
-                await this.toStream(event.data.data);
+                // await this.toStream(event.data.data);
             }
 
             if (event.data.name === 'updateview-lapdata') {
                 await this.updateGlobalVars(event.data.data);
-                await this.toStream(event.data.data);
+                // await this.toStream(event.data.data);
             }
 
             if (event.data.name === 'updateview-standingsdata') {
                 await this.updateGlobalVars(event.data.data);
-                await this.toStream(event.data.data);
+
+                // send stream specific data to stream view
+                if ('standingsStream' in event.data.data) {
+                    await this.toStream({
+                        standings: event.data.data.standingsStream
+                    });
+                }
+
+                if ('participant' in event.data.data) {
+                    await this.toStream({
+                        participant: event.data.data.participant
+                    });
+                }
             }
 
             if (event.data.name === 'updateview-carstatedata') {
                 await this.updateGlobalVars(event.data.data);
-                await this.toStream(event.data.data);
             }
 
             if (event.data.name === 'reset') {
@@ -460,6 +471,11 @@ export default class ParentWorkerMainThread {
 
         // loop through provided data
         for (const key in data) {
+            // skip if no object found
+            if (!Object.hasOwnProperty.call(this.app._context.provides, key)) {
+                continue;
+            }
+
             // note: remember were using vue 'ref' for data handling.
             // ref adds the 'value' attribute to the provide which we're updating here
             this.app._context.provides[key].value = data[key];
