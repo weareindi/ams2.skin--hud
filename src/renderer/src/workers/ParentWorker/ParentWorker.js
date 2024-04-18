@@ -143,7 +143,7 @@ class ParentWorker {
                 const paused = await this.isPaused(event.data.data);
                 if (paused) {
                     // just stop everything. keep data still and dont reset
-                    // return null;
+                    return null;
                 }
 
                 // are we ready?
@@ -176,15 +176,12 @@ class ParentWorker {
                 // user is whoever we're looking at, not nessasarily the driver
                 this.processStandingsWorkerData(user, event.data.data);
 
-
                 // get driver
                 const driverId = await this.getDriverId(event.data.data);
                 const driver = await this.getDriver(event.data.data);
 
                 // dont contaminate lap data with viewed user data
-                if (userId === driverId) {
-                    this.processLapWorkerData(driver, event.data.data);
-                }
+                this.processLapWorkerData(driverId, driver, userId, event.data.data);
             }
 
             if (event.data.name === 'connectionfailed') {
@@ -210,16 +207,16 @@ class ParentWorker {
         let driverid = null; 
 
         // any user input updates the driver id
-        if (data.unfilteredInput.mUnfilteredThrottle > 0) {
+        if (data.unfilteredInput.mUnfilteredThrottle !== 0) {
             driverid = data.participants.mViewedParticipantIndex;
         }
-        if (data.unfilteredInput.mUnfilteredSteering > 0) {
+        if (data.unfilteredInput.mUnfilteredSteering !== 0) {
             driverid = data.participants.mViewedParticipantIndex;
         }
-        if (data.unfilteredInput.mUnfilteredBrake < 1) {
+        if (data.unfilteredInput.mUnfilteredBrake !== 0 && data.unfilteredInput.mUnfilteredBrake !== 1) {
             driverid = data.participants.mViewedParticipantIndex;
         }
-        if (data.unfilteredInput.mUnfilteredClutch > 1) {
+        if (data.unfilteredInput.mUnfilteredClutch !== 0) {
             driverid = data.participants.mViewedParticipantIndex;
         }
 
@@ -457,24 +454,18 @@ class ParentWorker {
     /**
      * Post relevant data to the lap worker for processing
      */
-    async processLapWorkerData(driver, data) {
+    async processLapWorkerData(driverId, driver, userId, data) {
         return await this.postMessage(this.LapWorker, 'process', {
+            viewingDriver: driverId === userId,
             driver: driver,
-            mSessionState: data.gameStates.mSessionState,
-            mCurrentLap: driver.mCurrentLap,
-            mCurrentLapDistance: driver.mCurrentLapDistance,
-            mLapsInvalidated: driver.mLapsInvalidated,
-            mLapsCompleted: driver.mLapsCompleted,
-            mLastLapTimes: driver.mLastLapTimes,
             mFuelCapacity: data.carState.mFuelCapacity,
             mFuelLevel: data.carState.mFuelLevel,
             mCurrentTime: data.timings.mCurrentTime,
             mLapsInEvent: data.eventInformation.mLapsInEvent,
             mEventTimeRemaining: data.timings.mEventTimeRemaining,
+            mSessionState: data.gameStates.mSessionState,
             mSessionAdditionalLaps: data.eventInformation.mSessionAdditionalLaps,
-            mFastestLapTimes: driver.mFastestLapTimes,
             mNumParticipants: data.participants.mNumParticipants,
-            mRacePosition: driver.mRacePosition,
         });
     }
 
