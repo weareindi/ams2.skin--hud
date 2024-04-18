@@ -181,7 +181,9 @@ class ParentWorker {
                 const driver = await this.getDriver(event.data.data);
 
                 // dont contaminate lap data with viewed user data
-                this.processLapWorkerData(driverId, driver, userId, event.data.data);
+                if (driver) {
+                    this.processLapWorkerData(driverId, driver, userId, event.data.data);
+                }
             }
 
             if (event.data.name === 'connectionfailed') {
