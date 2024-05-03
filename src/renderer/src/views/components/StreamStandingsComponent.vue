@@ -1,11 +1,11 @@
 <template>
-    <div class="c-stream-standings">
+    <div class="c-stream-standings" v-if="standings && standings.page && standings.pages">
         <div class="c-stream-standings__groups">
-            <div class="c-stream-standings__group" v-for="chunk, chunkIndex in chunks">
-                <div class="c-stream-standings__items" v-if="chunkIndex == activeChunk">
-                    <div class="c-stream-standings__item" v-for="standing in chunk">
+            <div class="c-stream-standings__group" v-for="page, pageIndex in standings.pages">
+                <div class="c-stream-standings__items" v-if="(pageIndex + 1) == standings.page">
+                    <div class="c-stream-standings__item" v-for="standing in page">
                         <span class="c-stream-standings__position">{{ standing.mRacePosition }}</span>
-                        <span class="c-stream-standings__name">{{ standing.mName }}</span>                
+                        <span class="c-stream-standings__name">{{ standing.mName }}</span>
                     </div>
                 </div>
             </div>
@@ -36,7 +36,8 @@ $item_margin: 8;
     width: 100%;
     max-width: em(1280);
     height: em(($item_height * 3) + ($item_margin * 2 * 3));
-    align-items: center;
+    align-items: flex-start;
+    justify-content: flex-start;
 }
 
 .c-stream-standings__item {
@@ -101,30 +102,7 @@ export default {
         const standings = inject('standings');
 
         return {
-            chunks: standings,
-        }
-    },
-    data() {
-        return {
-            activeChunk: 0,
-            interval: null
-        }
-    },
-    mounted() {
-        this.start();
-    },
-    methods: {
-        start() {
-            this.stop();
-            this.interval = setInterval(() => {
-                this.activeChunk++;
-                if (this.activeChunk >= this.chunks.length) {
-                    this.activeChunk = 0;
-                }
-            }, 10000);
-        },
-        stop() {
-            clearInterval(this.interval);
+            standings
         }
     }
 }
