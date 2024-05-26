@@ -20,14 +20,6 @@ export default defineConfig({
         },
         plugins: [
             vue(),
-            // svgLoader({
-            //     defaultImport: 'raw'
-            // }),
-            stylelint({
-                fix: true,
-                cache: false,
-                lintOnStart: true,
-            }),
         ],
         css: {
             preprocessorOptions: {
