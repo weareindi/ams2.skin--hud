@@ -31,6 +31,14 @@ export default defineConfig({
                         `
                 }
             }
+        },
+        build: {
+            rollupOptions: {
+                input: [
+                    'src/renderer/index.html',
+                    'src/renderer/stream.html',
+                ]
+            }
         }
-    }
+    },
 })
