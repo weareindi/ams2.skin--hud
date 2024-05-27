@@ -4,7 +4,7 @@
             <div class="c-stream-solo__item" v-if="solo">
                 <span class="c-stream-solo__info">
                     <span class="c-stream-solo__name">{{ solo.mName }}</span>
-                    <span class="c-stream-solo__car">{{ solo.mCarNames }}</span>
+                    <span class="c-stream-solo__car">{{ solo.mCarNamesDisplay }}</span>
                 </span>
                 <span class="c-stream-solo__position">{{ solo.mRacePosition }}</span>
             </div>

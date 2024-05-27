@@ -82,6 +82,7 @@ export default class StreamWorkerMainThread {
     async updateGlobalVars(data) {
         // loop through provided data
         for (const key in data) {
+
             // skip if no object found
             if (!Object.hasOwnProperty.call(this.app._context.provides, key)) {
                 continue;
@@ -90,6 +91,9 @@ export default class StreamWorkerMainThread {
             // note: remember were using vue 'ref' for data handling.
             // ref adds the 'value' attribute to the provide which we're updating here
             this.app._context.provides[key].value = data[key];
+
+            // console.log(key);
+            // console.log(data);
         }
     }
 

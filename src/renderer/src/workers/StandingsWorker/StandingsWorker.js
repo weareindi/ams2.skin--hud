@@ -118,6 +118,7 @@ class StandingsWorker {
             const participant = participants[index];
             participants[index].mNameDisplay = await this.mNameDisplay(participant.mName);
             participants[index].mCarClassNamesDisplay = await this.mCarClassNamesDisplay(participant.mCarClassNames);
+            participants[index].mCarNamesDisplay = await this.mCarNamesDisplay(participant.mCarNames);
             participants[index].mFastestLapTimesDisplay = await this.mFastestLapTimeDisplay(participant.mFastestLapTimes);
             participants[index].mLastLapTimeDisplay = await this.mLastLapTimeDisplay(participant.mLastLapTimes);
             participants[index].calculatedCurrentTime = await this.calcMCurrentTime(participant);
@@ -218,6 +219,20 @@ class StandingsWorker {
         
         // make it uppercase
         return shortname.toUpperCase();        
+    }
+
+    /**
+     * 
+     */
+    async mCarNamesDisplay(mCarNames) {
+        // split name at capitals
+        const parts = mCarNames.split('-');
+
+        if (parts) {
+            return parts[0].trim();
+        }
+
+        return mCarNames;
     }
 
     /**
@@ -355,13 +370,13 @@ class StandingsWorker {
     async distanceToUserDisplay(distanceToUser) {
         let symbol = '';
 
-        if (distanceToUser < 0) {
-            symbol = '';
-        }
+        // if (distanceToUser < 0) {
+        //     symbol = '';
+        // }
 
-        if (distanceToUser > 0) {
-            symbol = '-';
-        }
+        // if (distanceToUser > 0) {
+        //     symbol = '';
+        // }
 
         const diff = Math.abs(distanceToUser);
 

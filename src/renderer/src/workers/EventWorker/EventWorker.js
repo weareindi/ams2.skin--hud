@@ -59,15 +59,6 @@ class EventWorker {
         const eventData = await this.getEventData(data);
 
         return {...eventData}
-
-        // const settingsData = await this.getSettingsData(data);
-        // const settingsDataDisplay = await this.getSettingsDataForDisplay(settingsData);
-        // const inputsData = await this.getInputsData(data);
-        // const inputsDataDisplay = await this.getInputsDataForDisplay(inputsData);
-        // const speedometerData = await this.getSpeedometerData(data);
-        // const speedometerDataDisplay = await this.getSpeedometerDataForDisplay(speedometerData);
-
-        // return {...settingsDataDisplay, ...inputsDataDisplay, ...speedometerDataDisplay}
     }
 
     /**
@@ -83,6 +74,14 @@ class EventWorker {
             return null;
         }
 
+        if (!('eventInformation' in data)) {
+            return null;
+        }
+
+        if (!('mSessionDuration' in data.eventInformation)) {
+            return null;
+        }
+
         if (!('gameStates' in data)) {
             return null;
         }
@@ -93,6 +92,9 @@ class EventWorker {
 
         return {
             eventTimeRemaining: await this.getEventTimeRemaining(data.timings.mEventTimeRemaining),
+            eventTimeElapsed: await this.getEventTimeElapsed(data.eventInformation.mSessionDuration, data.timings.mEventTimeRemaining),
+            gameState: await this.getGameState(data.gameStates.mGameState),
+            raceState: await this.getRaceState(data.gameStates.mRaceState),
             sessionName: await this.getSessionName(data.gameStates.mSessionState),
             sessionState: await this.getSessionState(data.gameStates.mSessionState)
         }
@@ -102,7 +104,24 @@ class EventWorker {
      * 
      */
     async getEventTimeRemaining(mEventTimeRemaining) {
+        if (mEventTimeRemaining < 0) {
+            return millisecondsToTime(0, true);
+        }
+
         return millisecondsToTime(mEventTimeRemaining, true);
+    }
+
+    /**
+     * 
+     */
+    async getEventTimeElapsed(mSessionDuration, mEventTimeRemaining) {
+        const elapsed = mSessionDuration - mEventTimeRemaining;
+
+        if (elapsed > mSessionDuration) {
+            return mSessionDuration;
+        }
+
+        return elapsed;
     }
 
     /**
@@ -129,6 +148,20 @@ class EventWorker {
      */
     async getSessionState(mSessionState) {
         return mSessionState;
+    }
+
+    /**
+     * 
+     */
+    async getGameState(mGameState) {
+        return mGameState;
+    }
+
+    /**
+     * 
+     */
+    async getRaceState(mRaceState) {
+        return mRaceState;
     }
 
     /**

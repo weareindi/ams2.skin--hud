@@ -1,15 +1,15 @@
 <template>
-    <div class="c-stream-hud" v-if="viewStates">
-        <div class="c-stream-hud__item c-stream-hud__item--standings" v-if="standings">
+    <div class="c-stream-hud" v-if="director && view">
+        <div class="c-stream-hud__item c-stream-hud__item--standings" v-if="view === 'standings'">
             <StreamStandingsComponent />
         </div>
-        <div class="c-stream-hud__item c-stream-hud__item--solo" v-if="solo">
+        <div class="c-stream-hud__item c-stream-hud__item--solo" v-if="view === 'solo'">
             <StreamSoloComponent />
         </div>
-        <div class="c-stream-hud__item c-stream-hud__item--chase" v-if="chase">
+        <div class="c-stream-hud__item c-stream-hud__item--chase" v-if="view === 'chase'">
             <StreamChaseComponent />
         </div>
-        <div class="c-stream-hud__item c-stream-hud__item--timings" v-if="timings">
+        <div class="c-stream-hud__item c-stream-hud__item--timings" v-if="view === 'timings'">
             <StreamTimingsComponent />
         </div>
     </div>
@@ -18,11 +18,10 @@
 <style lang="scss">
 .c-stream-hud {}
 
-.c-stream-hud__item {
-}
+.c-stream-hud__item {}
 
 .c-stream-hud__item--standings,
-.c-stream-hud__item--chasing,
+.c-stream-hud__item--chase,
 .c-stream-hud__item--solo {
     @include color('background-color', 'pitbox', 0.8);
 
@@ -52,10 +51,12 @@ import { inject } from 'vue';
 
 export default {
     setup() {
-        const viewStates = inject('viewStates');
+        const director = inject('director');
+        const view = inject('view');
 
         return {
-            viewStates
+            director,
+            view
         }
     },
     components: {
@@ -63,20 +64,6 @@ export default {
         StreamSoloComponent,
         StreamChaseComponent,
         StreamTimingsComponent,
-    },
-    computed: {
-        chase() {
-            return this.viewStates.indexOf('chase') >= 0 ? true : false;
-        },
-        solo() {
-            return this.viewStates.indexOf('solo') >= 0 ? true : false;
-        },
-        standings() {
-            return this.viewStates.indexOf('standings') >= 0 ? true : false;
-        },
-        timings() {
-            return this.viewStates.indexOf('timings') >= 0 ? true : false;
-        }
     }
 }
 </script>
