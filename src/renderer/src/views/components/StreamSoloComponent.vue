@@ -1,12 +1,12 @@
 <template>
     <div class="c-stream-solo">
         <div class="c-stream-solo__items">
-            <div class="c-stream-solo__item" v-if="participant">
+            <div class="c-stream-solo__item" v-if="solo">
                 <span class="c-stream-solo__info">
-                    <span class="c-stream-solo__name">{{ participant.mName }}</span>
-                    <span class="c-stream-solo__car">{{ participant.mCarNames }}</span>
+                    <span class="c-stream-solo__name">{{ solo.mName }}</span>
+                    <span class="c-stream-solo__car">{{ solo.mCarNamesDisplay }}</span>
                 </span>
-                <span class="c-stream-solo__position">{{ participant.mRacePosition }}</span>
+                <span class="c-stream-solo__position">{{ solo.mRacePosition }}</span>
             </div>
         </div>
     </div>
@@ -113,12 +113,10 @@ import { inject } from 'vue';
 
 export default {
     setup() {
-        const participant = inject('participant');
-
-        console.log(participant);
+        const solo = inject('solo');
 
         return {
-            participant
+            solo
         }
     }
 }

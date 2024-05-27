@@ -1,4 +1,5 @@
 import { millisecondsToTime } from '../../utils/TimeUtils';
+import { zerofill } from "../../utils/ValueUtils";
 import localforage from "localforage";
 
 class StandingsWorker {
@@ -9,6 +10,10 @@ class StandingsWorker {
         this.bestLapSectorDeltaSector = null;
         this.bestLapSectorDeltaVisible = false;
         this.bestLapSectorDeltaVisibleTimeout = null;
+        this.driverAhead = null;
+        this.driverAheadCountdown = 5;
+        this.driverBehind = null;
+        this.driverBehindCountdown = 5;
         this.init();
     }
 
@@ -48,7 +53,8 @@ class StandingsWorker {
      * Delete the store
      */
     async deleteParticipantsData() {
-        return await localforage.removeItem('participantsstore');
+        await localforage.removeItem('chasestore');
+        await localforage.removeItem('participantsstore');
     }
 
     /**
@@ -86,17 +92,295 @@ class StandingsWorker {
         const lapsAppliedParticipantInfo = await this.applyStoredParticipantLapData(data.mParticipantInfo);
         const sortedParticipantInfo = await this.getSortedParticipants(lapsAppliedParticipantInfo);
         const participantData = await this.setParticipantsIndexes(sortedParticipantInfo);
+        const participantDataAdditionalData = await this.setParticipantsAdditionalData(participantData);
         user = await this.updateUser(user, sortedParticipantInfo);
-        const standingsData = await this.getStandingsData(user, participantData);
+        user = await this.applyTimingsToUser(user, data.timings);
+        const standingsData = await this.getStandingsData(user, participantDataAdditionalData);
         const userIndex = standingsData.indexOf(user);
-        const standingsDataDisplay = await this.getStandingsDataForDisplay(user, userIndex, standingsData, data.mSessionState, data.mTrackLength, data.timings);
-        const standingsDataStream = await this.getStandingsDataForStream(data.mParticipantInfo);
+        const standingsAdditionalData = await this.setStandingsAdditionalData(userIndex, user, standingsData, data.mSessionState, data.mTrackLength);
+        const standingsDataDisplay = await this.getStandingsDataForDisplay(userIndex, standingsAdditionalData);
 
         return {
-            standingsDisplay: standingsDataDisplay,
-            standingsStream: standingsDataStream,
-            participant: user,
+            standings: standingsDataDisplay,
+            userIndex: userIndex,
+            user: user,
+            participants: participantDataAdditionalData,
         };
+    }
+
+    /**
+     * 
+     * @param {*} participants 
+     * @returns 
+     */
+    async setParticipantsAdditionalData(participants) {
+        for (let index = 0; index < participants.length; index++) {
+            const participant = participants[index];
+            participants[index].mNameDisplay = await this.mNameDisplay(participant.mName);
+            participants[index].mCarClassNamesDisplay = await this.mCarClassNamesDisplay(participant.mCarClassNames);
+            participants[index].mCarNamesDisplay = await this.mCarNamesDisplay(participant.mCarNames);
+            participants[index].mFastestLapTimesDisplay = await this.mFastestLapTimeDisplay(participant.mFastestLapTimes);
+            participants[index].mLastLapTimeDisplay = await this.mLastLapTimeDisplay(participant.mLastLapTimes);
+            participants[index].calculatedCurrentTime = await this.calcMCurrentTime(participant);
+            participants[index].mCurrentTimeDisplay = await this.mCurrentTimeDisplay(participants[index].calculatedCurrentTime);
+            participants[index].mSpeedsDisplay = await this.mSpeedsDisplay(participants[index].mSpeeds);
+            participants[index].mPitModesDisplay = await this.mPitModesDisplay(participants[index].mPitModes);
+
+        }
+
+        return participants;
+    }
+
+    /**
+     * 
+     * @param {*} participant 
+     */
+    async calcMCurrentTime(participant) {
+        if (!('mCurrentSector' in participant)) {
+            return null;
+        }
+
+        if (!('mCurrentSector1Times' in participant)) {
+            return null;
+        }
+
+        if (!('mCurrentSector2Times' in participant)) {
+            return null;
+        }
+
+        if (!('mCurrentSector3Times' in participant)) {
+            return null;
+        }
+
+        let total = 0;
+
+        for (let sector = 0; sector <= participant.mCurrentSector; sector++) {
+            total += participant[`mCurrentSector${sector + 1}Times`];
+        }
+
+        return total;
+    }
+
+    /**
+     * 
+     */
+    async setStandingsAdditionalData(userIndex, user, standings, mSessionState, mTrackLength) {
+        for (let index = 0; index < standings.length; index++) {
+            const participant = standings[index];
+            standings[index].statusToUser = await this.statusToUser(index, participant, userIndex, user, mSessionState);
+            standings[index].statusToUserDisplay = await this.statusToUserDisplay(standings[index].statusToUser);
+            standings[index].distanceToUser = await this.distanceToUser(index, participant, userIndex, user, mTrackLength);
+            standings[index].distanceToUserDisplay = await this.distanceToUserDisplay(standings[index].distanceToUser);
+            standings[index].isUser = userIndex == index;
+        }
+
+        return standings;
+    }
+
+    /**
+     * Get participant name
+     * @param {*} mName 
+     * @returns string
+     */
+    async mNameDisplay(mName) {
+        return mName;
+    }
+
+    /**
+     * Prepare car class name for standing in view
+     * @param {*} mCarClassNames 
+     * @returns string
+     */
+    async mCarClassNamesDisplay(mCarClassNames) {
+        // split name at capitals
+        const parts = mCarClassNames.match(/[A-Z][a-z]+|[A-Z]|[0-9]+/g);
+
+        let name = mCarClassNames;
+        if (parts) {
+            name = parts[0];
+        }
+
+        // create shortname from first 3 characters of first item
+        let shortname = name.slice(0, 3);
+
+        if (parts) {
+            // remove first part as we've used it
+            parts.shift();
+
+            // any more parts? add the first character from the next part only
+            if (parts.length) {
+                if (shortname.length === 1) {
+                    shortname += parts[0].slice(0, 3);
+                } else {
+                    shortname += parts[0].slice(0, 1);
+                }
+            }
+        }
+        
+        // make it uppercase
+        return shortname.toUpperCase();        
+    }
+
+    /**
+     * 
+     */
+    async mCarNamesDisplay(mCarNames) {
+        // split name at capitals
+        const parts = mCarNames.split('-');
+
+        if (parts) {
+            return parts[0].trim();
+        }
+
+        return mCarNames;
+    }
+
+    /**
+     * Get participant status prepared for the view
+     * @param {*} index 
+     * @param {*} participant 
+     * @param {*} userIndex
+     * @param {*} user
+     * @param {*} mSessionState 
+     * @returns string
+     */
+    async statusToUser(index, participant, userIndex, user, mSessionState) {
+        // skip if its current driver
+        if (participant.positionIndex === user.positionIndex) {
+            return null
+        }
+
+        if (mSessionState === 1 || mSessionState === 3) { // practice (1) or qualifying (3)
+            if (participant.mRaceStates === 1) {
+                return 'out';
+            }
+
+            if (participant.mRaceStates === 2) {
+                return 'hot';
+            }
+        }
+
+        if (mSessionState === 5) { // race (5)
+            // participant ahead on same lap (racing)
+            if (index < userIndex && participant.mRacePosition < user.mRacePosition && participant.mCurrentLap === user.mCurrentLap) {
+                return 'ahead';
+            }
+
+            // participant behind on same lap (racing)
+            if (index > userIndex && participant.mRacePosition > user.mRacePosition && participant.mCurrentLap === user.mCurrentLap) {
+                return 'behind';
+            }
+
+            // participant ahead on higher lap, better position
+            if (index < userIndex && participant.mRacePosition < user.mRacePosition && participant.mCurrentLap > user.mCurrentLap) {
+                return 'leader';
+            }
+
+            // participant behind on same lap, better position 
+            if (index > userIndex && participant.mRacePosition < user.mRacePosition && participant.mCurrentLap === user.mCurrentLap) {
+                return 'leader';
+            }
+
+            // participant behind on higher lap, better position
+            if (index > userIndex && participant.mRacePosition < user.mRacePosition && participant.mCurrentLap > user.mCurrentLap) {
+                return 'leader';
+            }
+
+            // participant ahead on lower lap, lower position
+            if (index < userIndex && participant.mRacePosition > user.mRacePosition && participant.mCurrentLap < user.mCurrentLap) {
+                return 'backmarker';
+            }
+
+            // participant ahead on lower lap, lower position
+            if (index > userIndex && participant.mRacePosition > user.mRacePosition && participant.mCurrentLap < user.mCurrentLap) {
+                return 'backmarker';
+            }
+
+            // participant ahead on lower lap, lower position
+            if (index < userIndex && participant.mRacePosition > user.mRacePosition && participant.mCurrentLap === user.mCurrentLap) {
+                return 'backmarker';
+            }
+        }
+
+        // no match?
+        return null
+    }
+
+    /**
+     * 
+     * @param {*} statusToUser 
+     * @returns 
+     */
+    async statusToUserDisplay(statusToUser) {
+        return statusToUser;
+    }
+
+    /**
+     * Get distance to other participants prepared for the view
+     * @param {*} index 
+     * @param {*} participant 
+     * @param {*} userIndex 
+     * @param {*} user 
+     * @param {*} mTrackLength 
+     * @returns string
+     */
+    async distanceToUser(index, participant, userIndex, user, mTrackLength) {
+        if (participant.mCurrentLapDistance <= 0 && participant.mCurrentLap === 1) {
+            return null;
+        }
+
+        let diff = 0;
+
+        // if ahead of current player on circuit
+        if (index < userIndex) {
+            if (user.mCurrentLapDistance < participant.mCurrentLapDistance) {
+                diff = participant.mCurrentLapDistance - user.mCurrentLapDistance;
+            }
+            
+            if (user.mCurrentLapDistance > participant.mCurrentLapDistance) {
+                diff = mTrackLength - (user.mCurrentLapDistance - participant.mCurrentLapDistance);
+            }
+
+            return diff * -1;
+        }
+
+        // if behind current player on circuit
+        if (index > userIndex) {
+            // racing
+            if (user.mCurrentLapDistance > participant.mCurrentLapDistance) {
+                diff = user.mCurrentLapDistance - participant.mCurrentLapDistance;
+            }
+
+            // leaders
+            if (user.mCurrentLapDistance < participant.mCurrentLapDistance) {
+                diff = mTrackLength - (participant.mCurrentLapDistance - user.mCurrentLapDistance);
+            }
+
+            return diff;
+        }
+
+        return diff
+    }
+
+    /**
+     * 
+     * @param {*} distanceToUser 
+     * @returns 
+     */
+    async distanceToUserDisplay(distanceToUser) {
+        let symbol = '';
+
+        // if (distanceToUser < 0) {
+        //     symbol = '';
+        // }
+
+        // if (distanceToUser > 0) {
+        //     symbol = '';
+        // }
+
+        const diff = Math.abs(distanceToUser);
+
+        return `${symbol}${diff.toFixed(2)}m`;
     }
 
     /**
@@ -196,70 +480,61 @@ class StandingsWorker {
             break;
         }
 
+        if (participantUser) {
+            
+        }
+
         return participantUser;
     }
 
     /**
-     * Get a full stack of standings prepared for the view
+     * 
      * @param {*} user 
+     */
+    async applyTimingsToUser(user, timings) {
+        user.mBestLapTimeDisplay = await this.mBestLapTimeDisplay(timings.mBestLapTime);
+        user.mLastLapTimeDisplay = await this.mLastLapTimeDisplay(timings.mLastLapTime);
+        user.mCurrentTime = timings.mCurrentTime;
+        user.mCurrentTimeDisplay = await this.mCurrentTimeDisplay(timings.mCurrentTime);
+
+        const bestLapSectorDelta = await this.processBestLapSectorDelta(user);
+        user.bestLapSectorDelta = await this.processBestLapSectorDeltaDisplay(bestLapSectorDelta);
+        user.bestLapSectorDeltaPositive = await this.processBestLapSectorDeltaPositiveDisplay(bestLapSectorDelta);
+        user.bestLapSectorDeltaVisible = await this.processBestLapSectorDeltaVisible(user);
+
+        const lastLapSectorDelta = await this.processLastLapSectorDelta(user);
+        user.lastLapSectorDelta = await this.processLastLapSectorDeltaDisplay(lastLapSectorDelta);
+        user.lastLapSectorDeltaPositive = await this.processLastLapSectorDeltaPositiveDisplay(lastLapSectorDelta);
+        user.lastLapSectorDeltaVisible = await this.processLastLapSectorDeltaVisible(user);
+
+        return user;
+    }
+
+    /**
+     * Get a full stack of standings prepared for the view
      * @param {*} userIndex 
-     * @param {*} standingsData 
-     * @param {*} mSessionState 
-     * @param {*} mTrackLength 
+     * @param {*} standings
      * @returns array
      */
-    async getStandingsDataForDisplay(user, userIndex, standingsData, mSessionState, mTrackLength, timings) {
-        // the number if total standings we want to return
-        // they dont all show at once so lets limit the data that is returned to the view
-        // ... this may be moved to a user defined option hense the use of this variable
-        let limit = 6;
+    async getStandingsDataForDisplay(userIndex, standings) {
+        return standings;
 
-        // .. ensure its an even number
-        if ((limit % 2)) {
-            limit = 2 * Math.round(limit / 2);
-        }
+        // // the number if total standings we want to return
+        // // they dont all show at once so lets limit the data that is returned to the view
+        // // ... this may be moved to a user defined option hense the use of this variable
+        // let limit = 6;
 
-        // standings
-        let standings = [];
-        for (const index in standingsData) {
-            const standing = {};
-            const participantData = standingsData[index];
-            const status = await this.statusDisplay(index, participantData, userIndex, user, mSessionState);
-            const distance = await this.distanceDisplay(index, participantData, userIndex, user, mTrackLength);
-            const mNameDisplay = await this.mNameDisplay(participantData.mName);
-            const mCarClassNamesDisplay = await this.mCarClassNamesDisplay(participantData.mCarClassNames);
+        // if (standings.length < limit) {
+        //     return standings;
+        // }
 
-            // populate standing
-            standing.positionIndex = participantData.positionIndex;
-            standing.status = status;
-            standing.distance = distance;
-            standing.mRacePosition = participantData.mRacePosition;
-            standing.mName = mNameDisplay;
-            standing.mCarClassNames = mCarClassNamesDisplay;
-            standing.isUser = userIndex == index;
+        // // .. ensure its an even number
+        // if ((limit % 2)) {
+        //     limit = 2 * Math.round(limit / 2);
+        // }
 
-            // user only values
-            if (userIndex == index) {
-                standing.mBestLapTime = await this.mBestLapTimeDisplay(timings.mBestLapTime);
-                standing.mLastLapTime = await this.mLastLapTimeDisplay(timings.mLastLapTime);
-                standing.mCurrentTime = await this.mCurrentTimeDisplay(timings.mCurrentTime);
-
-                const bestLapSectorDelta = await this.processBestLapSectorDelta(participantData);
-                standing.bestLapSectorDelta = await this.processBestLapSectorDeltaDisplay(bestLapSectorDelta);
-                standing.bestLapSectorDeltaPositive = await this.processBestLapSectorDeltaPositiveDisplay(bestLapSectorDelta);
-                standing.bestLapSectorDeltaVisible = await this.processBestLapSectorDeltaVisible(participantData);
-
-                const lastLapSectorDelta = await this.processLastLapSectorDelta(participantData);
-                standing.lastLapSectorDelta = await this.processLastLapSectorDeltaDisplay(lastLapSectorDelta);
-                standing.lastLapSectorDeltaPositive = await this.processLastLapSectorDeltaPositiveDisplay(lastLapSectorDelta);
-                standing.lastLapSectorDeltaVisible = await this.processLastLapSectorDeltaVisible(participantData);
-            }
-
-            standings.push(standing);
-        }
-
-        // slice standings from the current users position, outwards as per limit
-        return [].concat(standings.slice(userIndex - (limit / 2), userIndex), standings[userIndex], standings.slice(userIndex + 1, userIndex + 1 + (limit / 2)));
+        // // slice standings from the current users position, outwards as per limit
+        // return [].concat(standings.slice(userIndex - (limit / 2), userIndex), standings[userIndex], standings.slice(userIndex + 1, userIndex + 1 + (limit / 2)));
     }
 
     /**
@@ -469,6 +744,45 @@ class StandingsWorker {
     }
 
     /**
+     * 
+     * @param {*} mSpeeds 
+     */
+    async mSpeedsDisplay(mSpeeds) {
+        const kph = Math.floor(mSpeeds * 3.6);
+        const zeros = zerofill(kph, 3);
+        return `${zeros}${kph}`;
+    }
+
+    /**
+     * 
+     * @param {*} mSpeeds 
+     */
+    async mPitModesDisplay(mPitModes) {
+        if (mPitModes === 1) { // entering pit
+            return 'pit';
+        }
+
+        if (mPitModes === 5) {
+            return 'pit';
+        }
+
+        return null;
+    }
+
+    /**
+     * Process best time for display
+     * @param {*} mFastestLapTime 
+     * @returns string
+     */
+    async mFastestLapTimeDisplay(mFastestLapTime) {
+        if (mFastestLapTime < 0) { 
+            return null;
+        }
+
+        return millisecondsToTime(mFastestLapTime);
+    }
+
+    /**
      * Process best time for display
      * @param {*} mBestLapTime 
      * @returns string
@@ -495,185 +809,37 @@ class StandingsWorker {
     }
 
     /**
-     * Get participant name
-     * @param {*} mName 
-     * @returns string
-     */
-    async mNameDisplay(mName) {
-        return mName;
-    }
-
-    /**
-     * Prepare car class name for standing in view
-     * @param {*} mCarClassNames 
-     * @returns string
-     */
-    async mCarClassNamesDisplay(mCarClassNames) {
-        // split name at capitals
-        const parts = mCarClassNames.match(/[A-Z][a-z]+|[A-Z]|[0-9]+/g);
-
-        let name = mCarClassNames;
-        if (parts) {
-            name = parts[0];
-        }
-
-        // // create shortname from first 3 characters of first item
-        let shortname = name.slice(0, 3);
-
-        if (parts) {
-            // remove first part as we've used it
-            parts.shift();
-
-            // any more parts? add the first character from the next part only
-            if (parts.length) {
-                if (shortname.length === 1) {
-                    shortname += parts[0].slice(0, 3);
-                } else {
-                    shortname += parts[0].slice(0, 1);
-                }
-            }
-        }
-        
-        // make it uppercase
-        return shortname.toUpperCase();        
-    }
-
-    /**
-     * Get participant status prepared for the view
-     * @param {*} index 
-     * @param {*} participant 
-     * @param {*} userIndex
-     * @param {*} user
-     * @param {*} mSessionState 
-     * @returns string
-     */
-    async statusDisplay(index, participant, userIndex, user, mSessionState) {
-        // skip if its current driver
-        if (participant.positionIndex === user.positionIndex) {
-            return null
-        }
-
-        if (mSessionState === 1 || mSessionState === 3) { // practice (1) or qualifying (3)
-            if (participant.mRaceStates === 1) {
-                return 'out';
-            }
-
-            if (participant.mRaceStates === 2) {
-                return 'hot';
-            }
-        }
-
-        if (mSessionState === 5) { // race (5)
-            // participant ahead on same lap (racing)
-            if (index < userIndex && participant.mRacePosition < user.mRacePosition && participant.mCurrentLap === user.mCurrentLap) {
-                return 'ahead';
-            }
-
-            // participant behind on same lap (racing)
-            if (index > userIndex && participant.mRacePosition > user.mRacePosition && participant.mCurrentLap === user.mCurrentLap) {
-                return 'behind';
-            }
-
-            // participant ahead on higher lap, better position
-            if (index < userIndex && participant.mRacePosition < user.mRacePosition && participant.mCurrentLap > user.mCurrentLap) {
-                return 'leader';
-            }
-
-            // participant behind on same lap, better position 
-            if (index > userIndex && participant.mRacePosition < user.mRacePosition && participant.mCurrentLap === user.mCurrentLap) {
-                return 'leader';
-            }
-
-            // participant behind on higher lap, better position
-            if (index > userIndex && participant.mRacePosition < user.mRacePosition && participant.mCurrentLap > user.mCurrentLap) {
-                return 'leader';
-            }
-
-            // participant ahead on lower lap, lower position
-            if (index < userIndex && participant.mRacePosition > user.mRacePosition && participant.mCurrentLap < user.mCurrentLap) {
-                return 'backmarker';
-            }
-
-            // participant ahead on lower lap, lower position
-            if (index > userIndex && participant.mRacePosition > user.mRacePosition && participant.mCurrentLap < user.mCurrentLap) {
-                return 'backmarker';
-            }
-
-            // participant ahead on lower lap, lower position
-            if (index < userIndex && participant.mRacePosition > user.mRacePosition && participant.mCurrentLap === user.mCurrentLap) {
-                return 'backmarker';
-            }
-        }
-
-        // no match?
-        return null
-    }
-
-    /**
-     * Get distance to other participants prepared for the view
-     * @param {*} index 
-     * @param {*} participantData 
-     * @param {*} userIndex 
-     * @param {*} user 
-     * @param {*} mTrackLength 
-     * @returns string
-     */
-    async distanceDisplay(index, participantData, userIndex, user, mTrackLength) {
-        if (participantData.mCurrentLapDistance <= 0 && participantData.mCurrentLap === 1) {
-            return null;
-        }
-
-        let symbol = '±';
-        let diff = 0;
-
-        // if ahead of current player on circuit
-        if (index < userIndex) {
-            symbol = '+';
-            
-            if (user.mCurrentLapDistance < participantData.mCurrentLapDistance) {
-                diff = participantData.mCurrentLapDistance - user.mCurrentLapDistance;
-            }
-            
-            if (user.mCurrentLapDistance > participantData.mCurrentLapDistance) {
-                diff = mTrackLength - (user.mCurrentLapDistance - participantData.mCurrentLapDistance);
-            }
-        }
-
-        // if behind current player on circuit
-        if (index > userIndex) {
-            symbol = '-';
-
-            // racing
-            if (user.mCurrentLapDistance > participantData.mCurrentLapDistance) {
-                diff = user.mCurrentLapDistance - participantData.mCurrentLapDistance;
-            }
-
-            // leaders
-            if (user.mCurrentLapDistance < participantData.mCurrentLapDistance) {
-                diff = mTrackLength - (participantData.mCurrentLapDistance - user.mCurrentLapDistance);
-            }
-        }
-
-        diff = Math.abs(diff);
-
-        return `${symbol}${diff.toFixed(2)}m`;
-    }
-
-    /**
      * Get standings data in a carousel prepared array with the current user in the center
      * @param {*} user 
      * @param {*} sortedParticipantInfo 
      * @returns array
      */
     async getStandingsData(user, sortedParticipantInfo) {
-        // get participants ahead
-        const ahead = sortedParticipantInfo.slice(0, user.positionIndex);
+        let aheadA = [];
+        let aheadB = [];
+        let behindA = [];
+        let behindB = [];
 
-        // get participants behind
-        const behind = sortedParticipantInfo.slice(user.positionIndex + 1, sortedParticipantInfo.length);
+        for (let index = 0; index < sortedParticipantInfo.length; index++) {
+            const participant = sortedParticipantInfo[index];
+            const isUser = participant.positionIndex === user.positionIndex;
+            if (isUser) {
+                continue;
+            }
+
+            if (participant.positionIndex < user.positionIndex) {
+                aheadA.push( {...sortedParticipantInfo[index]} );
+                aheadB.push( {...sortedParticipantInfo[index]} );
+            }
+
+            if (participant.positionIndex > user.positionIndex) {
+                behindA.push( {...sortedParticipantInfo[index]} );
+                behindB.push( {...sortedParticipantInfo[index]} );
+            }
+        }
 
         // prepend and appends ahead,behind data to aid carousel of data
-        return [].concat(behind, ahead, user, behind, ahead);
+        return [].concat(behindA, aheadA, user, behindB, aheadB);
     }
 
     /**
@@ -721,24 +887,6 @@ class StandingsWorker {
             name,
             data
         });
-    }
-
-    /**
-     * Get a full stack of standings prepared for the stream
-     * @param {*} mParticipantInfo 
-     * @returns array
-     */
-    async getStandingsDataForStream(mParticipantInfo) {
-        const sorted = [].concat(mParticipantInfo).sort((a, b) => {
-            return a.mRacePosition - b.mRacePosition;
-        });
-
-        const chunked = [];
-        for (let i = 0; i < sorted.length; i += 6) {
-            chunked.push(sorted.slice(i, i + 6));
-        }
-
-        return chunked;
     }
 }
 

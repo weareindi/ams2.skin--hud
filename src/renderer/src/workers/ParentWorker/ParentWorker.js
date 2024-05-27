@@ -1,4 +1,5 @@
 import CrestWorker from '../CrestWorker/CrestWorker?worker';
+import EventWorker from '../EventWorker/EventWorker?worker';
 import DashWorker from '../DashWorker/DashWorker?worker';
 import LapWorker from '../LapWorker/LapWorker?worker';
 import StandingsWorker from '../StandingsWorker/StandingsWorker?worker';
@@ -66,6 +67,8 @@ class ParentWorker {
     async create() {
         await this.createCrestWorker();
         await this.createCrestWorkerListener();
+        await this.createEventWorker();
+        await this.createEventWorkerListener();
         await this.createDashWorker();
         await this.createDashWorkerListener();
         await this.createLapWorker();
@@ -170,6 +173,7 @@ class ParentWorker {
                     return null;
                 }
 
+                this.processEventData(event.data.data); 
                 this.processDashWorkerData(event.data.data); 
                 this.processCarStateWorkerData(event.data.data);
 
@@ -181,9 +185,9 @@ class ParentWorker {
                 const driver = await this.getDriver(event.data.data);
 
                 // dont contaminate lap data with viewed user data
-                if (driver) {
+                // if (driver) {
                     this.processLapWorkerData(driverId, driver, userId, event.data.data);
-                }
+                // }
             }
 
             if (event.data.name === 'connectionfailed') {
@@ -368,6 +372,48 @@ class ParentWorker {
             // fetch from CrestWorker
             await this.postMessage(this.CrestWorker, 'fetch'); 
         }
+    }
+
+    /**
+     * Create the dashboard worker
+     */
+    async createEventWorker() {
+        return this.EventWorker = new EventWorker();
+    }
+
+    /**
+     * Register the Event board listener
+     */
+    async createEventWorkerListener() {
+        return this.EventWorker.onmessage = async (event) => {
+            if (typeof event.data === 'undefined') {
+                return console.error('No message supplied');
+            }
+
+            if (event.data.name === 'updateview') {
+                return await this.returnMessage('updateview-eventdata', event.data.data);
+            }
+        };
+    }
+
+    /**
+     * 
+     * @param {*} data 
+     * @returns 
+     */
+    async processEventData(data) {
+        return await this.postMessage(this.EventWorker, 'process', {
+            eventInformation: data.eventInformation,
+            timings: data.timings,
+            gameStates: data.gameStates
+        });
+    }
+
+    /**
+     * Send message to event worker to reset the stored lap data
+     */
+    async resetEventWorkerData() {
+        return await this.postMessage(this.EventWorker, 'reset');
     }
 
     /**

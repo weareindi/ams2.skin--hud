@@ -142,17 +142,82 @@ class LapWorker {
      */
     async getLapData(data) {
         const mEventTimeRemaining = await this.getEventTimeRemaining(data.mEventTimeRemaining, data.mCurrentTime, data.mSessionState);
+        const mCurrentLap = await this.getCurrentLap(data.driver);
+        const mLapsInvalidated = await this.getLapsInvalidated(data.driver);
+        const mRacePosition = await this.getRacePosition(data.driver);
 
         return {
-            mCurrentLap: data.driver.mCurrentLap,
-            mLapsInvalidated: data.driver.mLapsInvalidated,
-            mRacePosition: data.driver.mRacePosition,
+            mCurrentLap: mCurrentLap,
+            mLapsInvalidated: mLapsInvalidated,
+            mRacePosition: mRacePosition,
             mLapsInEvent: data.mLapsInEvent,
             mNumParticipants: data.mNumParticipants,
             mEventTimeRemaining: mEventTimeRemaining,
             mSessionAdditionalLaps: data.mSessionAdditionalLaps,
             mSessionState: data.mSessionState,
         };
+    }
+
+    /**
+     * 
+     */
+    async getCurrentLap(driver) {
+        if (!driver) {
+            return null;
+        }
+
+        if (!('mCurrentLap' in driver)) {
+            return null;
+        }
+
+        return driver.mCurrentLap;
+    }
+
+    /**
+     * 
+     */
+    async getLapsInvalidated(driver) {
+        if (!driver) {
+            return null;
+        }
+
+        if (!('mLapsInvalidated' in driver)) {
+            return null;
+        }
+
+        return driver.mLapsInvalidated;
+    }
+
+    /**
+     * 
+     */
+    async getRacePosition(driver) {
+        if (!driver) {
+            return null;
+        }
+
+        if (!('mRacePosition' in driver)) {
+            return null;
+        }
+
+        return driver.mRacePosition;
+    }
+
+    /**
+     * 
+     * @param {*} driver 
+     * @returns 
+     */
+    async getFastestLapTimes(driver) {
+        if (!driver) {
+            return null;
+        }
+
+        if (!('mFastestLapTimes' in driver)) {
+            return null;
+        }
+
+        return driver.mFastestLapTimes;
     }
 
     /**
@@ -281,13 +346,14 @@ class LapWorker {
 
         // get process vars
         const mEventTimeRemaining = await this.getEventTimeRemaining(data.mEventTimeRemaining, data.mCurrentTime, data.mSessionState);
+        const mFastestLapTimes = await this.getFastestLapTimes(data.driver);
 
         // get session laps
         const runLapGroups = await this.getRunLapGroups(laps);
         const fuelCapacity = data.mFuelCapacity / 100;
         const fuel = await this.getFuel(fuelCapacity, data.mFuelLevel);
         const fuelPerLap = await this.getMaxFuelPerLap(runLapGroups);
-        const fuelToEndSession = await this.getFuelToEndSession(runLapGroups, fuel, fuelPerLap, data.mLapsInEvent, data.mLapsCompleted, mEventTimeRemaining, data.mSessionAdditionalLaps, data.mCurrentTime, data.driver.mFastestLapTimes);
+        const fuelToEndSession = await this.getFuelToEndSession(runLapGroups, fuel, fuelPerLap, data.mLapsInEvent, data.mLapsCompleted, mEventTimeRemaining, data.mSessionAdditionalLaps, data.mCurrentTime, mFastestLapTimes);
         const pitsToEndSession = await this.getPitsToEndSession(fuelCapacity, fuel, fuelToEndSession);
 
         return {

@@ -1,8 +1,8 @@
 <template>
     <div class="c-in-car-standings">
         <div class="c-in-car-standings__items">
-            <div class="c-in-car-standings__item" v-for="standingDisplay in standingsDisplay">
-                <InCarStandingComponent :standing="standingDisplay" />
+            <div class="c-in-car-standings__item" v-for="standing in standings">
+                <InCarStandingComponent :standing="standing" />
             </div>
         </div>
     </div>
@@ -36,10 +36,10 @@ import InCarStandingComponent from '../components/InCarStandingComponent.vue';
 
 export default {
     setup() {
-        const standingsDisplay = inject('standingsDisplay');
+        const standings = inject('standings');
 
         return {
-            standingsDisplay
+            standings
         }
     },
     components: {
