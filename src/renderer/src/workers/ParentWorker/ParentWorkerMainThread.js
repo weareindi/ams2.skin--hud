@@ -410,7 +410,7 @@ export default class ParentWorkerMainThread {
                 await this.dump(event.data.data);
             }
 
-            // send every to stream to handle as it likes
+            // send all to stream to handle as it likes
             await this.toStream(event.data);
         };
     }
