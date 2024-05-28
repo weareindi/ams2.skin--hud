@@ -75,8 +75,12 @@ class StreamWorker {
             }
 
             if (event.data.name === 'update-gamestates') {
-                const viewStates = this.viewStates = await this.getAvailableViewStates(event.data.data);
+                const isPaused = await this.isPaused(event.data.data);
+                if (isPaused) {
+                    return await this.returnMessage('paused', true);
+                }
 
+                const viewStates = this.viewStates = await this.getAvailableViewStates(event.data.data);
                 return await this.returnMessage('streamview', {
                     viewStates
                 });
@@ -102,6 +106,17 @@ class StreamWorker {
                 });
             }
         };
+    }
+
+    /**
+     * 
+     */
+    async isPaused(data) {
+        if (data.mGameState !== 3) {
+            return false;
+        }
+
+        return true;
     }
 
     /**

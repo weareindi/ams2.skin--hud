@@ -53,6 +53,13 @@ export default class StreamWorkerMainThread {
                 await this.updateGlobalVars(event.data.data);
                 return;
             }
+
+            if (event.data.name === 'paused') {
+                await this.updateGlobalVars({
+                    view: null
+                });
+                return;
+            }
         };
     }
 
