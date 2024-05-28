@@ -1,4 +1,5 @@
 import CrestWorker from '../CrestWorker/CrestWorker?worker';
+import EventWorker from '../EventWorker/EventWorker?worker';
 import DashWorker from '../DashWorker/DashWorker?worker';
 import LapWorker from '../LapWorker/LapWorker?worker';
 import StandingsWorker from '../StandingsWorker/StandingsWorker?worker';
@@ -11,6 +12,7 @@ class ParentWorker {
         this.fetching = false;
         this.config = {};
         this.isConnected = false;
+        this.mSessionState = null;
         this.then = Date.now();
         this.init();
 
@@ -65,6 +67,8 @@ class ParentWorker {
     async create() {
         await this.createCrestWorker();
         await this.createCrestWorkerListener();
+        await this.createEventWorker();
+        await this.createEventWorkerListener();
         await this.createDashWorker();
         await this.createDashWorkerListener();
         await this.createLapWorker();
@@ -95,7 +99,15 @@ class ParentWorker {
     async reset() {
         await this.resetDashWorkerData();
         await this.resetLapWorkerData();
+        await this.resetStandingsWorkerData();
         await this.resetData();
+    }
+
+    /**
+     * Do a restart
+     */
+    async restart() {
+        await this.resetStandingsWorkerData();
     }
 
     /**
@@ -146,16 +158,36 @@ class ParentWorker {
                     return null;
                 }
 
+                // is new session?
+                const newSession = await this.isNewSession(event.data.data);
+
+                // ... yes?
+                if (newSession) {
+                    await this.restart();
+                }
+
                 // get user
+                const userId = await this.getUserId(event.data.data);
                 const user = await this.getUser(event.data.data);
                 if (!user) {
                     return null;
                 }
 
-                this.processDashWorkerData(user, event.data.data); 
-                this.processLapWorkerData(user, event.data.data);
+                this.processEventData(event.data.data); 
+                this.processDashWorkerData(event.data.data); 
+                this.processCarStateWorkerData(event.data.data);
+
+                // user is whoever we're looking at, not nessasarily the driver
                 this.processStandingsWorkerData(user, event.data.data);
-                this.processCarStateWorkerData(user, event.data.data);
+
+                // get driver
+                const driverId = await this.getDriverId(event.data.data);
+                const driver = await this.getDriver(event.data.data);
+
+                // dont contaminate lap data with viewed user data
+                // if (driver) {
+                    this.processLapWorkerData(driverId, driver, userId, event.data.data);
+                // }
             }
 
             if (event.data.name === 'connectionfailed') {
@@ -166,6 +198,64 @@ class ParentWorker {
                 return;
             }
         };
+    }
+
+    /**
+     * 
+     * @param {*} data 
+     * @returns 
+     */
+    async getDriverId(data) {
+        if (data.participants.mViewedParticipantIndex < 0) {
+            return null;
+        }
+
+        let driverid = null; 
+
+        // any user input updates the driver id
+        if (data.unfilteredInput.mUnfilteredThrottle !== 0) {
+            driverid = data.participants.mViewedParticipantIndex;
+        }
+        if (data.unfilteredInput.mUnfilteredSteering !== 0) {
+            driverid = data.participants.mViewedParticipantIndex;
+        }
+        if (data.unfilteredInput.mUnfilteredBrake !== 0 && data.unfilteredInput.mUnfilteredBrake !== 1) {
+            driverid = data.participants.mViewedParticipantIndex;
+        }
+        if (data.unfilteredInput.mUnfilteredClutch !== 0) {
+            driverid = data.participants.mViewedParticipantIndex;
+        }
+
+        // save driver id if driverid is found/applied
+        if (driverid !== null) {
+            await localforage.setItem('driverid', driverid);
+        }
+
+        // return whatever id is stored
+        return await localforage.getItem('driverid');
+    }
+
+    /**
+     * 
+     * @param {*} data 
+     * @returns 
+     */
+    async getDriver(data) {
+        const driverId = await this.getDriverId(data);
+
+        if (driverId === null) {
+            return null;
+        }
+
+        if (!('participants' in data)) {
+            return null;
+        }
+
+        if (!('mParticipantInfo' in data.participants)) {
+            return null;
+        }
+
+        return data.participants.mParticipantInfo[driverId];
     }
 
     /**
@@ -226,6 +316,21 @@ class ParentWorker {
     }
 
     /**
+     * Has the session restarted or changed?
+     * @param {*} data 
+     * @returns boolean
+     */
+    async isNewSession(data) {
+        if (this.mSessionState === data.gameStates.mSessionState) {
+            return false;
+        }
+
+        this.mSessionState = data.gameStates.mSessionState;
+
+        return true;
+    }
+
+    /**
      * Tell the crest worker to update the config
      */
     async crestworkerUpdateConfig() {
@@ -272,6 +377,48 @@ class ParentWorker {
     /**
      * Create the dashboard worker
      */
+    async createEventWorker() {
+        return this.EventWorker = new EventWorker();
+    }
+
+    /**
+     * Register the Event board listener
+     */
+    async createEventWorkerListener() {
+        return this.EventWorker.onmessage = async (event) => {
+            if (typeof event.data === 'undefined') {
+                return console.error('No message supplied');
+            }
+
+            if (event.data.name === 'updateview') {
+                return await this.returnMessage('updateview-eventdata', event.data.data);
+            }
+        };
+    }
+
+    /**
+     * 
+     * @param {*} data 
+     * @returns 
+     */
+    async processEventData(data) {
+        return await this.postMessage(this.EventWorker, 'process', {
+            eventInformation: data.eventInformation,
+            timings: data.timings,
+            gameStates: data.gameStates
+        });
+    }
+
+    /**
+     * Send message to event worker to reset the stored lap data
+     */
+    async resetEventWorkerData() {
+        return await this.postMessage(this.EventWorker, 'reset');
+    }
+
+    /**
+     * Create the dashboard worker
+     */
     async createDashWorker() {
         return this.DashWorker = new DashWorker();
     }
@@ -293,10 +440,9 @@ class ParentWorker {
 
     /**
      * Post relevant data to the dash worker for processing
-     * @param {*} user 
      * @param {*} data 
      */
-    async processDashWorkerData(user, data) {
+    async processDashWorkerData(data) {
         return await this.postMessage(this.DashWorker, 'process', {
             mAntiLockActive: data.carState.mAntiLockActive,
             mAntiLockSetting: data.carState.mAntiLockSetting,
@@ -356,24 +502,18 @@ class ParentWorker {
     /**
      * Post relevant data to the lap worker for processing
      */
-    async processLapWorkerData(user, data) {
+    async processLapWorkerData(driverId, driver, userId, data) {
         return await this.postMessage(this.LapWorker, 'process', {
-            user: user,
-            mSessionState: data.gameStates.mSessionState,
-            mCurrentLap: user.mCurrentLap,
-            mCurrentLapDistance: user.mCurrentLapDistance,
-            mLapsInvalidated: user.mLapsInvalidated,
-            mLapsCompleted: user.mLapsCompleted,
-            mLastLapTimes: user.mLastLapTimes,
+            viewingDriver: driverId === userId,
+            driver: driver,
             mFuelCapacity: data.carState.mFuelCapacity,
             mFuelLevel: data.carState.mFuelLevel,
             mCurrentTime: data.timings.mCurrentTime,
             mLapsInEvent: data.eventInformation.mLapsInEvent,
             mEventTimeRemaining: data.timings.mEventTimeRemaining,
+            mSessionState: data.gameStates.mSessionState,
             mSessionAdditionalLaps: data.eventInformation.mSessionAdditionalLaps,
-            mFastestLapTimes: user.mFastestLapTimes,
             mNumParticipants: data.participants.mNumParticipants,
-            mRacePosition: user.mRacePosition,
         });
     }
 
@@ -421,16 +561,37 @@ class ParentWorker {
     }
 
     /**
+     * Send message to lap worker to reset the stored lap data
+     */
+    async resetStandingsWorkerData() {
+        return await this.postMessage(this.StandingsWorker, 'reset');
+    }
+
+    /**
+     * 
+     * @param {*} data 
+     * @returns 
+     */
+    async getUserId(data) {
+        if (data.participants.mViewedParticipantIndex < 0) {
+            return null;
+        }
+
+        return data.participants.mViewedParticipantIndex;
+    }
+
+    /**
      * Get currently viewed user data
      * @param {*} data 
      * @returns object
      */
     async getUser(data) {
-        if (data.participants.mViewedParticipantIndex < 0) {
+        const userID = await this.getUserId(data);
+        if (userID === null) {
             return null;
         }
 
-        return data.participants.mParticipantInfo[data.participants.mViewedParticipantIndex];
+        return data.participants.mParticipantInfo[userID];
     }
 
     /**
@@ -457,10 +618,9 @@ class ParentWorker {
 
     /**
      * Post relavant data to the car state worker for processing
-     * @param {*} user 
      * @param {*} data 
      */
-    async processCarStateWorkerData(user, data) {
+    async processCarStateWorkerData(data) {
         return await this.postMessage(this.CarStateWorker, 'process', {
             mAeroDamage: data.carDamage.mAeroDamage,
             mEngineDamage: data.carDamage.mEngineDamage,

@@ -2,71 +2,86 @@
     <div class="c-in-car-standing">
         <div class="c-in-car-standing__rows">
             <div class="c-in-car-standing__row">
-                <div class="c-in-car-standing__frame" :status="standing.status">
+                <div class="c-in-car-standing__frame" :status="standing.statusToUser">
                     <div class="c-in-car-standing__items">
                         <div class="c-in-car-standing__item c-in-car-standing__item--position">
                             <div class="c-in-car-standing__position">{{ standing.mRacePosition }}</div>
                         </div>
                         <div class="c-in-car-standing__item c-in-car-standing__item--car">
-                            <div class="c-in-car-standing__car">{{ standing.mCarClassNames }}</div>
+                            <div class="c-in-car-standing__car">{{ standing.mCarClassNamesDisplay }}</div>
                         </div>
                         <div class="c-in-car-standing__item c-in-car-standing__item--name">
-                            <div class="c-in-car-standing__name">{{ standing.mName }}</div>
+                            <div class="c-in-car-standing__name">{{ standing.mNameDisplay }}</div>
                         </div>
                         <div class="c-in-car-standing__item c-in-car-standing__item--distance" v-if="!standing.isUser">
-                            <div class="c-in-car-standing__distance">{{ standing.distance }}</div>
+                            <div class="c-in-car-standing__distance">{{ standing.distanceToUserDisplay }}</div>
                         </div>
                     </div>
                 </div>
             </div>
-            <div class="c-in-car-standing__row" v-if="standing.mBestLapTime">
+            <div class="c-in-car-standing__row" v-if="standing.mFastestLapTimesDisplay">
+                <div class="c-in-car-standing__frame">
+                    <div class="c-in-car-standing__items">
+                        <div class="c-in-car-standing__item c-in-car-standing__item--label">
+                            <div class="c-in-car-standing__label">Fastest</div>
+                        </div>
+                        <div class="c-in-car-standing__item c-in-car-standing__item--time c-in-car-standing__item--best">
+                            <span class="c-in-car-standing__delta" v-if="standing.fastestLapSectorDeltaVisible" :positive="standing.fastestLapSectorDeltaPositive ? true : false">{{ standing.fastestLapSectorDelta }}</span>
+                            <span class="c-in-car-standing__time">{{ standing.mFastestLapTimesDisplay }}</span>
+                        </div>
+                    </div>
+                </div>
+            </div>
+            <div class="c-in-car-standing__row" v-if="standing.mBestLapTimeDisplay">
                 <div class="c-in-car-standing__frame">
                     <div class="c-in-car-standing__items">
                         <div class="c-in-car-standing__item c-in-car-standing__item--label">
                             <div class="c-in-car-standing__label">Best</div>
                         </div>
                         <div class="c-in-car-standing__item c-in-car-standing__item--time c-in-car-standing__item--best">
-                            <div class="c-in-car-standing__time">{{ standing.mBestLapTime }}</div>
+                            <span class="c-in-car-standing__delta" v-if="standing.bestLapSectorDeltaVisible" :positive="standing.bestLapSectorDeltaPositive ? true : false">{{ standing.bestLapSectorDelta }}</span>
+                            <span class="c-in-car-standing__time">{{ standing.mBestLapTimeDisplay }}</span>
                         </div>
                     </div>
                 </div>
             </div>
-            <div class="c-in-car-standing__row" v-if="standing.mLastLapTime">
+            <div class="c-in-car-standing__row" v-if="standing.mLastLapTimeDisplay">
                 <div class="c-in-car-standing__frame">
                     <div class="c-in-car-standing__items">
                         <div class="c-in-car-standing__item c-in-car-standing__item--label">
                             <div class="c-in-car-standing__label">Last</div>
                         </div>
                         <div class="c-in-car-standing__item c-in-car-standing__item--time c-in-car-standing__item--last">
-                            <div class="c-in-car-standing__time">{{ standing.mLastLapTime }}</div>
+                            <span class="c-in-car-standing__delta" v-if="standing.lastLapSectorDeltaVisible" :positive="standing.lastLapSectorDeltaPositive ? true : false">{{ standing.lastLapSectorDelta }}</span>
+                            <span class="c-in-car-standing__time">{{ standing.mLastLapTimeDisplay }}</span>
                         </div>
                     </div>
                 </div>
             </div>
-            <div class="c-in-car-standing__row" v-if="standing.mCurrentTime">
+            <!-- <div class="c-in-car-standing__row" v-if="standing.calculatedCurrentTimeDisplay && !standing.mCurrentTimeDisplay">
                 <div class="c-in-car-standing__frame">
                     <div class="c-in-car-standing__items">
                         <div class="c-in-car-standing__item c-in-car-standing__item--label">
                             <div class="c-in-car-standing__label">Current</div>
                         </div>
                         <div class="c-in-car-standing__item c-in-car-standing__item--time c-in-car-standing__item--current">
-                            <div class="c-in-car-standing__time">{{ standing.mCurrentTime }}</div>
+                            <div class="c-in-car-standing__time">{{ standing.calculatedCurrentTimeDisplay }}</div>
                         </div>
                     </div>
                 </div>
-            </div>
-            <div class="c-in-car-standing__row" v-if="standing.deltaVisible">
-                <div class="c-in-car-standing__frame" :status="standing.deltaStatus">
+            </div> -->
+            <div class="c-in-car-standing__row" v-if="standing.mCurrentTimeDisplay">
+                <div class="c-in-car-standing__frame">
                     <div class="c-in-car-standing__items">
                         <div class="c-in-car-standing__item c-in-car-standing__item--label">
-                            <div class="c-in-car-standing__label">Delta</div>
+                            <div class="c-in-car-standing__label">Current</div>
                         </div>
-                        <div class="c-in-car-standing__item c-in-car-standing__item--delta">
-                            <div class="c-in-car-standing__delta">{{ standing.delta }}</div>
+                        <div class="c-in-car-standing__item c-in-car-standing__item--time c-in-car-standing__item--current">
+                            <div class="c-in-car-standing__time">{{ standing.mCurrentTimeDisplay }}</div>
                         </div>
                     </div>
                 </div>
-            </div>
+            </div>            
         </div>
     </div>
 </template>
@@ -86,6 +101,10 @@
             border-top-left-radius: 0;
             border-top-right-radius: 0;
         }
+    }
+
+    &:nth-of-type(2) {
+        margin-top: em(8);
     }
 }
 
@@ -272,10 +291,20 @@
 
 .c-in-car-standing__label,
 .c-in-car-standing__time,
-.c-in-car-standing__delta {
+.c-in-car-standing__delta, {
     font-family: 'firacode', monospace;
     font-size: em(14);
     line-height: 1em;
+}
+
+.c-in-car-standing__delta {
+    @include color('color', 'green');
+
+    margin-right: em(16);
+
+    &[positive="true"] {
+        @include color('color', 'red');
+    }
 }
 </style>
 

@@ -1,8 +1,10 @@
 /**
- * 
- * @param {*} n 
+ * Covert milliseconds to readable time
+ * @param {*} n The number in milliseconds
+ * @param {*} r Are we rounding to nearest second?
+ * @returns 
  */
-export function millisecondsToTime(n) {
+export function millisecondsToTime(n, r = false) {
     // convert to total milliseconds
     const totalmilliseconds = Math.abs(n) * 1000;
 
@@ -23,6 +25,14 @@ export function millisecondsToTime(n) {
     // hours
     let hours = Math.floor((totalmilliseconds / (1000 * 60 * 60)) % 24);
     let hoursDisplay = (hours < 10) ? "0" + hours : hours;
+
+    if (r) {
+        if (hours === 0) {
+            return `${minutesDisplay}:${secondsDisplay}`;
+        }
+
+        return `${hoursDisplay}:${minutesDisplay}:${secondsDisplay}`;
+    }
     
     // return time without hours
     if (hours === 0) {

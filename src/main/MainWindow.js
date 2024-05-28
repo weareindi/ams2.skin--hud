@@ -115,7 +115,7 @@ export default class MainWindow {
         // HMR for renderer base on electron-vite cli.
         // Load the remote URL for development or the local html file for production.
         if (is.dev && process.env['ELECTRON_RENDERER_URL']) {
-            this.window.loadURL(process.env['ELECTRON_RENDERER_URL']);
+            this.window.loadURL(`${process.env['ELECTRON_RENDERER_URL']}/index.html`);
         } else {
             this.window.loadFile(join(__dirname, '../renderer/index.html'));
         }

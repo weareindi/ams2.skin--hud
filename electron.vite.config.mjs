@@ -20,14 +20,6 @@ export default defineConfig({
         },
         plugins: [
             vue(),
-            // svgLoader({
-            //     defaultImport: 'raw'
-            // }),
-            stylelint({
-                fix: true,
-                cache: false,
-                lintOnStart: true,
-            }),
         ],
         css: {
             preprocessorOptions: {
@@ -39,6 +31,14 @@ export default defineConfig({
                         `
                 }
             }
+        },
+        build: {
+            rollupOptions: {
+                input: [
+                    'src/renderer/index.html',
+                    'src/renderer/stream.html',
+                ]
+            }
         }
-    }
+    },
 })

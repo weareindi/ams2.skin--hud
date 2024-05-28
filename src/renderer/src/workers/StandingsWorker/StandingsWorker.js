@@ -1,14 +1,19 @@
 import { millisecondsToTime } from '../../utils/TimeUtils';
+import { zerofill } from "../../utils/ValueUtils";
+import localforage from "localforage";
 
 class StandingsWorker {
     constructor() {
-        this.storedSector = null;
-        this.storedDelta = null;
-        this.previousBestLapTime = null;
-        this.previousFastestSector1Time = null;
-        this.previousFastestSector2Time = null;
-        this.previousFastestSector3Time = null;
-        this.deltaDisplayThen = Date.now();
+        this.lastLapSectorDeltaSector = null;
+        this.lastLapSectorDeltaVisible = false;
+        this.lastLapSectorDeltaVisibleTimeout = null;
+        this.bestLapSectorDeltaSector = null;
+        this.bestLapSectorDeltaVisible = false;
+        this.bestLapSectorDeltaVisibleTimeout = null;
+        this.driverAhead = null;
+        this.driverAheadCountdown = 5;
+        this.driverBehind = null;
+        this.driverBehindCountdown = 5;
         this.init();
     }
 
@@ -36,7 +41,20 @@ class StandingsWorker {
                 const data = await this.prepareData(event.data.data);
                 await this.returnMessage('updateview', data);
             }
+
+            if (event.data.name === 'reset') {
+                await this.deleteParticipantsData();
+                await this.returnMessage('resetcomplete');
+            }
         };
+    }
+
+    /**
+     * Delete the store
+     */
+    async deleteParticipantsData() {
+        await localforage.removeItem('chasestore');
+        await localforage.removeItem('participantsstore');
     }
 
     /**
@@ -71,266 +89,92 @@ class StandingsWorker {
         }
 
         let user = data.user;
-        const sortedParticipantData = await this.getSortedParticipants(data.mParticipantInfo);
-        const participantData = await this.setParticipantsIndexes(sortedParticipantData);      
-        user = await this.updateUser(user, sortedParticipantData);
-        const standingsData = await this.getStandingsData(user, participantData);
+        const lapsAppliedParticipantInfo = await this.applyStoredParticipantLapData(data.mParticipantInfo);
+        const sortedParticipantInfo = await this.getSortedParticipants(lapsAppliedParticipantInfo);
+        const participantData = await this.setParticipantsIndexes(sortedParticipantInfo);
+        const participantDataAdditionalData = await this.setParticipantsAdditionalData(participantData);
+        user = await this.updateUser(user, sortedParticipantInfo);
+        user = await this.applyTimingsToUser(user, data.timings);
+        const standingsData = await this.getStandingsData(user, participantDataAdditionalData);
         const userIndex = standingsData.indexOf(user);
-        const standingsDataDisplay = await this.getStandingsDataForDisplay(user, userIndex, standingsData, data.mSessionState, data.mTrackLength, data.timings);
-        
-        return {standingsDisplay: standingsDataDisplay};
+        const standingsAdditionalData = await this.setStandingsAdditionalData(userIndex, user, standingsData, data.mSessionState, data.mTrackLength);
+        const standingsDataDisplay = await this.getStandingsDataForDisplay(userIndex, standingsAdditionalData);
+
+        return {
+            standings: standingsDataDisplay,
+            userIndex: userIndex,
+            user: user,
+            participants: participantDataAdditionalData,
+        };
     }
 
     /**
-     * Get the user data which has been sorted and processed
-     * @param {*} user 
-     * @param {*} sortedParticipantData 
-     * @returns object
-     */
-    async updateUser(user, sortedParticipantData) {
-        let participantUser = null;
-        for (const participantIndex in sortedParticipantData) {
-            const participant =  sortedParticipantData[participantIndex];
-            
-            if (participant.mRacePosition !== user.mRacePosition) {
-                continue;
-            }
-
-            participantUser = participant;
-            break;
-        }
-
-        return participantUser;
-    }
-
-    /**
-     * Get a full stack of standings prepared for the view
-     * @param {*} user 
-     * @param {*} userIndex 
-     * @param {*} standingsData 
-     * @param {*} mSessionState 
-     * @param {*} mTrackLength 
-     * @returns array
-     */
-    async getStandingsDataForDisplay(user, userIndex, standingsData, mSessionState, mTrackLength, timings) {
-        // the number if total standings we want to return
-        // they dont all show at once so lets limit the data that is returned to the view
-        // ... this may be moved to a user defined option hense the use of this variable
-        let limit = 6;
-
-        // .. ensure its an even number
-        if ((limit % 2)) {
-            limit = 2 * Math.round(limit / 2);
-        }
-
-
-        // standings
-        let standings = [];
-        for (const index in standingsData) {
-            const standing = {};
-            const participantData = standingsData[index];
-            const status = await this.statusDisplay(index, participantData, userIndex, user, mSessionState);
-            const distance = await this.distanceDisplay(index, participantData, userIndex, user, mTrackLength);
-            const mNameDisplay = await this.mNameDisplay(participantData.mName);
-            const mCarClassNamesDisplay = await this.mCarClassNamesDisplay(participantData.mCarClassNames);
-
-            // populate standing
-            standing.positionIndex = participantData.positionIndex;
-            standing.status = status;
-            standing.distance = distance;
-            standing.mRacePosition = participantData.mRacePosition;
-            standing.mName = mNameDisplay;
-            standing.mCarClassNames = mCarClassNamesDisplay;
-            standing.isUser = userIndex == index;
-
-            // user only values
-            if (userIndex == index) {
-                const delta = await this.delta(user.mCurrentSector, timings);
-                const deltaDisplay = await this.deltaDisplay(delta);
-                const deltaStatus = await this.deltaStatusDisplay(delta);
-                const deltaVisible = await this.deltaVisible(timings.mCurrentTime, delta, deltaStatus);
-                const mCurrentTimeDisplay = await this.mCurrentTimeDisplay(timings.mCurrentTime);
-                const mBestLapTimeDisplay = await this.mBestLapTimeDisplay(timings.mBestLapTime);
-                const mLastLapTimeDisplay = await this.mLastLapTimeDisplay(timings.mLastLapTime);
-
-                standing.delta = deltaDisplay;
-                standing.deltaStatus = deltaStatus;
-                standing.deltaVisible = deltaVisible;
-                standing.mCurrentTime = mCurrentTimeDisplay;
-                standing.mBestLapTime = mBestLapTimeDisplay;
-                standing.mLastLapTime = mLastLapTimeDisplay;
-            }
-
-            standings.push(standing);
-        }
-
-        // slice standings from the current users position, outwards as per limit
-        return [].concat(standings.slice(userIndex - (limit / 2), userIndex), standings[userIndex], standings.slice(userIndex + 1, userIndex + 1 + (limit / 2)));
-    }
-
-    /**
-     * Delta is performance of current lap against session best lap
-     * @param {*} timings 
+     * 
+     * @param {*} participants 
      * @returns 
      */
-    async delta(mCurrentSector, timings) {
-        if (!('mLastLapTime' in timings)) {
-            return null;
+    async setParticipantsAdditionalData(participants) {
+        for (let index = 0; index < participants.length; index++) {
+            const participant = participants[index];
+            participants[index].mNameDisplay = await this.mNameDisplay(participant.mName);
+            participants[index].mCarClassNamesDisplay = await this.mCarClassNamesDisplay(participant.mCarClassNames);
+            participants[index].mCarNamesDisplay = await this.mCarNamesDisplay(participant.mCarNames);
+            participants[index].mFastestLapTimesDisplay = await this.mFastestLapTimeDisplay(participant.mFastestLapTimes);
+            participants[index].mLastLapTimeDisplay = await this.mLastLapTimeDisplay(participant.mLastLapTimes);
+            participants[index].calculatedCurrentTime = await this.calcMCurrentTime(participant);
+            participants[index].mCurrentTimeDisplay = await this.mCurrentTimeDisplay(participants[index].calculatedCurrentTime);
+            participants[index].mSpeedsDisplay = await this.mSpeedsDisplay(participants[index].mSpeeds);
+            participants[index].mPitModesDisplay = await this.mPitModesDisplay(participants[index].mPitModes);
+
         }
 
-        if (timings.mLastLapTime < 0) {
-            return null;
-        }
-
-        if (!('mBestLapTime' in timings)) {
-            return null;
-        }
-
-        if (timings.mBestLapTime < 0) {
-            return null;
-        }
-
-        if (mCurrentSector === this.storedSector && this.previousBestLapTime) {
-            return this.storedDelta;
-        }
-
-        // update store sector
-        this.storedSector = mCurrentSector;
-
-        // lap end/start
-        if (mCurrentSector === 0 && this.previousBestLapTime) {
-            this.storedDelta = timings.mCurrentSector3Time - this.previousFastestSector3Time;
-            // this.storedDelta = timings.mLastLapTime - this.previousBestLapTime;
-        }
-
-        // sector 0 end
-        if (mCurrentSector === 1) {
-            this.storedDelta = timings.mCurrentSector1Time - this.previousFastestSector1Time;
-            // this.storedDelta = timings.mCurrentSector1Time - timings.mFastestSector1Time;
-        }
-
-        // sector 1 end
-        if (mCurrentSector === 2) {
-            this.storedDelta = timings.mCurrentSector2Time - this.previousFastestSector2Time;
-            // this.storedDelta = timings.mCurrentSector2Time - timings.mFastestSector2Time;
-        }
-
-        // update previous best lap time.
-        // we store the previous best as mBestLapTime gets updated over the line when you
-        // improve so we can't calculate the difference any more
-        this.previousBestLapTime = timings.mBestLapTime;
-        this.previousFastestSector1Time = timings.mFastestSector1Time;
-        this.previousFastestSector2Time = timings.mFastestSector2Time;
-        this.previousFastestSector3Time = timings.mFastestSector3Time;
-
-        // reset delta display timeout
-        await this.resetDeltaDisplayTimeout();
-        await this.deltaDisplayTimeout();
+        return participants;
     }
 
     /**
+     * 
+     * @param {*} participant 
      */
-    async deltaDisplay(delta) {
-        let prefix = '±';
-        if (delta < 0) { 
-            prefix = '-';
-        }
-        if (delta > 0) { 
-            prefix = '+';
+    async calcMCurrentTime(participant) {
+        if (!('mCurrentSector' in participant)) {
+            return null;
         }
 
-        return `${prefix}${millisecondsToTime(delta)}`;
+        if (!('mCurrentSector1Times' in participant)) {
+            return null;
+        }
+
+        if (!('mCurrentSector2Times' in participant)) {
+            return null;
+        }
+
+        if (!('mCurrentSector3Times' in participant)) {
+            return null;
+        }
+
+        let total = 0;
+
+        for (let sector = 0; sector <= participant.mCurrentSector; sector++) {
+            total += participant[`mCurrentSector${sector + 1}Times`];
+        }
+
+        return total;
     }
 
     /**
      * 
      */
-    async deltaVisible(mCurrentTime, delta, deltaStatus) { 
-        if (!mCurrentTime) {
-            return false;
-        } 
-
-        if (!delta) {
-            return false;
-        } 
-
-        if (!deltaStatus) {
-            return false;
+    async setStandingsAdditionalData(userIndex, user, standings, mSessionState, mTrackLength) {
+        for (let index = 0; index < standings.length; index++) {
+            const participant = standings[index];
+            standings[index].statusToUser = await this.statusToUser(index, participant, userIndex, user, mSessionState);
+            standings[index].statusToUserDisplay = await this.statusToUserDisplay(standings[index].statusToUser);
+            standings[index].distanceToUser = await this.distanceToUser(index, participant, userIndex, user, mTrackLength);
+            standings[index].distanceToUserDisplay = await this.distanceToUserDisplay(standings[index].distanceToUser);
+            standings[index].isUser = userIndex == index;
         }
 
-        return this.isDeltaVisible;
-    }
-    /**
-     * 
-     */
-    async resetDeltaDisplayTimeout() { 
-        return this.isDeltaVisible = true;
-    }
-
-    /**
-     */
-    async deltaDisplayTimeout() {
-        setTimeout(() => {
-            this.isDeltaVisible = false;
-        }, 5000);
-    }
-
-    /**
-     */
-    async deltaStatusDisplay(delta) {
-        if (!delta) { 
-            return null;
-        }
-
-        let status = 'zero';
-        if (delta > 0) {
-            status = 'positive';
-        }
-
-        if (delta < 0) {
-            status = 'negative';
-        }
-
-        return status;
-    }
-
-    /**
-     * Process current time for display
-     * @param {*} mCurrentTime 
-     * @returns string
-     */
-    async mCurrentTimeDisplay(mCurrentTime) {
-        if (mCurrentTime < 0) { 
-            return null;
-        }
-
-        return millisecondsToTime(mCurrentTime);
-    }
-
-    /**
-     * Process best time for display
-     * @param {*} mBestLapTime 
-     * @returns string
-     */
-    async mBestLapTimeDisplay(mBestLapTime) {
-        if (mBestLapTime < 0) { 
-            return null;
-        }
-
-        return millisecondsToTime(mBestLapTime);
-    }
-
-    /**
-     * Process last lap time for display
-     * @param {*} mLastLapTime 
-     * @returns string
-     */
-    async mLastLapTimeDisplay(mLastLapTime) {
-        if (mLastLapTime < 0) { 
-            return null;
-        }
-
-        return millisecondsToTime(mLastLapTime);
+        return standings;
     }
 
     /**
@@ -351,23 +195,44 @@ class StandingsWorker {
         // split name at capitals
         const parts = mCarClassNames.match(/[A-Z][a-z]+|[A-Z]|[0-9]+/g);
 
-        // create shortname from first 3 characters of first item
-        let shortname = parts[0].slice(0, 3);
-
-        // remove first part as we've used it
-        parts.shift();
-
-        // any more parts? add the first character from the next part only
-        if (parts.length) {
-            if (shortname.length === 1) {
-                shortname += parts[0].slice(0, 3);
-            } else {
-                shortname += parts[0].slice(0, 1);
-            }
+        let name = mCarClassNames;
+        if (parts) {
+            name = parts[0];
         }
 
+        // create shortname from first 3 characters of first item
+        let shortname = name.slice(0, 3);
+
+        if (parts) {
+            // remove first part as we've used it
+            parts.shift();
+
+            // any more parts? add the first character from the next part only
+            if (parts.length) {
+                if (shortname.length === 1) {
+                    shortname += parts[0].slice(0, 3);
+                } else {
+                    shortname += parts[0].slice(0, 1);
+                }
+            }
+        }
+        
         // make it uppercase
         return shortname.toUpperCase();        
+    }
+
+    /**
+     * 
+     */
+    async mCarNamesDisplay(mCarNames) {
+        // split name at capitals
+        const parts = mCarNames.split('-');
+
+        if (parts) {
+            return parts[0].trim();
+        }
+
+        return mCarNames;
     }
 
     /**
@@ -379,7 +244,7 @@ class StandingsWorker {
      * @param {*} mSessionState 
      * @returns string
      */
-    async statusDisplay(index, participant, userIndex, user, mSessionState) {
+    async statusToUser(index, participant, userIndex, user, mSessionState) {
         // skip if its current driver
         if (participant.positionIndex === user.positionIndex) {
             return null
@@ -442,70 +307,539 @@ class StandingsWorker {
     }
 
     /**
+     * 
+     * @param {*} statusToUser 
+     * @returns 
+     */
+    async statusToUserDisplay(statusToUser) {
+        return statusToUser;
+    }
+
+    /**
      * Get distance to other participants prepared for the view
      * @param {*} index 
-     * @param {*} participantData 
+     * @param {*} participant 
      * @param {*} userIndex 
      * @param {*} user 
      * @param {*} mTrackLength 
      * @returns string
      */
-    async distanceDisplay(index, participantData, userIndex, user, mTrackLength) {
-        if (participantData.mCurrentLapDistance <= 0 && participantData.mCurrentLap === 1) {
+    async distanceToUser(index, participant, userIndex, user, mTrackLength) {
+        if (participant.mCurrentLapDistance <= 0 && participant.mCurrentLap === 1) {
             return null;
         }
 
-        let symbol = '±';
         let diff = 0;
 
         // if ahead of current player on circuit
         if (index < userIndex) {
-            symbol = '+';
-            
-            if (user.mCurrentLapDistance < participantData.mCurrentLapDistance) {
-                diff = participantData.mCurrentLapDistance - user.mCurrentLapDistance;
+            if (user.mCurrentLapDistance < participant.mCurrentLapDistance) {
+                diff = participant.mCurrentLapDistance - user.mCurrentLapDistance;
             }
             
-            if (user.mCurrentLapDistance > participantData.mCurrentLapDistance) {
-                diff = mTrackLength - (user.mCurrentLapDistance - participantData.mCurrentLapDistance);
+            if (user.mCurrentLapDistance > participant.mCurrentLapDistance) {
+                diff = mTrackLength - (user.mCurrentLapDistance - participant.mCurrentLapDistance);
             }
+
+            return diff * -1;
         }
 
         // if behind current player on circuit
         if (index > userIndex) {
-            symbol = '-';
-
             // racing
-            if (user.mCurrentLapDistance > participantData.mCurrentLapDistance) {
-                diff = user.mCurrentLapDistance - participantData.mCurrentLapDistance;
+            if (user.mCurrentLapDistance > participant.mCurrentLapDistance) {
+                diff = user.mCurrentLapDistance - participant.mCurrentLapDistance;
             }
 
             // leaders
-            if (user.mCurrentLapDistance < participantData.mCurrentLapDistance) {
-                diff = mTrackLength - (participantData.mCurrentLapDistance - user.mCurrentLapDistance);
+            if (user.mCurrentLapDistance < participant.mCurrentLapDistance) {
+                diff = mTrackLength - (participant.mCurrentLapDistance - user.mCurrentLapDistance);
             }
+
+            return diff;
         }
 
-        diff = Math.abs(diff);
+        return diff
+    }
+
+    /**
+     * 
+     * @param {*} distanceToUser 
+     * @returns 
+     */
+    async distanceToUserDisplay(distanceToUser) {
+        let symbol = '';
+
+        // if (distanceToUser < 0) {
+        //     symbol = '';
+        // }
+
+        // if (distanceToUser > 0) {
+        //     symbol = '';
+        // }
+
+        const diff = Math.abs(distanceToUser);
 
         return `${symbol}${diff.toFixed(2)}m`;
     }
 
     /**
-     * Get standings data in a carousel prepared array with the current user in the center
+     * Add stored lap data for each participant to main data array
+     * @param {*} participantData 
+     * @returns 
+     */
+    async applyStoredParticipantLapData(mParticipantInfo) {
+        // get stored participants
+        let participants = await localforage.getItem('participantsstore');
+
+        // no participants? create empty array so we have something to work with
+        if (!participants) {
+            participants = []
+        }
+
+        for (const index in mParticipantInfo) {
+            const participant = mParticipantInfo[index];
+
+            if (!(index in participants)) {
+                participants[index] = {};
+            }
+
+            //
+            // all laps
+            //
+            if (!('laps' in participants[index])) {
+                participants[index]['laps'] = {};
+            }
+
+            if (!(participant.mCurrentLap in participants[index]['laps'])) {
+                participants[index]['laps'][participant.mCurrentLap] = {};
+            }
+
+            participants[index]['laps'][participant.mCurrentLap]['mCurrentSector1Times'] = participant.mCurrentSector1Times;
+            participants[index]['laps'][participant.mCurrentLap]['mCurrentSector2Times'] = participant.mCurrentSector2Times;
+            participants[index]['laps'][participant.mCurrentLap]['mCurrentSector3Times'] = participant.mCurrentSector3Times;
+
+            // push back into main mParticipantInfo array
+            mParticipantInfo[index]['laps'] = participants[index]['laps'];
+
+            //
+            // fastest laps
+            //
+            if (!('fastestLaps' in participants[index])) {
+                participants[index]['fastestLaps'] = {};
+            }
+
+            if (!(participant.mCurrentLap in participants[index]['fastestLaps'])) {
+                participants[index]['fastestLaps'][participant.mCurrentLap] = {}
+            }
+
+            if (!(participant.mFastestLapTimes in participants[index]['fastestLaps'][participant.mCurrentLap])) {
+                participants[index]['fastestLaps'][participant.mCurrentLap] = {}
+            }
+
+            participants[index]['fastestLaps'][participant.mCurrentLap]['mFastestLapTimes'] = participant.mFastestLapTimes;
+            participants[index]['fastestLaps'][participant.mCurrentLap]['mFastestSector1Times'] = participant.mFastestSector1Times;
+            participants[index]['fastestLaps'][participant.mCurrentLap]['mFastestSector2Times'] = participant.mFastestSector2Times;
+            participants[index]['fastestLaps'][participant.mCurrentLap]['mFastestSector3Times'] = participant.mFastestSector3Times;
+
+            for (const lapNumber in participants[index]['fastestLaps']) {
+                if (lapNumber > participant.mCurrentLap - 2) {
+                    continue;
+                }
+
+                delete participants[index]['fastestLaps'][lapNumber];
+            }
+
+            // // push back into main mParticipantInfo array
+            mParticipantInfo[index]['fastestLaps'] = participants[index]['fastestLaps'];
+        }
+
+        // save laps to storage
+        await localforage.setItem('participantsstore', participants);
+
+        // return mParticipantInfo
+        return mParticipantInfo;
+    }
+
+    /**
+     * Get the user data which has been sorted and processed
      * @param {*} user 
-     * @param {*} sortedParticipantData 
+     * @param {*} sortedParticipantInfo 
+     * @returns object
+     */
+    async updateUser(user, sortedParticipantInfo) {
+        let participantUser = null;
+        for (const participantIndex in sortedParticipantInfo) {
+            const participant =  sortedParticipantInfo[participantIndex];
+            
+            if (participant.mRacePosition !== user.mRacePosition) {
+                continue;
+            }
+
+            participantUser = participant;
+            break;
+        }
+
+        if (participantUser) {
+            
+        }
+
+        return participantUser;
+    }
+
+    /**
+     * 
+     * @param {*} user 
+     */
+    async applyTimingsToUser(user, timings) {
+        user.mBestLapTimeDisplay = await this.mBestLapTimeDisplay(timings.mBestLapTime);
+        user.mLastLapTimeDisplay = await this.mLastLapTimeDisplay(timings.mLastLapTime);
+        user.mCurrentTime = timings.mCurrentTime;
+        user.mCurrentTimeDisplay = await this.mCurrentTimeDisplay(timings.mCurrentTime);
+
+        const bestLapSectorDelta = await this.processBestLapSectorDelta(user);
+        user.bestLapSectorDelta = await this.processBestLapSectorDeltaDisplay(bestLapSectorDelta);
+        user.bestLapSectorDeltaPositive = await this.processBestLapSectorDeltaPositiveDisplay(bestLapSectorDelta);
+        user.bestLapSectorDeltaVisible = await this.processBestLapSectorDeltaVisible(user);
+
+        const lastLapSectorDelta = await this.processLastLapSectorDelta(user);
+        user.lastLapSectorDelta = await this.processLastLapSectorDeltaDisplay(lastLapSectorDelta);
+        user.lastLapSectorDeltaPositive = await this.processLastLapSectorDeltaPositiveDisplay(lastLapSectorDelta);
+        user.lastLapSectorDeltaVisible = await this.processLastLapSectorDeltaVisible(user);
+
+        return user;
+    }
+
+    /**
+     * Get a full stack of standings prepared for the view
+     * @param {*} userIndex 
+     * @param {*} standings
      * @returns array
      */
-    async getStandingsData(user, sortedParticipantData) {
-        // get participants ahead
-        const ahead = sortedParticipantData.slice(0, user.positionIndex);
+    async getStandingsDataForDisplay(userIndex, standings) {
+        return standings;
 
-        // get participants behind
-        const behind = sortedParticipantData.slice(user.positionIndex + 1, sortedParticipantData.length);
+        // // the number if total standings we want to return
+        // // they dont all show at once so lets limit the data that is returned to the view
+        // // ... this may be moved to a user defined option hense the use of this variable
+        // let limit = 6;
+
+        // if (standings.length < limit) {
+        //     return standings;
+        // }
+
+        // // .. ensure its an even number
+        // if ((limit % 2)) {
+        //     limit = 2 * Math.round(limit / 2);
+        // }
+
+        // // slice standings from the current users position, outwards as per limit
+        // return [].concat(standings.slice(userIndex - (limit / 2), userIndex), standings[userIndex], standings.slice(userIndex + 1, userIndex + 1 + (limit / 2)));
+    }
+
+    /**
+     * 
+     * @param {*} participantData 
+     * @returns 
+     */
+    async processBestLapSectorDelta(participantData) {
+        const lastLapNum = participantData.mCurrentLap - 1;
+        if (!(lastLapNum in participantData.laps)) {
+            return null;
+        }
+
+        const fastestLapNumbers = Object.keys(participantData.fastestLaps);
+        if (fastestLapNumbers.length < 2) {
+            return null;
+        }
+
+        const lastLapSectors = participantData.laps[lastLapNum];
+        const oldFastestLapData = participantData.fastestLaps[fastestLapNumbers[0]];
+        const newFastestLapData = participantData.fastestLaps[fastestLapNumbers[1]];
+
+        let current = 0;
+        let last = 0;
+
+        if (participantData.mCurrentSector === 0 && participantData.mFastestLapTimes === newFastestLapData.mFastestLapTimes) {
+            current += lastLapSectors.mCurrentSector1Times;
+            current += lastLapSectors.mCurrentSector2Times;
+            current += lastLapSectors.mCurrentSector3Times;
+
+            last += oldFastestLapData.mFastestSector1Times;
+            last += oldFastestLapData.mFastestSector2Times;
+            last += oldFastestLapData.mFastestSector3Times;
+        }
+
+        if (participantData.mCurrentSector === 0 && participantData.mFastestLapTimes !== newFastestLapData.mFastestLapTimes) {
+            current += lastLapSectors.mCurrentSector1Times;
+            current += lastLapSectors.mCurrentSector2Times;
+            current += lastLapSectors.mCurrentSector3Times;
+
+            last += newFastestLapData.mFastestSector1Times;
+            last += newFastestLapData.mFastestSector2Times;
+            last += newFastestLapData.mFastestSector3Times;
+        }
+
+        if (participantData.mCurrentSector === 1) {
+            current += participantData.mCurrentSector1Times;
+
+            last += newFastestLapData.mFastestSector1Times;
+        }
+        
+        if (participantData.mCurrentSector === 2) {
+            current += participantData.mCurrentSector1Times;
+            current += participantData.mCurrentSector2Times;
+
+            last += newFastestLapData.mFastestSector1Times;
+            last += newFastestLapData.mFastestSector2Times;
+        }
+
+        return current - last;
+    }
+
+    /**
+     * 
+     * @param {*} participantData 
+     * @returns 
+     */
+    async processBestLapSectorDeltaDisplay(difference) {
+        let symbol = difference > 0 ? '+' : '-';
+    
+        return `${symbol}${millisecondsToTime(difference)}`;
+    }
+
+    /**
+     * Are we showing the best lap delta?
+     * @param {*} participantData 
+     * @returns boolean
+     */
+    async processBestLapSectorDeltaVisible(participantData) {
+        if (participantData.mCurrentSector !== this.bestLapSectorDeltaSector) {
+            clearTimeout(this.bestLapSectorDeltaVisibleTimeout);
+            this.bestLapSectorDeltaVisible = true;
+            this.bestLapSectorDeltaVisibleTimeout = setTimeout(() => {
+                this.bestLapSectorDeltaVisible = false;
+            }, 6000);
+        }
+
+        this.bestLapSectorDeltaSector = participantData.mCurrentSector;
+
+        return this.bestLapSectorDeltaVisible;
+    }
+
+    /**
+     * Is delta positive?
+     * @param {*} delta 
+     * @returns boolean
+     */
+    async processBestLapSectorDeltaPositiveDisplay(delta) {
+        if (delta > 0) {
+            return true;
+        }
+
+        return false;
+    }
+
+    /**
+     * Calculate difference at cuurent sector to previous lap
+     * @param {*} participantData 
+     * @returns 
+     */
+    async processLastLapSectorDelta(participantData) {
+        const lastLapNum = participantData.mCurrentLap - 1;
+        if (!(lastLapNum in participantData.laps)) {
+            return null;
+        }
+
+        const lastLapX2Num = participantData.mCurrentLap - 2;
+        if (!(lastLapX2Num in participantData.laps)) {
+            return null;
+        }
+
+        const lastLapSectors = participantData.laps[lastLapNum];
+        const lastLapX2Sectors = participantData.laps[lastLapX2Num];
+
+        let current = 0;
+        let last = 0;
+
+        if (participantData.mCurrentSector === 0) {
+            current += lastLapSectors.mCurrentSector1Times;
+            current += lastLapSectors.mCurrentSector2Times;
+            current += lastLapSectors.mCurrentSector3Times;
+
+            last += lastLapX2Sectors.mCurrentSector1Times;
+            last += lastLapX2Sectors.mCurrentSector2Times;
+            last += lastLapX2Sectors.mCurrentSector3Times;
+        }
+
+        if (participantData.mCurrentSector === 1) {
+            current += participantData.mCurrentSector1Times;
+            last += lastLapSectors.mCurrentSector1Times;
+        }
+        
+        if (participantData.mCurrentSector === 2) {
+            current += participantData.mCurrentSector1Times;
+            current += participantData.mCurrentSector2Times;
+            last += lastLapSectors.mCurrentSector1Times;
+            last += lastLapSectors.mCurrentSector2Times;
+        }
+
+        return current - last;
+    }
+
+    /**
+     * Calculate difference at cuurent sector to previous lap
+     * @param {*} participantData 
+     * @returns 
+     */
+    async processLastLapSectorDeltaDisplay(difference) {        
+        let symbol = difference > 0 ? '+' : '-';
+    
+        return `${symbol}${millisecondsToTime(difference)}`;
+    }
+
+    /**
+     * Is delta positive?
+     * @param {*} delta 
+     * @returns boolean
+     */
+    async processLastLapSectorDeltaPositiveDisplay(delta) {
+        if (delta > 0) {
+            return true;
+        }
+        
+        return false;
+    }
+
+    /**
+     * Are we showing the last lap delta?
+     * @param {*} participantData 
+     * @returns boolean
+     */
+    async processLastLapSectorDeltaVisible(participantData) {
+        if (participantData.mCurrentSector !== this.lastLapSectorDeltaSector) {
+            clearTimeout(this.lastLapSectorDeltaVisibleTimeout);
+            this.lastLapSectorDeltaVisible = true;
+            this.lastLapSectorDeltaVisibleTimeout = setTimeout(() => {
+                this.lastLapSectorDeltaVisible = false;
+            }, 6000);
+        }
+
+        this.lastLapSectorDeltaSector = participantData.mCurrentSector;
+
+        return this.lastLapSectorDeltaVisible;
+    }
+
+    /**
+     * Process current time for display
+     * @param {*} mCurrentTime 
+     * @returns string
+     */
+    async mCurrentTimeDisplay(mCurrentTime) {
+        if (mCurrentTime < 0) { 
+            return null;
+        }
+
+        return millisecondsToTime(mCurrentTime);
+    }
+
+    /**
+     * 
+     * @param {*} mSpeeds 
+     */
+    async mSpeedsDisplay(mSpeeds) {
+        const kph = Math.floor(mSpeeds * 3.6);
+        const zeros = zerofill(kph, 3);
+        return `${zeros}${kph}`;
+    }
+
+    /**
+     * 
+     * @param {*} mSpeeds 
+     */
+    async mPitModesDisplay(mPitModes) {
+        if (mPitModes === 1) { // entering pit
+            return 'pit';
+        }
+
+        if (mPitModes === 5) {
+            return 'pit';
+        }
+
+        return null;
+    }
+
+    /**
+     * Process best time for display
+     * @param {*} mFastestLapTime 
+     * @returns string
+     */
+    async mFastestLapTimeDisplay(mFastestLapTime) {
+        if (mFastestLapTime < 0) { 
+            return null;
+        }
+
+        return millisecondsToTime(mFastestLapTime);
+    }
+
+    /**
+     * Process best time for display
+     * @param {*} mBestLapTime 
+     * @returns string
+     */
+    async mBestLapTimeDisplay(mBestLapTime) {
+        if (mBestLapTime < 0) { 
+            return null;
+        }
+
+        return millisecondsToTime(mBestLapTime);
+    }
+
+    /**
+     * Process last lap time for display
+     * @param {*} mLastLapTime 
+     * @returns string
+     */
+    async mLastLapTimeDisplay(mLastLapTime) {
+        if (mLastLapTime < 0) { 
+            return null;
+        }
+
+        return millisecondsToTime(mLastLapTime);
+    }
+
+    /**
+     * Get standings data in a carousel prepared array with the current user in the center
+     * @param {*} user 
+     * @param {*} sortedParticipantInfo 
+     * @returns array
+     */
+    async getStandingsData(user, sortedParticipantInfo) {
+        let aheadA = [];
+        let aheadB = [];
+        let behindA = [];
+        let behindB = [];
+
+        for (let index = 0; index < sortedParticipantInfo.length; index++) {
+            const participant = sortedParticipantInfo[index];
+            const isUser = participant.positionIndex === user.positionIndex;
+            if (isUser) {
+                continue;
+            }
+
+            if (participant.positionIndex < user.positionIndex) {
+                aheadA.push( {...sortedParticipantInfo[index]} );
+                aheadB.push( {...sortedParticipantInfo[index]} );
+            }
+
+            if (participant.positionIndex > user.positionIndex) {
+                behindA.push( {...sortedParticipantInfo[index]} );
+                behindB.push( {...sortedParticipantInfo[index]} );
+            }
+        }
 
         // prepend and appends ahead,behind data to aid carousel of data
-        return [].concat(behind, ahead, user, behind, ahead);
+        return [].concat(behindA, aheadA, user, behindB, aheadB);
     }
 
     /**
@@ -524,11 +858,11 @@ class StandingsWorker {
 
     /**
      * Sort participants by lap distance, leader first
-     * @param {*} participantsData 
+     * @param {*} mParticipantInfo 
      * @returns array
      */
-    async getSortedParticipants(participantsData) {
-        return [].concat(participantsData).sort((a, b) => {
+    async getSortedParticipants(mParticipantInfo) {
+        return [].concat(mParticipantInfo).sort((a, b) => {
             if (a.mCurrentLapDistance === 0 && a.mCurrentLapDistance === 0) {
                 return a.mRacePosition - b.mRacePosition;
             }

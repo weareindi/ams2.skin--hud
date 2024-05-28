@@ -15,8 +15,8 @@ export default class StreamWindow {
             await this.createWindow();
             await this.registerEventListeners();
             await this.loadUrl();
-            // await this.dev();
-            await this.send('updateScale');
+            await this.dev();
+            // await this.send('updateScale');
         } catch (error) {
             console.log(error);
         }

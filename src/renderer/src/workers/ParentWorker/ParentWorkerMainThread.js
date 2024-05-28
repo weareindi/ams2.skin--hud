@@ -89,7 +89,7 @@ export default class ParentWorkerMainThread {
         this.app.provide('mClutchStatus', ref(null));
         this.app.provide('mClutchHighlight', ref(null));
 
-        this.app.provide('standingsDisplay', ref(null));
+        this.app.provide('standings', ref(null));
 
         this.app.provide('mCurrentLapDisplay', ref(null));
         this.app.provide('mLapsInEventDisplay', ref(null));
@@ -376,32 +376,30 @@ export default class ParentWorkerMainThread {
 
             if (event.data.name === 'update-connectedstate') {
                 await this.updateConnectedState(event.data.data);
-                // await this.toStream(event.data.data);
             }
 
             if (event.data.name === 'update-gamestates') {
                 await this.updateGlobalVars(event.data.data);
-                await this.toStream(event.data.data);
             }
 
             if (event.data.name === 'updateview-dashdata') {
                 await this.updateGlobalVars(event.data.data);
-                await this.toStream(event.data.data);
             }
 
             if (event.data.name === 'updateview-lapdata') {
                 await this.updateGlobalVars(event.data.data);
-                await this.toStream(event.data.data);
             }
 
             if (event.data.name === 'updateview-standingsdata') {
                 await this.updateGlobalVars(event.data.data);
-                await this.toStream(event.data.data);
             }
 
             if (event.data.name === 'updateview-carstatedata') {
                 await this.updateGlobalVars(event.data.data);
-                await this.toStream(event.data.data);
+            }
+
+            if (event.data.name === 'updateview-eventdata') {
+                // await this.updateGlobalVars(event.data.data);
             }
 
             if (event.data.name === 'reset') {
@@ -411,6 +409,9 @@ export default class ParentWorkerMainThread {
             if (event.data.name === 'dump') {
                 await this.dump(event.data.data);
             }
+
+            // send all to stream to handle as it likes
+            await this.toStream(event.data);
         };
     }
 
@@ -460,6 +461,11 @@ export default class ParentWorkerMainThread {
 
         // loop through provided data
         for (const key in data) {
+            // skip if no object found
+            if (!Object.hasOwnProperty.call(this.app._context.provides, key)) {
+                continue;
+            }
+
             // note: remember were using vue 'ref' for data handling.
             // ref adds the 'value' attribute to the provide which we're updating here
             this.app._context.provides[key].value = data[key];
@@ -515,7 +521,7 @@ export default class ParentWorkerMainThread {
         this.app._context.provides.mClutchStatus.value = null;
         this.app._context.provides.mClutchHighlight.value = null;
 
-        this.app._context.provides.standingsDisplay.value = null;
+        this.app._context.provides.standings.value = null;
 
         this.app._context.provides.mCurrentLapDisplay.value = null;
         this.app._context.provides.mLapsInEventDisplay.value = null;

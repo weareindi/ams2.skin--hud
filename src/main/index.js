@@ -145,9 +145,23 @@ class Main {
             {
                 label: 'Quit',
                 click: async () => {
-                    const mainWindow = await this.mainWindow.getWindow();
+                    try {
+                        if (typeof this.mainWindow !== 'undefined') {
+                            const mainWindow = await this.mainWindow.getWindow();
+                            mainWindow.close();
+                        }
+                    } catch (error) {
+                        console.log(error);
+                    }
 
-                    mainWindow.close();
+                    try {
+                        if (typeof this.streamWindow !== 'undefined') {
+                            const streamWindow = await this.streamWindow.getWindow();
+                            streamWindow.close();
+                        }
+                    } catch (error) {
+                        console.log(error);
+                    }
                 }
             }
         ]);
