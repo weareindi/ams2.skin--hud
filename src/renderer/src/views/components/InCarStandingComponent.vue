@@ -11,7 +11,7 @@
                             <div class="c-in-car-standing__car">{{ standing.mCarClassNamesDisplay }}</div>
                         </div>
                         <div class="c-in-car-standing__item c-in-car-standing__item--name">
-                            <div class="c-in-car-standing__name">{{ standing.mNameDisplay }}</div>
+                            <div class="c-in-car-standing__name">{{ standing.mNameShort }}</div>
                         </div>
                         <div class="c-in-car-standing__item c-in-car-standing__item--distance" v-if="!standing.isUser">
                             <div class="c-in-car-standing__distance">{{ standing.distanceToUserDisplay }}</div>
