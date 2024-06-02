@@ -13,8 +13,8 @@ class StreamWorker {
         this.standingsPage = null;
 
         this.chaseRaf = Date.now();
-        this.chaseThreshold = 6000; // minimum is 5000
-        this.chaseMinTime = 15000;
+        this.chaseThreshold = 3000; // minimum is 3000
+        this.chaseMinTime = 30000;
 
         this.viewStates = null;
         this.sessionState = null;
@@ -286,7 +286,7 @@ class StreamWorker {
                     this.viewDeactivate();
                 }
             }
-        }            
+        }
         
         if (this.viewCurrent === 'standings') {
             if (!this.viewIsActive()) {
@@ -421,6 +421,10 @@ class StreamWorker {
 
         let page = this.standingsPage;
 
+        if (page === null) {
+            page = 0;
+        }
+
         // update values which we're using to limit the tick rate of the request
         const now = Date.now();
         const delta = now - this.standingsTimer;
@@ -432,15 +436,11 @@ class StreamWorker {
         if (delta > interval) {
             // update raf
             this.standingsTimer = now - (delta % interval);
-
-            if (this.standingsPage === null) {
-                page = 0;
-            }
             
             page++;
 
-            if (this.standingsPage === this.standingsPages.length) {
-                page = 0;
+            if (page > this.standingsPages.length) {
+                page = null;
 
                 this.standingsPages = null;
             }
@@ -460,7 +460,11 @@ class StreamWorker {
     }
 
     standingsComplete() {
-        return this.standingsPage === 0 ? true : false
+        if (this.standingsPages === null) {
+            return false;
+        }
+
+        return this.standingsPage > this.standingsPages.length ? true : false;
     }
 
     standingsStop() {
@@ -712,11 +716,11 @@ class StreamWorker {
         }
 
         if (data.mSessionState === 1) {
-            return ['timings', 'solo', 'standings'];
+            return ['timings', 'solo'];
         }
 
         if (data.mSessionState === 3) {
-            return ['timings', 'solo', 'standings'];
+            return ['timings', 'solo'];
         }
 
         if (data.mSessionState === 5) {
