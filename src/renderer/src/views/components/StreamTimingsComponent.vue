@@ -9,13 +9,25 @@
                     </div>
                 </aside>
             </header>
-            <div class="c-stream-timings__items">
+            <div class="c-stream-timings__items" :count="count">
                 <div class="c-stream-timings__item" v-for="timing in timings">
-                    <span class="c-stream-timings__position">{{ timing.mRacePosition }}</span>
-                    <span class="c-stream-timings__class">{{ timing.mCarClassNamesDisplay }}</span>
-                    <span class="c-stream-timings__name">{{ timing.mName }}</span>
-                    <span class="c-stream-timings__time">{{ timing.mFastestLapTimesDisplay }}</span>
-                    <span class="c-stream-timings__state" v-if="timing.mPitModesDisplay">{{ timing.mPitModesDisplay }}</span>
+                    <div class="c-stream-timings__driver" :class="timing.isUser ? 'c-stream-timings__driver--user' : ''">
+                        <div class="c-stream-timings__position">
+                            <span class="c-stream-timings__label">{{ timing.mRacePosition }}</span>
+                        </div>
+                        <div class="c-stream-timings__tag">
+                            <span class="c-stream-timings__label" v-if="timing.mNameTag">{{ timing.mNameTag }}</span>
+                        </div>
+                        <div class="c-stream-timings__name">
+                            <span class="c-stream-timings__label">{{ timing.mNameShort }}</span>
+                        </div>
+                        <div class="c-stream-timings__time">
+                            <span class="c-stream-timings__label">{{ timing.mFastestLapTimesDisplay }}</span>
+                        </div>
+                        <div class="c-stream-timings__state" v-if="timing.mPitModesDisplay">
+                            <span class="c-stream-timings__label">{{ timing.mPitModesDisplay }}</span>
+                        </div>
+                    </div>
                 </div>
             </div>
         </div>
@@ -23,11 +35,33 @@
 </template>
 
 <style lang="scss">
-$item_label: 12;
-$item_height: 20;
-$item_margin: 4;
-$content_padding: 12;
+$content_padding: 8;
 $title_size: 24;
+
+$item_spacing: 4;
+$item_height: 20;
+
+$item_gap: 8;
+
+$item_position_label: 14;
+$item_tag_label: 14;
+$item_name_label: 14;
+$item_time_label: 14;
+$item_state_label: 14;
+
+// // $item_position_height: 20;
+// $item_class_label: 15;
+
+// $item_name_label: 20;
+// $item_name_height: 22;
+
+// $item_label: 20;
+// $item_height: 22;
+// $item_spacing: 4;
+// // $item_margin: 4;
+// $item_state_label: 18;
+// $item_state_height: 18;
+// $item_state_padding: 8;
 
 .c-stream-timings {
     display: flex;
@@ -39,7 +73,7 @@ $title_size: 24;
 .c-stream-timings__content {
     @include color('background-color', 'pitbox', 0.8);
 
-    padding: em(12);
+    padding: em($content_padding);
     border-radius: em(4);
 }
 
@@ -63,6 +97,7 @@ $title_size: 24;
 
 .c-stream-timings__time-remaining {
     text-align: right;
+    
     h2 {
         font-family: "qanelassoft";
         font-weight: normal;
@@ -78,122 +113,145 @@ $title_size: 24;
 }
 
 .c-stream-timings__items {
-    display: flex;
-    flex-direction: column;
-    margin: em(-$item_margin);
+    margin: em(-$item_spacing);
 }
 
 .c-stream-timings__item {
+    padding: em($item_spacing);
+}
+
+.c-stream-timings__driver {
+    position: relative;
     display: flex;
     flex-direction: row;
+    flex-wrap: nowrap;
+    align-content: center;
+    justify-content: flex-start;
+}
+
+.c-stream-timings__driver--user {
+    @include color('background-color', 'yellow');
+    @include color('color', 'black');
+
+    margin: em(0) em(-$content_padding);
+    padding: em($content_padding);
+
+    .c-stream-timings__state {
+        margin-left: 0;
+    }
+
+    .c-stream-timings__position,
+    .c-stream-timings__tag,
+    .c-stream-timings__name,
+    .c-stream-timings__time,
+    .c-stream-timings__state {
+        @include color('background-color', 'yellow');
+        @include color('color', 'black');
+    }
+}
+
+.c-stream-timings__position,
+.c-stream-timings__tag,
+.c-stream-timings__name,
+.c-stream-timings__time,
+.c-stream-timings__state {
+    flex-grow: 0;
+    flex-shrink: 0;
+    flex-basis: auto;
+
+    display: flex;
     align-items: center;
-    position: relative;
-    padding: em($item_margin);
+    justify-content: flex-start;
+
+    line-height: 1em;
+    letter-spacing: 0em;
 }
 
 .c-stream-timings__position {
     @include color('background-color', 'yellow');
     @include color('color', 'black');
 
-    flex-grow: 0;
-    flex-shrink: 0;
-    flex-basis: auto;
-
     display: flex;
     align-items: center;
     justify-content: center;
-    font-family: "qanelassoft";
-    font-weight: bold;
-    font-size: em($item_label);
-    line-height: 1em;
-    width: em($item_height, $item_label);
-    height: em($item_height, $item_label);
+
+    width: em($item_height);
+    height: em($item_height);
+
+    .c-stream-timings__label {
+        font-size: em($item_position_label);
+        font-family: 'firacode', monospace;
+    }
 }
 
-.c-stream-timings__class {
-    @include color('color', 'yellow');
+.c-stream-timings__tag {
+    margin-left: em($item_gap);
 
     flex-grow: 0;
-    flex-shrink: 0;
+    flex-shrink: 1;
     flex-basis: auto;
 
-    padding: 0 0 0 em(16, $item_label);
-    display: flex;
-    align-items: center;
-    justify-content: center;
-    font-family: "qanelassoft";
-    font-weight: bold;
-    font-size: em($item_label);
-    line-height: 1em;
+    .c-stream-timings__label {
+        font-size: em($item_tag_label);
+        font-family: 'firacode', monospace;
+        width: 5ch;
+        text-align: center;
+    }
 }
 
 .c-stream-timings__name {
-    @include color('color', 'white');
+    @include color('color', 'yellow');
 
     flex-grow: 1;
     flex-shrink: 0;
     flex-basis: auto;
 
-    padding: 0 0 0 em(16, $item_label);
-    font-family: "qanelassoft";
-    font-weight: bold;
-    font-size: em($item_label);
-    line-height: 1em;
-    letter-spacing: em(0.04);
-    text-transform: uppercase;
-    text-overflow: ellipsis;
-    white-space: nowrap;
-    overflow: hidden;
+    margin-left: em($item_gap);
+
+    .c-stream-timings__label {
+        font-size: em($item_name_label);
+        font-family: 'firacode', monospace;
+        width: 14ch;
+    }
 }
 
 .c-stream-timings__time {
-    @include color('color', 'white');
+    margin-left: em($item_gap);
 
-    flex-grow: 0;
-    flex-shrink: 0;
-    flex-basis: auto;
-
-    padding: 0 0 0 em(16, $item_label);
-    font-family: "firacode";
-    font-weight: bold;
-    font-size: em($item_label);
-    line-height: 1em;
-    letter-spacing: em(0.04);
-    text-transform: uppercase;
-    text-overflow: ellipsis;
-    white-space: nowrap;
-    overflow: hidden;
+    .c-stream-timings__label {
+        font-size: em($item_time_label);
+        font-family: 'firacode', monospace;
+        // width: 10ch;
+    }
 }
 
 .c-stream-timings__state {
     @include color('background-color', 'pitbox', 0.8);
-    @include color('color', 'yellow');
-
-    flex-grow: 0;
-    flex-shrink: 0;
-    flex-basis: auto;
-
-    display: flex;
-    justify-content: center;
-    align-items: center;
 
     position: absolute;
     top: 0;
     left: 100%;
-    bottom: 0;
-    padding: 0 em(8, $item_label);
-    margin: 0 0 0 em($content_padding - $item_margin, $item_label);
-    font-family: "firacode";
-    font-weight: bold;
-    font-size: em($item_label);
-    line-height: 1em;
-    letter-spacing: em(0.04);
+    height: 100%;
+    margin-left: em($content_padding);
+    padding: em($item_spacing * 2);
+    border-top-right-radius: em(4);
+    border-bottom-right-radius: em(4);
+
+    .c-stream-timings__label {
+        width: 100%;
+        max-width: 10ch;
+        font-size: em($item_state_label);
+        font-family: 'firacode', monospace;
+    }
+}
+
+.c-stream-timings__label {
+    display: block;
     text-transform: uppercase;
     text-overflow: ellipsis;
     white-space: nowrap;
     overflow: hidden;
-    border-top-right-radius: em(4);
-    border-bottom-right-radius: em(4);
+    line-height: 1em;
 }
 </style>
 
@@ -210,6 +268,11 @@ export default {
             timings,
             sessionName,
             eventTimeRemaining
+        }
+    },
+    computed: {
+        count() {
+            return 99;
         }
     }
 }

@@ -1,59 +1,242 @@
 <template>
     <div class="c-stream-chase" v-if="chase">
-        <div class="c-stream-chase__items" :count="count">            
+        <div class="c-stream-chase__items" :count="count"> 
+                      
             <div class="c-stream-chase__item c-stream-chase__item--participant" v-if="chase.ahead">
                 <span class="c-stream-chase__info">
                     <span class="c-stream-chase__gradient"></span>
-                    <span class="c-stream-chase__name">{{ chase.ahead.mName }}</span>
-                    <span class="c-stream-chase__car">{{ chase.ahead.mCarNamesDisplay }}</span>
+                    <span class="c-stream-chase__name">
+                        <span class="c-stream-chase__label">{{ chase.ahead.mNameShort }}</span>
+                    </span>
+                    <span class="c-stream-chase__tag" v-if="chase.ahead.mNameTag">
+                        <span class="c-stream-chase__label">{{ chase.ahead.mNameTag }}</span>
+                    </span>
+                    <span class="c-stream-chase__car">
+                        <span class="c-stream-chase__label">{{ chase.ahead.mCarNamesDisplay }}</span>
+                    </span>
                 </span>
-                <span class="c-stream-chase__position">{{ chase.ahead.mRacePosition }}</span>
+                <span class="c-stream-chase__position">
+                    <span class="c-stream-chase__label">{{ chase.ahead.mRacePosition }}</span>
+                </span>
             </div>
+
             <div class="c-stream-chase__item c-stream-chase__item--time" v-if="chase.ahead">
-                <span class="c-stream-chase__time">{{ chase.ahead.distanceToUserDisplay }}</span>
+                <span class="c-stream-chase__time">
+                    <span class="c-stream-chase__label">{{ chase.ahead.distanceToUserDisplay }}</span>
+                </span>
             </div>
+
             <div class="c-stream-chase__item c-stream-chase__item--participant" v-if="chase.user">
                 <span class="c-stream-chase__info">
                     <span class="c-stream-chase__gradient"></span>
-                    <span class="c-stream-chase__name">{{ chase.user.mName }}</span>
-                    <span class="c-stream-chase__car">{{ chase.user.mCarNamesDisplay }}</span>
+                    <span class="c-stream-chase__name">
+                        <span class="c-stream-chase__label">{{ chase.user.mNameShort }}</span>
+                    </span>
+                    <span class="c-stream-chase__tag" v-if="chase.user.mNameTag">
+                        <span class="c-stream-chase__label">{{ chase.user.mNameTag }}</span>
+                    </span>
+                    <span class="c-stream-chase__car">
+                        <span class="c-stream-chase__label">{{ chase.user.mCarNamesDisplay }}</span>
+                    </span>
                 </span>
-                <span class="c-stream-chase__position">{{ chase.user.mRacePosition }}</span>
+                <span class="c-stream-chase__position">
+                    <span class="c-stream-chase__label">{{ chase.user.mRacePosition }}</span>
+                </span>
             </div>
+
             <div class="c-stream-chase__item c-stream-chase__item--time" v-if="chase.behind">
-                <span class="c-stream-chase__time">{{ chase.behind.distanceToUserDisplay }}</span>
+                <span class="c-stream-chase__time">
+                    <span class="c-stream-chase__label">{{ chase.behind.distanceToUserDisplay }}</span>
+                </span>
             </div>
+
             <div class="c-stream-chase__item c-stream-chase__item--participant" v-if="chase.behind">
                 <span class="c-stream-chase__info">
                     <span class="c-stream-chase__gradient"></span>
-                    <span class="c-stream-chase__name">{{ chase.behind.mName }}</span>
-                    <span class="c-stream-chase__car">{{ chase.behind.mCarNamesDisplay }}</span>
+                    <span class="c-stream-chase__name">
+                        <span class="c-stream-chase__label">{{ chase.behind.mNameShort }}</span>
+                    </span>
+                    <span class="c-stream-chase__tag" v-if="chase.behind.mNameTag">
+                        <span class="c-stream-chase__label">{{ chase.behind.mNameTag }}</span>
+                    </span>
+                    <span class="c-stream-chase__car">
+                        <span class="c-stream-chase__label">{{ chase.behind.mCarNamesDisplay }}</span>
+                    </span>
                 </span>
-                <span class="c-stream-chase__position">{{ chase.behind.mRacePosition }}</span>
+                <span class="c-stream-chase__position">
+                    <span class="c-stream-chase__label">{{ chase.behind.mRacePosition }}</span>
+                </span>
             </div>
+
         </div>
     </div>
 </template>
 
 <style lang="scss">
 .c-stream-chase {
+    @include color('background-color', 'pitbox', 0.8);
+    
+    padding: em(16) em(16) em(32);
+
     display: flex;
     align-items: center;
     justify-content: center;
-
-    width: 100%;
-    max-width: em(1280);
-    overflow: hidden;
-    margin: 0 auto;
 }
 
 .c-stream-chase__items {
     display: flex;
     flex-direction: row;
-    // flex-wrap: wrap;
     flex-wrap: nowrap;
+
+    width: 100%;
+    max-width: em(1280);
+    overflow: hidden;
+}
+
+.c-stream-chase__item {
+    flex-grow: 0;
+    flex-shrink: 0;
+    flex-basis: auto;
+
+    display: flex;
+    flex-direction: row;
+    overflow: hidden;
+}
+
+.c-stream-chase__item--participant {
+    width: em(428);
+}
+
+.c-stream-chase__item--time {
+    flex-grow: 1;
+
+    padding: em(24);
+
+    align-items: center;
+    justify-content: center;
+}
+
+.c-stream-chase__time {
+    @include color('color', 'yellow');
+
+    // flex-grow: 1;
+    // flex-shrink: 1;
+    // flex-basis: auto;
+
+    .c-stream-chase__label {
+        font-family: 'firacode', monospace;
+        font-size: em(48);
+        min-width: 8ch;
+    }
+}
+
+.c-stream-chase__info {
+    flex-grow: 0;
+    flex-shrink: 1;
+    flex-basis: auto;
+
+    display: flex;
+    flex-direction: column;
+    flex-wrap: wrap;
+    margin: 0 em(16) 0 0;
+    width: calc(100% - em(96 + 16));
+}
+
+.c-stream-chase__gradient,
+.c-stream-chase__name,
+.c-stream-chase__tag,
+.c-stream-chase__car {
+    flex-grow: 0;
+    flex-shrink: 0;
+    flex-basis: auto;
+
+    width: 100%;
+}
+
+.c-stream-chase__gradient {
+    background: linear-gradient(90deg, #0D0B00 0%, #C79700 50%, #CFCCBE 100%);
+
+    width: 100%;
+    height: em(16);
+}
+
+.c-stream-chase__name,
+.c-stream-chase__tag,
+.c-stream-chase__car {
+    display: flex;
     align-items: flex-start;
-    height: em(210);
+    justify-content: flex-start;
+}
+
+.c-stream-chase__name {
+    @include color('color', 'white');
+
+    margin: em(8) 0 0;
+
+    .c-stream-chase__label {
+        font-size: em(42);
+    }
+}
+
+.c-stream-chase__tag {
+    @include color('border-color', 'white', 0.4);
+    @include color('color', 'yellow');
+
+    margin: em(4) 0 0;
+    padding: em(8) 0 0 0;
+
+    border-top-width: em(2, 36);
+    border-top-style:dotted;
+
+    .c-stream-chase__label {
+        font-size: em(20);
+    }
+}
+
+.c-stream-chase__car {
+    @include color('color', 'white', 0.8);
+
+    flex-grow: 1;
+
+    margin: em(32) 0 0;
+    display: flex;
+    align-items: flex-end;
+
+    .c-stream-chase__label {
+        font-size: em(20);
+    }
+}
+
+.c-stream-chase__position {
+    @include color('background-color', 'yellow');
+    @include color('color', 'black');
+
+    flex-grow: 0;
+    flex-shrink: 0;
+    flex-basis: auto;
+
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    
+    width: em(96);
+    height: em(96);
+
+    .c-stream-chase__label {
+        font-size: em(64);
+    }
+}
+
+.c-stream-chase__label {
+    font-family: "qanelassoft";
+    display: block;
+    font-weight: bold;
+    line-height: 1em;
+    letter-spacing: 0.04em;
+    text-transform: uppercase;
+    text-overflow: ellipsis;
+    white-space: nowrap;
+    overflow: hidden;
 }
 
 .c-stream-chase__items[count="1"] {
@@ -68,180 +251,58 @@
             background: linear-gradient(90deg, #CFCCBE 0%, #C79700 50%, #0D0B00 100%);
         }
 
-        .c-stream-chase__name {
-            padding: 0 0 0 em(32, 42);
-            text-align: right;
-        }
-
-        
+        .c-stream-chase__name,
+        .c-stream-chase__tag,
         .c-stream-chase__car {
-            padding: 0 0 0 em(32, 24);
-            text-align: right;
+            justify-content: flex-end;
         }
     }
 }
 
 .c-stream-chase__items[count="2"] {
-    .c-stream-chase__item--time {
-        padding: em(16) em(32);
-    }
+    max-width: em(1600);
 
     .c-stream-chase__item--participant {
-        width: em(300);
+        width: em(320);
     }
 
     .c-stream-chase__info {
-        margin: 0 0 0 em(8);
+        width: calc(100% - em(64 + 16));
     }
 
     .c-stream-chase__time {
-        font-size: em(24);
-    }
-
-    .c-stream-chase__gradient {
-        height: em(8);
+        .c-stream-chase__label {
+            font-size: em(36);
+        }
     }
 
     .c-stream-chase__name {
-        margin: em(16, 28) 0 0;
-        padding: 0 em(32, 28) 0 0;
-        font-size: em(28);
+        .c-stream-chase__label {
+            font-size: em(36);
+        }
+    }
+
+    .c-stream-chase__tag {
+        .c-stream-chase__label {
+            font-size: em(18);
+        }
     }
 
     .c-stream-chase__car {
-        margin: em(8, 22) 0 0;
-        padding: 0 em(16, 22) 0 0;
-        font-size: em(22);
+        .c-stream-chase__label {
+            font-size: em(18);
+        }
     }
 
     .c-stream-chase__position {
-        font-size: em(32);
-        width: em(48, 32);
-        height: em(48, 32);
+        width: em(64);
+        height: em(64);
+
+        .c-stream-chase__label {
+            font-size: em(36);
+        }
     }
-}
 
-.c-stream-chase__item {
-    flex-grow: 0;
-    flex-shrink: 0;
-    flex-basis: auto;
-
-    display: flex;
-    align-items: flex-start;
-    justify-content: center;
-}
-
-.c-stream-chase__item--participant {
-    width: em(428);
-}
-
-.c-stream-chase__item--time {
-    flex-grow: 1;
-    flex-shrink: 0;
-    flex-basis: auto;
-
-    padding: em(16) em(96);
-}
-
-.c-stream-chase__info {
-    flex-grow: 1;
-    flex-shrink: 1;
-    flex-basis: auto;
-
-    display: flex;
-    flex-direction: column;
-    margin: 0 em(16) 0 0
-}
-
-.c-stream-chase__time {
-    @include color('color', 'yellow');
-
-    flex-grow: 0;
-    flex-shrink: 0;
-    flex-basis: auto;
-
-    font-family: 'firacode', monospace;
-    font-size: em(48);
-    line-height: 1em;
-    letter-spacing: 0.04em;
-    white-space: nowrap;
-    min-width: 8ch;
-    text-align: center;
-}
-
-.c-stream-chase__gradient {
-    // @include color('background-color', 'white');
-    background: linear-gradient(90deg, #0D0B00 0%, #C79700 50%, #CFCCBE 100%);
-
-    flex-grow: 0;
-    flex-shrink: 0;
-    flex-basis: auto;
-
-    width: 100%;
-    height: em(16);
-}
-
-.c-stream-chase__name {
-    @include color('color', 'white');
-
-    flex-grow: 0;
-    flex-shrink: 0;
-    flex-basis: auto;
-
-    margin: em(16, 34) 0 0;
-    padding: 0 em(32, 34) 0 0;
-    width: 100%;
-    font-family: "qanelassoft";
-    font-weight: bold;
-    font-size: em(34);
-    line-height: 1em;
-    letter-spacing: 0.04em;
-    text-transform: uppercase;
-    // text-overflow: ellipsis;
-    white-space: wrap;
-    overflow: hidden;
-    word-spacing: 100vw;
-}
-
-.c-stream-chase__car {
-    @include color('color', 'white', 0.8);
-
-    flex-grow: 1;
-    flex-shrink: 1;
-    flex-basis: auto;
-
-    margin: em(16, 20) 0 0;
-    padding: 0 em(32, 20) 0 0;
-    width: 100%;
-    font-family: "qanelassoft";
-    font-weight: bold;
-    font-size: em(20);
-    line-height: 1em;
-    letter-spacing: 0.04em;
-    text-transform: uppercase;
-    // text-overflow: ellipsis;
-    // white-space: nowrap;
-    // overflow: hidden;
-    white-space: wrap;
-}
-
-.c-stream-chase__position {
-    @include color('background-color', 'yellow');
-    @include color('color', 'black');
-
-    flex-grow: 0;
-    flex-shrink: 0;
-    flex-basis: auto;
-
-    display: flex;
-    align-items: center;
-    justify-content: center;
-    font-family: "qanelassoft";
-    font-weight: bold;
-    font-size: em(64);
-    line-height: 1em;
-    width: em(96, 64);
-    height: em(96, 64);
 }
 </style>
 
