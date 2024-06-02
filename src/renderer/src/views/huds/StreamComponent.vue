@@ -23,13 +23,10 @@
 .c-stream-hud__item--standings,
 .c-stream-hud__item--chase,
 .c-stream-hud__item--solo {
-    @include color('background-color', 'pitbox', 0.8);
-
     position: fixed;
     bottom: 0;
     right: 0;
     left: 0;
-    padding: em(8) em(8) em(32);
 }
 
 .c-stream-hud__item--timings {

@@ -90,13 +90,14 @@ class StandingsWorker {
 
         let user = data.user;
         const lapsAppliedParticipantInfo = await this.applyStoredParticipantLapData(data.mParticipantInfo);
-        const sortedParticipantInfo = await this.getSortedParticipants(lapsAppliedParticipantInfo);
+        const filteredParticipants = await this.filterParticipants(lapsAppliedParticipantInfo);
+        const sortedParticipantInfo = await this.getSortedParticipants(filteredParticipants);
         const participantData = await this.setParticipantsIndexes(sortedParticipantInfo);
         const participantDataAdditionalData = await this.setParticipantsAdditionalData(participantData);
         user = await this.updateUser(user, sortedParticipantInfo);
         user = await this.applyTimingsToUser(user, data.timings);
         const standingsData = await this.getStandingsData(user, participantDataAdditionalData);
-        const userIndex = standingsData.indexOf(user);
+        const userIndex = await this.getUserIndex(user, standingsData);
         const standingsAdditionalData = await this.setStandingsAdditionalData(userIndex, user, standingsData, data.mSessionState, data.mTrackLength);
         const standingsDataDisplay = await this.getStandingsDataForDisplay(userIndex, standingsAdditionalData);
 
@@ -110,13 +111,35 @@ class StandingsWorker {
 
     /**
      * 
+     * @param {*} user 
+     * @param {*} standingsData 
+     * @returns 
+     */
+    async getUserIndex(user, standingsData) {
+        if (user === null) {
+            return null;
+        }
+
+        return standingsData.indexOf(user);
+    }
+
+    /**
+     * 
      * @param {*} participants 
      * @returns 
      */
     async setParticipantsAdditionalData(participants) {
         for (let index = 0; index < participants.length; index++) {
             const participant = participants[index];
-            participants[index].mNameDisplay = await this.mNameDisplay(participant.mName);
+
+            if (typeof participant === 'undefined') {
+                continue;
+            }
+
+            const nameParts = await this.nameSplitTag(participant.mName);
+            participants[index].mNameDisplay = await this.mNameDisplay(nameParts);
+            participants[index].mNameShort = await this.mNameShort(nameParts);
+            participants[index].mNameTag = await this.mNameTag(nameParts);
             participants[index].mCarClassNamesDisplay = await this.mCarClassNamesDisplay(participant.mCarClassNames);
             participants[index].mCarNamesDisplay = await this.mCarNamesDisplay(participant.mCarNames);
             participants[index].mFastestLapTimesDisplay = await this.mFastestLapTimeDisplay(participant.mFastestLapTimes);
@@ -129,6 +152,37 @@ class StandingsWorker {
         }
 
         return participants;
+    }
+
+    /**
+     * 
+     */
+    async nameSplitTag(mName) {
+        // extract tag
+        const regex = /([\[|\(|\{].*?[\]|\)|\}])/g;
+
+        // prep tag
+        let tag = '';
+
+        // get matches
+        let matches = regex.exec(mName);
+        if (matches !== null) {
+            // update tag with match
+            tag = matches[0];
+        }
+
+        // prepare name
+        let name = mName
+            .replace(tag, '')
+            .replace(/^[-_]+/, '') // remove leading _ or - chars
+            .replace(/[-_]+$/, '') // remove trailing _ or - chars
+            .replace(/[-_]+/, ' ') // replace underscore in names with space
+            ;
+
+        return {
+            name,
+            tag
+        }
     }
 
     /**
@@ -179,11 +233,39 @@ class StandingsWorker {
 
     /**
      * Get participant name
-     * @param {*} mName 
+     * @param {*} nameParts 
      * @returns string
      */
-    async mNameDisplay(mName) {
-        return mName;
+    async mNameDisplay(nameParts) {
+        return nameParts.name;
+    }
+
+    /**
+     * Get participant name
+     * @param {*} nameParts 
+     * @returns string
+     */
+    async mNameShort(nameParts) {
+        const nameSplit = nameParts.name.split(' ');
+        
+        let nameShort = '';
+        for (let index = 0; index < nameSplit.length - 1; index++) {
+            const nameSplitPart = nameSplit[index];
+            nameShort += `${nameSplitPart[0]}. `;
+        }
+
+        nameShort += nameSplit[nameSplit.length-1];
+
+        return nameShort;
+    }
+
+    /**
+     * Get participant name
+     * @param {*} nameParts 
+     * @returns string
+     */
+    async mNameTag(nameParts) {
+        return nameParts.tag.slice(1, -1);
     }
 
     /**
@@ -370,17 +452,26 @@ class StandingsWorker {
     async distanceToUserDisplay(distanceToUser) {
         let symbol = '';
 
-        // if (distanceToUser < 0) {
-        //     symbol = '';
-        // }
-
-        // if (distanceToUser > 0) {
-        //     symbol = '';
-        // }
-
         const diff = Math.abs(distanceToUser);
 
         return `${symbol}${diff.toFixed(2)}m`;
+    }
+    
+    /**
+     * 
+     * @param {*} mParticipantInfo 
+     * @returns 
+     */
+    async filterParticipants(mParticipantInfo) {
+        for (const index in mParticipantInfo) {
+            const participant = mParticipantInfo[index];
+
+            if (participant.mCarClassNames === "SafetyCar") {
+                mParticipantInfo.splice(index, 1);
+            }
+        }
+
+        return mParticipantInfo;
     }
 
     /**
@@ -454,7 +545,7 @@ class StandingsWorker {
             mParticipantInfo[index]['fastestLaps'] = participants[index]['fastestLaps'];
         }
 
-        // save laps to storage
+        // save participants to storage
         await localforage.setItem('participantsstore', participants);
 
         // return mParticipantInfo
@@ -492,6 +583,10 @@ class StandingsWorker {
      * @param {*} user 
      */
     async applyTimingsToUser(user, timings) {
+        if (user === null) {
+            return null;
+        }
+
         user.mBestLapTimeDisplay = await this.mBestLapTimeDisplay(timings.mBestLapTime);
         user.mLastLapTimeDisplay = await this.mLastLapTimeDisplay(timings.mLastLapTime);
         user.mCurrentTime = timings.mCurrentTime;
@@ -776,7 +871,7 @@ class StandingsWorker {
      */
     async mFastestLapTimeDisplay(mFastestLapTime) {
         if (mFastestLapTime < 0) { 
-            return null;
+            return 'no time';
         }
 
         return millisecondsToTime(mFastestLapTime);
@@ -815,6 +910,10 @@ class StandingsWorker {
      * @returns array
      */
     async getStandingsData(user, sortedParticipantInfo) {
+        if (user === null) {
+            return null;
+        }
+
         let aheadA = [];
         let aheadB = [];
         let behindA = [];

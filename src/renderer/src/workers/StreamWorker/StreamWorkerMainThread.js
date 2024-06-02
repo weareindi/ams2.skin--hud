@@ -98,9 +98,6 @@ export default class StreamWorkerMainThread {
             // note: remember were using vue 'ref' for data handling.
             // ref adds the 'value' attribute to the provide which we're updating here
             this.app._context.provides[key].value = data[key];
-
-            // console.log(key);
-            // console.log(data);
         }
     }
 

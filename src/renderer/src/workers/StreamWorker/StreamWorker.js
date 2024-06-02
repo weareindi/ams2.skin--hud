@@ -4,6 +4,8 @@ class StreamWorker {
     constructor() {
         this.StreamWorker = self;
 
+        this.gapMinTime = 6000;
+
         this.soloMinTime = 30000;
 
         this.timingsMinTime = 30000;
@@ -13,8 +15,8 @@ class StreamWorker {
         this.standingsPage = null;
 
         this.chaseRaf = Date.now();
-        this.chaseThreshold = 6000; // minimum is 5000
-        this.chaseMinTime = 15000;
+        this.chaseThreshold = 15000; // minimum is 3000
+        this.chaseMinTime = 30000;
 
         this.viewStates = null;
         this.sessionState = null;
@@ -230,6 +232,7 @@ class StreamWorker {
         }
 
         let activeViews = [];
+        activeViews.push('gap');
         if (solo !== null) {
             activeViews.push('solo');
         }
@@ -241,6 +244,23 @@ class StreamWorker {
         }
         if (chase !== null) {
             activeViews.push('chase');
+        }
+
+        if (this.viewCurrent === 'gap') {
+            if (!this.viewIsActive()) {
+                this.viewActivate();
+                this.timeStart();
+            }
+
+            if (this.viewIsActive()) {
+                if (this.timeIsComplete(this.gapMinTime)) {
+                    this.timeStop();
+                    this.viewDeactivate();
+                    
+                    // remove from pool so we dont get it 2 times in a row
+                    activeViews.splice(activeViews.indexOf('gap'), 1);
+                }
+            }
         }
 
         if (this.viewCurrent === 'solo') {
@@ -270,6 +290,9 @@ class StreamWorker {
                 if (this.timeIsComplete(this.timingsMinTime)) {
                     this.timeStop();
                     this.viewDeactivate();
+                    
+                    // remove from pool so we dont get it 2 times in a row
+                    activeViews.splice(activeViews.indexOf('timings'), 1);
                 }
             }
         }
@@ -284,9 +307,12 @@ class StreamWorker {
                 if (this.timeIsComplete(this.chaseMinTime) || activeViews.indexOf('chase') === -1) {
                     this.timeStop();
                     this.viewDeactivate();
+                    
+                    // remove from pool so we dont get it 2 times in a row
+                    activeViews.splice(activeViews.indexOf('chase'), 1);
                 }
             }
-        }            
+        }
         
         if (this.viewCurrent === 'standings') {
             if (!this.viewIsActive()) {
@@ -296,9 +322,13 @@ class StreamWorker {
 
             if (this.viewIsActive()) {
                 if (this.standingsComplete()) {
+                    console.log('compelte');
                     this.standingsStop();
                     this.standingsReset();
                     this.viewDeactivate();
+                    
+                    // remove from pool so we dont get it 2 times in a row
+                    activeViews.splice(activeViews.indexOf('standings'), 1);
                 }
             }
         }
@@ -407,6 +437,7 @@ class StreamWorker {
 
         // store data for use outside of function
         if (this.standingsPages === null) {
+            console.log('here');
             const sorted = [].concat(data.participants).sort((a, b) => {
                 return a.mRacePosition - b.mRacePosition;
             });
@@ -421,6 +452,10 @@ class StreamWorker {
 
         let page = this.standingsPage;
 
+        if (page === null) {
+            page = 0;
+        }
+
         // update values which we're using to limit the tick rate of the request
         const now = Date.now();
         const delta = now - this.standingsTimer;
@@ -432,17 +467,11 @@ class StreamWorker {
         if (delta > interval) {
             // update raf
             this.standingsTimer = now - (delta % interval);
-
-            if (this.standingsPage === null) {
-                page = 0;
-            }
             
             page++;
 
-            if (this.standingsPage === this.standingsPages.length) {
-                page = 0;
-
-                this.standingsPages = null;
+            if (page > this.standingsPages.length) {
+                page = null;
             }
         }
 
@@ -460,7 +489,11 @@ class StreamWorker {
     }
 
     standingsComplete() {
-        return this.standingsPage === 0 ? true : false
+        if (this.standingsPages === null) {
+            return false;
+        }
+
+        return this.standingsPage === this.standingsPages.length ? true : false;
     }
 
     standingsStop() {
@@ -468,6 +501,7 @@ class StreamWorker {
     }
 
     standingsReset() {
+        this.standingsPages = null;
         this.standingsPage = null;
     }
 
@@ -712,11 +746,11 @@ class StreamWorker {
         }
 
         if (data.mSessionState === 1) {
-            return ['timings', 'solo', 'standings'];
+            return ['timings', 'solo'];
         }
 
         if (data.mSessionState === 3) {
-            return ['timings', 'solo', 'standings'];
+            return ['timings', 'solo'];
         }
 
         if (data.mSessionState === 5) {
