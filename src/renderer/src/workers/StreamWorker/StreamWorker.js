@@ -322,7 +322,6 @@ class StreamWorker {
 
             if (this.viewIsActive()) {
                 if (this.standingsComplete()) {
-                    console.log('compelte');
                     this.standingsStop();
                     this.standingsReset();
                     this.viewDeactivate();
@@ -437,7 +436,6 @@ class StreamWorker {
 
         // store data for use outside of function
         if (this.standingsPages === null) {
-            console.log('here');
             const sorted = [].concat(data.participants).sort((a, b) => {
                 return a.mRacePosition - b.mRacePosition;
             });
