@@ -184,6 +184,8 @@ class ParentWorker {
                 const driverId = await this.getDriverId(event.data.data);
                 const driver = await this.getDriver(event.data.data);
 
+                this.returnMessage('dump', event.data.data); 
+
                 // dont contaminate lap data with viewed user data
                 // if (driver) {
                     this.processLapWorkerData(driverId, driver, userId, event.data.data);

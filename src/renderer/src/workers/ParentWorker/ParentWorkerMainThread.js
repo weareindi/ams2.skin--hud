@@ -434,11 +434,11 @@ export default class ParentWorkerMainThread {
         // check we have debug enabled
         let config = await localforage.getItem('config');
 
-        if (!('debug' in config)) { 
+        if (!('configDebug' in config)) { 
             return null;
         }
 
-        if (config.debug !== true) { 
+        if (config.configDebug !== true) { 
             return null;
         }
 
