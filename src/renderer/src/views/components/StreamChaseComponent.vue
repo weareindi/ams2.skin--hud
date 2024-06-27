@@ -127,6 +127,7 @@
         font-family: 'firacode', monospace;
         font-size: em(48);
         min-width: 8ch;
+        text-align: center;
     }
 }
 
