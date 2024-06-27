@@ -123,11 +123,19 @@ class DashWorker {
             return null;
         }
 
-        if (!('mUnfilteredThrottle' in data)) {
+        if (!('mTractionControlSetting' in data)) {
             return null;
         }
 
-        if (!('mTractionControlSetting' in data)) {
+        if (!('mUnfilteredClutch' in data)) {
+            return null;
+        }
+
+        if (!('mUnfilteredBrake' in data)) {
+            return null;
+        }
+
+        if (!('mUnfilteredThrottle' in data)) {
             return null;
         }
 
@@ -553,8 +561,11 @@ class DashWorker {
     async getInputsData(data) {
         return {
             mBrake: data.mBrake,
+            mUnfilteredBrake: data.mUnfilteredBrake,
             mClutch: data.mClutch,
+            mUnfilteredClutch: data.mUnfilteredClutch,
             mThrottle: data.mThrottle,
+            mUnfilteredThrottle: data.mUnfilteredThrottle,
         };
     }
     
@@ -565,13 +576,19 @@ class DashWorker {
      */
     async getInputsDataForDisplay(inputsData) {
         const mBrakeDisplay = await this.mBrakeDisplay(inputsData.mBrake);
+        const mBrakeRawDisplay = await this.mBrakeDisplay(inputsData.mUnfilteredBrake);
         const mClutchDisplay = await this.mClutchDisplay(inputsData.mClutch);
+        const mClutchRawDisplay = await this.mClutchDisplay(inputsData.mUnfilteredClutch);
         const mThrottleDisplay = await this.mThrottleDisplay(inputsData.mThrottle);
+        const mThrottleRawDisplay = await this.mThrottleDisplay(inputsData.mUnfilteredThrottle);
 
         return {
             mBrakeDisplay,
+            mBrakeRawDisplay,
             mClutchDisplay,
+            mClutchRawDisplay,
             mThrottleDisplay,
+            mThrottleRawDisplay,
         };
     }
 

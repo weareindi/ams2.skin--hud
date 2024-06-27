@@ -79,8 +79,11 @@ export default class ParentWorkerMainThread {
         this.app.provide('mTractionControlHighlight', ref(null));
 
         this.app.provide('mClutchDisplay', ref(null));
+        this.app.provide('mClutchRawDisplay', ref(null));
         this.app.provide('mBrakeDisplay', ref(null));
+        this.app.provide('mBrakeRawDisplay', ref(null));
         this.app.provide('mThrottleDisplay', ref(null));
+        this.app.provide('mThrottleRawDisplay', ref(null));
 
         this.app.provide('mClutchOverheatedDisplay', ref(null));
         this.app.provide('mClutchSlippingDisplay', ref(null));
