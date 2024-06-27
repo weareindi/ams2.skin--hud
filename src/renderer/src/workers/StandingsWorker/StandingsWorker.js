@@ -135,7 +135,7 @@ class StandingsWorker {
             if (typeof participant === 'undefined') {
                 continue;
             }
-
+            
             const nameParts = await this.nameSplitTag(participant.mName);
             participants[index].mNameDisplay = await this.mNameDisplay(nameParts);
             participants[index].mNameShort = await this.mNameShort(nameParts);
@@ -178,6 +178,9 @@ class StandingsWorker {
             .replace(/[-_]+$/, '') // remove trailing _ or - chars
             .replace(/[-_]+/, ' ') // replace underscore in names with space
             ;
+
+        // trim surrounding white space
+        name = name.trim();
 
         return {
             name,
