@@ -5,7 +5,7 @@
                 <InCarInfoComponent icon="water-temp" :a="mWaterTempCelsiusDisplay" />
             </div>
             <div class="c-in-car-status__item">
-                <InCarInfoComponent icon="pedals" :a="mClutchDisplay" :b="mBrakeDisplay" :c="mThrottleDisplay" />
+                <InCarInfoComponent icon="pedals" :a="mClutchRawDisplay" :b="mBrakeRawDisplay" :c="mThrottleRawDisplay" />
             </div>
         </div>
     </div>
@@ -40,14 +40,20 @@ export default {
     setup() {
         const mWaterTempCelsiusDisplay = inject('mWaterTempCelsiusDisplay');
         const mClutchDisplay = inject('mClutchDisplay');
+        const mClutchRawDisplay = inject('mClutchRawDisplay');
         const mBrakeDisplay = inject('mBrakeDisplay');
+        const mBrakeRawDisplay = inject('mBrakeRawDisplay');
         const mThrottleDisplay = inject('mThrottleDisplay');
+        const mThrottleRawDisplay = inject('mThrottleRawDisplay');
 
         return {
             mWaterTempCelsiusDisplay,
             mClutchDisplay,
+            mClutchRawDisplay,
             mBrakeDisplay,
+            mBrakeRawDisplay,
             mThrottleDisplay,
+            mThrottleRawDisplay,
         }
     },
     components: {
