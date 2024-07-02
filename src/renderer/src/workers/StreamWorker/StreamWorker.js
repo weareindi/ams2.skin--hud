@@ -4,11 +4,11 @@ class StreamWorker {
     constructor() {
         this.StreamWorker = self;
 
-        this.gapMinTime = 6000;
+        this.gapMinTime = 30000;
 
-        this.soloMinTime = 30000;
+        this.soloMinTime = 120000;
 
-        this.timingsMinTime = 30000;
+        this.timingsMinTime = 60000;
 
         this.standingsTimer = null;
         this.standingsPages = null;
@@ -16,7 +16,7 @@ class StreamWorker {
 
         this.chaseRaf = Date.now();
         this.chaseThreshold = 15000; // minimum is 3000
-        this.chaseMinTime = 30000;
+        this.chaseMinTime = 120000;
 
         this.viewStates = null;
         this.sessionState = null;
@@ -28,7 +28,7 @@ class StreamWorker {
         this.viewActive = false;
         this.viewCurrent = null;
         this.viewLocked = false;
-        this.viewLockedTime = 30000;
+        this.viewLockedTime = 60000;
 
         this.init();
 
