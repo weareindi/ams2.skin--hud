@@ -6,6 +6,7 @@
                     <span class="c-stream-solo__name">{{ solo.mNameShort }}</span>
                     <span class="c-stream-solo__tag" v-if="solo.mNameTag">{{ solo.mNameTag }}</span>
                     <span class="c-stream-solo__car">{{ solo.mCarNamesDisplay }}</span>
+                    <span class="c-stream-solo__class">{{ solo.mCarClassNamesDisplay }}</span>
                 </span>
                 <span class="c-stream-solo__position">{{ solo.mRacePosition }}</span>
             </div>
@@ -114,6 +115,27 @@
     line-height: 1em;
     // letter-spacing: 0.04em;
     text-transform: uppercase;
+    text-overflow: ellipsis;
+    white-space: nowrap;
+    overflow: hidden;
+}
+
+.c-stream-solo__class {
+    @include color('color', 'yellow', 0.8);
+
+    flex-grow: 1;
+    flex-shrink: 1;
+    flex-basis: auto;
+
+    margin: em(6, 24) 0 0;
+    // padding: em(16, 24) 0 0 0;
+    width: 100%;
+    font-family: "qanelassoft";
+    font-weight: bold;
+    font-size: em(24);
+    line-height: 1em;
+    // letter-spacing: 0.04em;
+    // text-transform: uppercase;
     text-overflow: ellipsis;
     white-space: nowrap;
     overflow: hidden;

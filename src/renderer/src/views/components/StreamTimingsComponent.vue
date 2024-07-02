@@ -15,14 +15,20 @@
                         <div class="c-stream-timings__position">
                             <span class="c-stream-timings__label">{{ timing.mRacePosition }}</span>
                         </div>
+                        <div class="c-stream-timings__class" :style="{ 'background-color':timing.mCarClassColorDisplay }">
+                            <span class="c-stream-timings__label" v-if="timing.mCarClassNamesDisplay">{{ timing.mCarClassNamesDisplay }}</span>
+                        </div>
                         <div class="c-stream-timings__tag">
                             <span class="c-stream-timings__label" v-if="timing.mNameTag">{{ timing.mNameTag }}</span>
                         </div>
                         <div class="c-stream-timings__name">
                             <span class="c-stream-timings__label">{{ timing.mNameShort }}</span>
                         </div>
-                        <div class="c-stream-timings__time">
-                            <span class="c-stream-timings__label">{{ timing.mFastestLapTimesDisplay }}</span>
+                        <div class="c-stream-timings__time" v-if="sessionName === 'practice' || sessionName === 'qualifying'">
+                            <span class="c-stream-timings__label">{{ timing.mFastestLapTimesDisplay ? timing.mFastestLapTimesDisplay : 'No Time'  }}</span>
+                        </div>
+                        <div class="c-stream-timings__time" v-if="sessionName === 'race'">
+                            <span class="c-stream-timings__label">{{ timing.mLastLapTimeDisplay ? timing.mLastLapTimeDisplay : 'No Time' }}</span>
                         </div>
                         <div class="c-stream-timings__state" v-if="timing.mPitModesDisplay">
                             <span class="c-stream-timings__label">{{ timing.mPitModesDisplay }}</span>
@@ -141,6 +147,7 @@ $item_state_label: 14;
     }
 
     .c-stream-timings__position,
+    .c-stream-timings__class,
     .c-stream-timings__tag,
     .c-stream-timings__name,
     .c-stream-timings__time,
@@ -151,6 +158,7 @@ $item_state_label: 14;
 }
 
 .c-stream-timings__position,
+.c-stream-timings__class,
 .c-stream-timings__tag,
 .c-stream-timings__name,
 .c-stream-timings__time,
@@ -178,9 +186,31 @@ $item_state_label: 14;
     width: em($item_height);
     height: em($item_height);
 
+    border-radius: em(2);
+
     .c-stream-timings__label {
         font-size: em($item_position_label);
         font-family: 'firacode', monospace;
+    }
+}
+
+.c-stream-timings__class {    
+    margin-left: em($item_gap);
+
+    flex-grow: 0;
+    flex-shrink: 1;
+    flex-basis: auto;
+
+    border-radius: em(2);
+
+    .c-stream-timings__label {
+        @include color('color', 'white');
+
+        font-size: em($item_tag_label);
+        font-family: 'firacode', monospace;
+        width: 5ch;
+        text-align: center;
+        mix-blend-mode: lighten;
     }
 }
 
@@ -221,7 +251,8 @@ $item_state_label: 14;
     .c-stream-timings__label {
         font-size: em($item_time_label);
         font-family: 'firacode', monospace;
-        // width: 10ch;
+        min-width: 10ch;
+        text-align: center
     }
 }
 
