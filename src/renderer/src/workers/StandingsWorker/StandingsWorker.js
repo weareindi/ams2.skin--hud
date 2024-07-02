@@ -1,6 +1,9 @@
 import { millisecondsToTime } from '../../utils/TimeUtils';
 import { zerofill } from "../../utils/ValueUtils";
 import localforage from "localforage";
+import stc from "string-to-color";
+
+
 
 class StandingsWorker {
     constructor() {
@@ -141,6 +144,7 @@ class StandingsWorker {
             participants[index].mNameShort = await this.mNameShort(nameParts);
             participants[index].mNameTag = await this.mNameTag(nameParts);
             participants[index].mCarClassNamesDisplay = await this.mCarClassNamesDisplay(participant.mCarClassNames);
+            participants[index].mCarClassColorDisplay = await this.mCarClassColorDisplay(participant.mCarClassNames);
             participants[index].mCarNamesDisplay = await this.mCarNamesDisplay(participant.mCarNames);
             participants[index].mFastestLapTimesDisplay = await this.mFastestLapTimeDisplay(participant.mFastestLapTimes);
             participants[index].mLastLapTimeDisplay = await this.mLastLapTimeDisplay(participant.mLastLapTimes);
@@ -277,33 +281,26 @@ class StandingsWorker {
      * @returns string
      */
     async mCarClassNamesDisplay(mCarClassNames) {
-        // split name at capitals
-        const parts = mCarClassNames.match(/[A-Z][a-z]+|[A-Z]|[0-9]+/g);
+        // split name underscore
+        const parts = mCarClassNames.split('_');
 
         let name = mCarClassNames;
         if (parts) {
+            // use first part of name
             name = parts[0];
-        }
-
-        // create shortname from first 3 characters of first item
-        let shortname = name.slice(0, 3);
-
-        if (parts) {
-            // remove first part as we've used it
-            parts.shift();
-
-            // any more parts? add the first character from the next part only
-            if (parts.length) {
-                if (shortname.length === 1) {
-                    shortname += parts[0].slice(0, 3);
-                } else {
-                    shortname += parts[0].slice(0, 1);
-                }
-            }
         }
         
         // make it uppercase
-        return shortname.toUpperCase();        
+        return name;        
+    }
+
+    /**
+     * Genereate color based on classname
+     * @param {*} mCarClassNames 
+     * @returns string
+     */
+    async mCarClassColorDisplay(mCarClassNames) {
+        return stc(mCarClassNames);
     }
 
     /**
@@ -873,8 +870,8 @@ class StandingsWorker {
      * @returns string
      */
     async mFastestLapTimeDisplay(mFastestLapTime) {
-        if (mFastestLapTime < 0) { 
-            return 'no time';
+        if (mFastestLapTime < 0) {
+            return null;
         }
 
         return millisecondsToTime(mFastestLapTime);

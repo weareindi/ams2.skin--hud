@@ -8,7 +8,10 @@
                             <div class="c-in-car-standing__position">{{ standing.mRacePosition }}</div>
                         </div>
                         <div class="c-in-car-standing__item c-in-car-standing__item--car">
-                            <div class="c-in-car-standing__car">{{ standing.mCarClassNamesDisplay }}</div>
+                            <div class="c-in-car-standing__car">
+                                <span class="c-in-car-standing__car-name">{{ standing.mCarClassNamesDisplay }}</span>
+                                <span class="c-in-car-standing__car-color" :style="{ 'background-color':standing.mCarClassColorDisplay }"></span>
+                            </div>
                         </div>
                         <div class="c-in-car-standing__item c-in-car-standing__item--name">
                             <div class="c-in-car-standing__name">{{ standing.mNameShort }}</div>
@@ -259,13 +262,29 @@
 }
 
 .c-in-car-standing__car {
-    @include color('background-color', 'white');
-    @include color('color', 'black');
-
+    position: relative;
     font-size: em(16);
     line-height: 1em;
     border-radius: em(4, 20);
+    overflow: hidden;
     padding: em(10, 20) em(8, 20);
+}
+
+.c-in-car-standing__car-name {
+    @include color('color', 'white');
+
+    position: relative;
+    z-index: 2;
+    mix-blend-mode: lighten;
+}
+
+.c-in-car-standing__car-color {
+    position: absolute;
+    z-index: 1;
+    top: 0;
+    right: 0;
+    bottom: 0;
+    left: 0;
 }
 
 .c-in-car-standing__name {

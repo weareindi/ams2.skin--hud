@@ -27,6 +27,7 @@
     "localforage": "^1.10.0",
     "semver": "^7.6.0",
     "slash": "^5.1.0",
+    "string-to-color": "^2.2.2",
     "vh-check": "^2.0.5"
   },
   "devDependencies": {
