@@ -289,9 +289,26 @@ class StandingsWorker {
             // use first part of name
             name = parts[0];
         }
+
+        // create shortname from first 3 characters of first item 
+        let shortname = name.slice(0, 3);
+
+        if (parts) { 
+            // remove first part as we've used it 
+            parts.shift(); 
+ 
+            // any more parts? add the first character from the next part only 
+            if (parts.length) { 
+                if (shortname.length === 1) { 
+                    shortname += parts[0].slice(0, 3); 
+                } else { 
+                    shortname += parts[0].slice(0, 1); 
+                } 
+            } 
+        }
         
         // make it uppercase
-        return name;        
+        return shortname.toUpperCase();        
     }
 
     /**
