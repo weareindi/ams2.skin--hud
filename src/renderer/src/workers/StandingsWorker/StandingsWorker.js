@@ -301,9 +301,7 @@ class StandingsWorker {
             if (parts.length) { 
                 if (shortname.length === 1) { 
                     shortname += parts[0].slice(0, 3); 
-                } else { 
-                    shortname += parts[0].slice(0, 1); 
-                } 
+                }
             } 
         }
         
