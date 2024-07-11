@@ -6,7 +6,6 @@
                     <span class="c-stream-solo__name">{{ solo.mNameShort }}</span>
                     <span class="c-stream-solo__tag" v-if="solo.mNameTag">{{ solo.mNameTag }}</span>
                     <span class="c-stream-solo__car">{{ solo.mCarNamesDisplay }}</span>
-                    <span class="c-stream-solo__class">{{ solo.mCarClassNamesDisplay }}</span>
                 </span>
                 <span class="c-stream-solo__position">{{ solo.mRacePosition }}</span>
             </div>

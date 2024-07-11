@@ -11,9 +11,6 @@
                     <span class="c-stream-chase__tag" v-if="chase.ahead.mNameTag">
                         <span class="c-stream-chase__label">{{ chase.ahead.mNameTag }}</span>
                     </span>
-                    <span class="c-stream-chase__car">
-                        <span class="c-stream-chase__label">{{ chase.ahead.mCarNamesDisplay }}</span>
-                    </span>
                 </span>
                 <span class="c-stream-chase__position">
                     <span class="c-stream-chase__label">{{ chase.ahead.mRacePosition }}</span>
@@ -35,9 +32,6 @@
                     <span class="c-stream-chase__tag" v-if="chase.user.mNameTag">
                         <span class="c-stream-chase__label">{{ chase.user.mNameTag }}</span>
                     </span>
-                    <span class="c-stream-chase__car">
-                        <span class="c-stream-chase__label">{{ chase.user.mCarNamesDisplay }}</span>
-                    </span>
                 </span>
                 <span class="c-stream-chase__position">
                     <span class="c-stream-chase__label">{{ chase.user.mRacePosition }}</span>
@@ -58,9 +52,6 @@
                     </span>
                     <span class="c-stream-chase__tag" v-if="chase.behind.mNameTag">
                         <span class="c-stream-chase__label">{{ chase.behind.mNameTag }}</span>
-                    </span>
-                    <span class="c-stream-chase__car">
-                        <span class="c-stream-chase__label">{{ chase.behind.mCarNamesDisplay }}</span>
                     </span>
                 </span>
                 <span class="c-stream-chase__position">
