@@ -2,7 +2,7 @@ import { resolve } from 'path';
 import { defineConfig, externalizeDepsPlugin } from 'electron-vite';
 import vue from '@vitejs/plugin-vue';
 // import svgLoader from 'vite-svg-loader';
-import stylelint from 'vite-plugin-stylelint';
+// import stylelint from 'vite-plugin-stylelint';
 
 export default defineConfig({
     main: {
@@ -14,7 +14,7 @@ export default defineConfig({
     renderer: {
         resolve: {
             alias: {
-                '@renderer': resolve('src/renderer/src'),
+                '@renderer': resolve('src/renderer'),
                 '@public': resolve(__dirname, 'resources')
             }
         },
@@ -27,7 +27,7 @@ export default defineConfig({
                     additionalData: `
                         @use "sass:map";
                         @use "sass:math";
-                        @import 'src/renderer/src/assets/scss/bootstrap';
+                        @import 'src/renderer/assets/scss/bootstrap';
                         `
                 }
             }
@@ -35,8 +35,9 @@ export default defineConfig({
         build: {
             rollupOptions: {
                 input: [
-                    'src/renderer/index.html',
-                    'src/renderer/stream.html',
+                    // 'src/renderer/index.html',
+                    'src/renderer/settings.html',
+                    // 'src/renderer/stream.html',
                 ]
             }
         }
