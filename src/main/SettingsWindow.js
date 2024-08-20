@@ -1,12 +1,9 @@
 import { app, BrowserWindow } from 'electron';
 import { join } from 'path';
 import { is } from '@electron-toolkit/utils';
-// import { execFile } from 'child_process';
 import SettingsVariables from '../variables/SettingsVariables';
 import DisplayProcessor from './DisplayProcessor.js';
 import CrestProcessor from './CrestProcessor.js';
-
-// import crest2 from '../../resources/crest2/CREST2.exe?asset';
 
 export default class SettingsWindow {
     constructor() {

@@ -35,7 +35,6 @@ export default {
 
         // ... register listener from main
         electron.ipcRenderer.on('setScale', async (event, scale) => {
-            console.log('settingScale');
             await this.setScale(scale);
         });
     },

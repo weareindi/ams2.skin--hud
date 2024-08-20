@@ -1,4 +1,5 @@
 import { screen } from 'electron';
+import { is } from '@electron-toolkit/utils';
 import storage from 'electron-json-storage';
 import DisplayProcessor from '../main/DisplayProcessor.js';
 
@@ -100,6 +101,7 @@ export default class SettingsVariables {
         const primaryDisplay = screen.getPrimaryDisplay();
 
         const data = {};
+
         data.SettingsOnStartup = true;
         data.Debug = false;
         data.ExternalCrest = false;
@@ -110,10 +112,22 @@ export default class SettingsVariables {
         data.SettingsDisplay = primaryDisplay.id;
         data.HudEnabled = false;
         data.HudDisplay = primaryDisplay.id;
-        data.AutoDirectorEnabled = false;
-        data.AutoDirectorDisplay = primaryDisplay.id;
+        // data.AutoDirectorEnabled = false;
+        // data.AutoDirectorDisplay = primaryDisplay.id;
         data.DirectorEnabled = false;
         data.DirectorDisplay = primaryDisplay.id;
+        data.DirectorDefaultView = 'auto';
+        data.DirectorCommandAuto = 'ctrl+Num0';
+        data.DirectorCommandBlank = 'ctrl+Num1';
+        data.DirectorCommandSolo = 'ctrl+Num2';
+        data.DirectorCommandLeaderboard = 'ctrl+Num3';
+        data.DirectorCommandStandings = 'ctrl+Num4';
+        data.DirectorCommandBattle = 'ctrl+Num5';
+        
+        data.Developer = false;
+        data.MockFetch = false;
+        data.MockState = (await this.getMockStateOptions())[0].value;
+
         return data;
     }
 
@@ -133,7 +147,19 @@ export default class SettingsVariables {
         });        
 
         // check displays exist
+        storedSettings = await this.checkStoredDeveloper(storedSettings);
         storedSettings = await this.checkStoredDisplays(storedSettings);
+
+        return storedSettings;
+    }
+
+    /**
+     * 
+     */
+    async checkStoredDeveloper(storedSettings) {
+        if (is.dev) {
+            storedSettings['Developer'] = true;
+        }
 
         return storedSettings;
     }
@@ -150,9 +176,9 @@ export default class SettingsVariables {
             storedSettings['HudDisplay'] = await this.DisplayProcessor.getDisplayID(storedSettings['HudDisplay']);
         }
 
-        if ('AutoDirectorDisplay' in storedSettings) {
-            storedSettings['AutoDirectorDisplay'] = await this.DisplayProcessor.getDisplayID(storedSettings['AutoDirectorDisplay']);
-        }
+        // if ('AutoDirectorDisplay' in storedSettings) {
+        //     storedSettings['AutoDirectorDisplay'] = await this.DisplayProcessor.getDisplayID(storedSettings['AutoDirectorDisplay']);
+        // }
 
         if ('DirectorDisplay' in storedSettings) {
             storedSettings['DirectorDisplay'] = await this.DisplayProcessor.getDisplayID(storedSettings['DirectorDisplay']);
@@ -175,11 +201,16 @@ export default class SettingsVariables {
         options.HudEnabledOptions = await this.getDefaultYesNo();
         options.HudDisplayOptions = await this.getDefaultDisplays();
 
-        options.AutoDirectorEnabledOptions = await this.getDefaultYesNo();
-        options.AutoDirectorDisplayOptions = await this.getDefaultDisplays();
+        // options.AutoDirectorEnabledOptions = await this.getDefaultYesNo();
+        // options.AutoDirectorDisplayOptions = await this.getDefaultDisplays();
 
         options.DirectorEnabledOptions = await this.getDefaultYesNo();
         options.DirectorDisplayOptions = await this.getDefaultDisplays();
+        options.DirectorDefaultViewOptions = await this.getDirectorDefaultViewOptions();
+
+        options.MockFetchOptions = await this.getDefaultYesNo();
+        options.MockStateOptions = await this.getMockStateOptions();
+
         return options;
     }
 
@@ -207,5 +238,46 @@ export default class SettingsVariables {
         });
 
         return defaultDisplays;
+    }
+
+    /**
+     * 
+     */
+    async getDirectorDefaultViewOptions() {
+        return [
+            { label: 'Auto', value: 'auto' },
+            { label: 'Blank', value: 'blank' },
+            { label: 'Solo', value: 'solo' },
+            { label: 'Leaderboard', value: 'leaderboard' },
+            { label: 'Standings', value: 'standings' },
+            { label: 'Battle', value: 'battle' },
+        ];
+    }
+
+    /**
+     * 
+     */
+    async getMockStateOptions() {
+        return [
+            { label: 'Menu', value: 'menu.json' },
+            { label: 'Practice: Pit', value: 'practice-pit.json' },
+            { label: 'Practice: Driving', value: 'practice-driving.json' },
+            { label: 'Qualifying: Pit', value: 'qualifying-pit.json' },
+            { label: 'Qualifying: Driving', value: 'qualifying-driving.json' },
+            { label: 'Qualifying: Standings', value: 'qualifying-standings.json' },
+            { label: 'Race: Lobby', value: 'race-lobby.json' },
+            { label: 'Race: Start', value: 'race-start.json' },
+            { label: 'Race: Leaders Over Start Line', value: 'race-leaders-over-start-line.json' },
+            { label: 'Race: Driving: Lap 1', value: 'race-driving-lap-1.json' },
+            { label: 'Race: Driving: Lap 4', value: 'race-driving-lap-4.json' },
+            { label: 'Race: Chequered Flag', value: 'race-chequered-flag.json' },
+            { label: 'Race: Standings', value: 'race-standings.json' },
+            { label: 'Replay: Start', value: 'replay-start.json' },
+            { label: 'Replay: Leaders Over Start Line', value: 'replay-leaders-over-start-line.json' },
+            { label: 'Replay: Driving: Lap 1', value: 'replay-driving-lap-1.json' },
+            { label: 'Replay: Driving: Lap 4', value: 'replay-driving-lap-4.json' },
+            { label: 'Replay: Chequered Flag', value: 'replay-chequered-flag.json' },
+            { label: 'Disconnected', value: 'disconnected.json' },
+        ];
     }
 }

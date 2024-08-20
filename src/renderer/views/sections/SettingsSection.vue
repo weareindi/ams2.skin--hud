@@ -32,9 +32,6 @@
                                 <div class="s-settings__item">
                                     <SettingToggleComponent icon="auto" label="Show settings on start" v-model="SettingsOnStartup" :options="SettingsOnStartupOptions" />
                                 </div>
-                                <div class="s-settings__item">
-                                    <SettingToggleComponent label="Debug" v-model="Debug" :options="DebugOptions" />
-                                </div>
                             </div>
                         </div>
                         <div class="s-settings__group">
@@ -46,6 +43,31 @@
                                 </div> 
                                 <div class="s-settings__item">
                                     <SettingButtonComponent label="Hide Settings" color="yellow" @click="hideSettings" />
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+                <hr class="s-settings__hr" v-if="Developer">
+                <div class="s-settings__row" v-if="Developer">
+                    <div class="s-settings__header">
+                        <h1 class="s-settings__heading">Developer</h1>
+                    </div>
+                    <div class="s-settings__groups">
+                        <div class="s-settings__group">
+                            <div class="s-settings__items s-settings__items--prefs">
+                                <div class="s-settings__item">
+                                    <SettingToggleComponent icon="auto"  label="Debug" v-model="Debug" :options="DebugOptions" />
+                                </div>
+                            </div> 
+                        </div>
+                        <div class="s-settings__group">
+                            <div class="s-settings__items s-settings__items--prefs">
+                                <div class="s-settings__item">
+                                    <SettingToggleComponent label="Mock Fetch" v-model="MockFetch" :options="MockFetchOptions" />
+                                </div>
+                                <div class="s-settings__item" v-if="MockFetch">
+                                    <SettingToggleComponent label="Mock State" v-model="MockState" :options="MockStateOptions" />
                                 </div>
                             </div>
                         </div>
@@ -84,7 +106,7 @@
                         </div>
                     </div>
                 </div>
-                <hr class="s-settings__hr">
+                <!-- <hr class="s-settings__hr">
                 <div class="s-settings__row">
                     <div class="s-settings__header">
                         <h1 class="s-settings__heading">AutoDirector</h1>
@@ -101,7 +123,7 @@
                             </div>
                         </div>
                     </div>
-                </div>
+                </div> -->
                 <hr class="s-settings__hr">
                 <div class="s-settings__row">
                     <div class="s-settings__header">
@@ -118,6 +140,42 @@
                                 </div>
                             </div>
                         </div>
+                        <div class="s-settings__group" v-if="DirectorEnabled">
+                            <div class="s-settings__items s-settings__items--prefs">
+                                <div class="s-settings__item">
+                                    <SettingToggleComponent icon="auto" label="Default View" v-model="DirectorDefaultView" :options="DirectorDefaultViewOptions" />
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+                <div class="s-settings__row" v-if="DirectorEnabled">
+                    <div class="s-settings__header">
+                        <h1 class="s-settings__heading">Key Binds</h1>
+                    </div>
+                    <div class="s-settings__groups">
+                        <div class="s-settings__group">
+                            <div class="s-settings__items s-settings__items--prefs">
+                                <div class="s-settings__item">
+                                    <SettingKeyPressComponent icon="auto" label="Auto" v-model="DirectorCommandAuto" readonly="true" />
+                                </div>
+                                <div class="s-settings__item">
+                                    <SettingKeyPressComponent label="Blank" v-model="DirectorCommandBlank" readonly="true" />
+                                </div>
+                                <div class="s-settings__item">
+                                    <SettingKeyPressComponent label="Solo" v-model="DirectorCommandSolo" readonly="true" />
+                                </div>
+                                <div class="s-settings__item">
+                                    <SettingKeyPressComponent label="Leaderboard" v-model="DirectorCommandLeaderboard" readonly="true" />
+                                </div>
+                                <div class="s-settings__item">
+                                    <SettingKeyPressComponent label="Standings" v-model="DirectorCommandStandings" readonly="true" />
+                                </div>
+                                <div class="s-settings__item">
+                                    <SettingKeyPressComponent label="Battle" v-model="DirectorCommandBattle" readonly="true" />
+                                </div>
+                            </div>
+                        </div>
                     </div>
                 </div>
             </div>
@@ -131,7 +189,7 @@
 .s-settings {
     display: flex;
     align-items: center;
-    justify-content: flex-start;
+    justify-content: center;
     padding: em(32);
 }
 
@@ -165,6 +223,22 @@
     @include color('color', 'white', 1);
 
     font-size: em(18);
+}
+
+.s-settings__rows {}
+
+.s-settings__row {
+    + .s-settings__row {
+        @include color('background-color', 'white', 0.1);
+        
+        margin-top: em(16);
+        padding: em(16);
+        border-radius: 4px;
+
+        .s-settings__heading {
+            font-size: em(16);
+        }
+    }
 }
 
 .s-settings__groups {
@@ -223,6 +297,7 @@
 <script>
 import { inject  } from 'vue';
 import SettingInputComponent from '@renderer/views/components/SettingInputComponent.vue';
+import SettingKeyPressComponent from '@renderer/views/components/SettingKeyPressComponent.vue';
 import SettingButtonComponent from '@renderer/views/components/SettingButtonComponent.vue';
 import SettingToggleComponent from '@renderer/views/components/SettingToggleComponent.vue';
 
@@ -235,6 +310,13 @@ export default {
         // debug
         const Debug = inject('Debug');
         const DebugOptions = inject('DebugOptions');
+        
+        // mock
+        const Developer = inject('Developer');
+        const MockFetch = inject('MockFetch');
+        const MockFetchOptions = inject('MockFetchOptions');
+        const MockState = inject('MockState');
+        const MockStateOptions = inject('MockStateOptions');
 
         // crest
         const ExternalCrest = inject('ExternalCrest');
@@ -255,22 +337,37 @@ export default {
         const HudDisplayOptions = inject('HudDisplayOptions');
 
         // autodirector
-        const AutoDirectorEnabled = inject('AutoDirectorEnabled');
-        const AutoDirectorEnabledOptions = inject('AutoDirectorEnabledOptions');
-        const AutoDirectorDisplay = inject('AutoDirectorDisplay');
-        const AutoDirectorDisplayOptions = inject('AutoDirectorDisplayOptions');
+        // const AutoDirectorEnabled = inject('AutoDirectorEnabled');
+        // const AutoDirectorEnabledOptions = inject('AutoDirectorEnabledOptions');
+        // const AutoDirectorDisplay = inject('AutoDirectorDisplay');
+        // const AutoDirectorDisplayOptions = inject('AutoDirectorDisplayOptions');
 
         // director
         const DirectorEnabled = inject('DirectorEnabled');
         const DirectorEnabledOptions = inject('DirectorEnabledOptions');
         const DirectorDisplay = inject('DirectorDisplay');
         const DirectorDisplayOptions = inject('DirectorDisplayOptions');
+        const DirectorDefaultView = inject('DirectorDefaultView');
+        const DirectorDefaultViewOptions = inject('DirectorDefaultViewOptions');
+        const DirectorCommandAuto = inject('DirectorCommandAuto');
+        const DirectorCommandBlank = inject('DirectorCommandBlank');
+        const DirectorCommandSolo = inject('DirectorCommandSolo');
+        const DirectorCommandLeaderboard = inject('DirectorCommandLeaderboard');
+        const DirectorCommandStandings = inject('DirectorCommandStandings');
+        const DirectorCommandBattle = inject('DirectorCommandBattle');
 
         return {
             SettingsOnStartup,
             SettingsOnStartupOptions,
             Debug,
             DebugOptions,
+
+            Developer,
+            MockFetch,
+            MockFetchOptions,
+            MockState,
+            MockStateOptions,
+
             ExternalCrest,
             ExternalCrestOptions,
             IP,
@@ -286,19 +383,28 @@ export default {
             HudDisplay,
             HudDisplayOptions,
 
-            AutoDirectorEnabled,
-            AutoDirectorEnabledOptions,
-            AutoDirectorDisplay,
-            AutoDirectorDisplayOptions,
+            // AutoDirectorEnabled,
+            // AutoDirectorEnabledOptions,
+            // AutoDirectorDisplay,
+            // AutoDirectorDisplayOptions,
 
             DirectorEnabled,
             DirectorEnabledOptions,
             DirectorDisplay,
             DirectorDisplayOptions,
+            DirectorDefaultView,
+            DirectorDefaultViewOptions,
+            DirectorCommandAuto,
+            DirectorCommandBlank,
+            DirectorCommandSolo,
+            DirectorCommandLeaderboard,
+            DirectorCommandStandings,
+            DirectorCommandBattle,
         }
     },
     components: {
         SettingInputComponent,
+        SettingKeyPressComponent,
         SettingButtonComponent,
         SettingToggleComponent
     },

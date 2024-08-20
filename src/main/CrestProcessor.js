@@ -2,6 +2,15 @@ import SettingsVariables from '../variables/SettingsVariables';
 import { ipcMain } from 'electron';
 import { execFile } from 'child_process';
 import crest2 from '../../resources/crest2/CREST2.exe?asset';
+import MockData from './MockData';
+import { isReady, getActiveParticipant } from '../utils/CrestUtils';
+
+import ParticipantsFactory from './Factories/ParticipantsFactory';
+import TrackPositionFactory from './Factories/TrackPositionFactory';
+import EventTimingsFactory from './Factories/EventTimingsFactory';
+import FuelFactory from './Factories/FuelFactory';
+import BattleFactory from './Factories/BattleFactory';
+import DirectorFactory from './Factories/DirectorFactory';
 
 export default class CrestProcessor {
     constructor() {
@@ -21,10 +30,35 @@ export default class CrestProcessor {
         try {
             await this.registerSettingsVariables();
             await this.processInitialState();
+            await this.registerFactories();
             await this.doTimer();
         } catch (error) {
             console.log(error);
         }
+    }
+
+    /**
+     * 
+     */
+    async registerFactories() {
+        this.ParticipantsFactory = new ParticipantsFactory();
+        this.TrackPositionFactory = new TrackPositionFactory();
+        this.EventTimingsFactory = new EventTimingsFactory();
+        this.FuelFactory = new FuelFactory();
+        this.BattleFactory = new BattleFactory();
+        this.DirectorFactory = new DirectorFactory();
+    }
+
+    /**
+     * 
+     */
+    async resetProcessors() {
+        this.ParticipantsFactory.reset();
+        this.TrackPositionFactory.reset();
+        this.EventTimingsFactory.reset();
+        this.FuelFactory.reset();
+        this.BattleFactory.reset();
+        this.DirectorFactory.reset();
     }
 
     /**
@@ -67,11 +101,15 @@ export default class CrestProcessor {
         const TickRate = await this.SettingsVariables.get('TickRate');
         const IP = ExternalCrest ? await this.SettingsVariables.get('IP') : '127.0.0.1';
         const Port = ExternalCrest ? await this.SettingsVariables.get('Port') : '8881';
+        const MockFetch = await this.SettingsVariables.get('MockFetch');
+        const MockState = await this.SettingsVariables.get('MockState');
 
         return {
             TickRate,
             IP,
-            Port
+            Port,
+            MockFetch,
+            MockState,
         }
     }
 
@@ -79,15 +117,22 @@ export default class CrestProcessor {
      * 
      */
     async doTimer() {
-        const { TickRate, IP, Port } = await this.getVariables();
+        const { TickRate, IP, Port, MockFetch, MockState } = await this.getVariables();
+        
+        let data = {};
 
-        // wait for data
-        const data = await this.fetchData(IP, Port);
+        if (MockFetch) {
+            data = await this.fetchMockData(MockState);
+        } else {
+            data = await this.fetchData(IP, Port);
+        }        
 
         // update connected state
         await this.setConnectedState(data);
 
         // handle sleep/delay before next iteration
+
+        // let interval = 2000;
         let interval = 1000 / TickRate;
         if (data === null) {
             interval = 1000;
@@ -127,6 +172,17 @@ export default class CrestProcessor {
     }
 
     /**
+     * 
+     * @param {*} MockState 
+     */
+    async fetchMockData(MockState) {
+        const json = await (new MockData()).data(MockState);
+
+        // if we got here we should have good data
+        return await this.processData( json );
+    }
+
+    /**
      * Fetch data from crest worker
      */
     async fetchData(IP, Port) {
@@ -146,7 +202,8 @@ export default class CrestProcessor {
             {
                 signal: AbortSignal.timeout(1000),
                 // headers: {
-                //     'Accept-Encoding': 'gzip'
+                    // "Content-Type": "application/json",
+                    // 'Accept-Encoding': 'gzip'
                 // }
             }).catch(async (error) => {
                 return null;
@@ -160,13 +217,16 @@ export default class CrestProcessor {
 
         // validate response
         const valid = await this.validate(response);
+        
         if (!valid) {
             // .. bail and return a message to parent
             return null;
         }
 
+        const json = await this.getJson(response);
+
         // if we got here we should have good data
-        return await this.processData( await response.json() );
+        return await this.processData( json );
     }
 
     /**
@@ -184,13 +244,13 @@ export default class CrestProcessor {
 
         // get text from response
         let textResponse = await response.text();
-
+        
         // prep for json
         let passedJson;
 
         // is it json?
         try {
-            passedJson = JSON.parse(textResponse);
+            passedJson = JSON.parse( textResponse.replace(/(?:\r\n|\r|\n)/g, '') );
         } catch (e) {
             return false;
         }
@@ -200,17 +260,29 @@ export default class CrestProcessor {
             return false;
         }
 
-        // maybe introduce object instance checks here
-        
         return true;
+    }
+
+    /**
+     * 
+     */
+    async getJson(fetchResponse) {
+        const response = fetchResponse.clone();
+
+        if (response.status !== 200) {
+            return false;
+        }
+
+        // get text from response
+        let textResponse = await response.text();
+
+        return await JSON.parse( textResponse.replace(/(?:\r\n|\r|\n)/g, '') );
     }
 
     /**
      * Open Crest2
      */
     async openCrest() {
-        console.log('openCrest');
-
         if (process.platform === 'win32') {
             try {
                 if (typeof this.crest !== 'undefined') {
@@ -231,11 +303,8 @@ export default class CrestProcessor {
      * Close Crest2
      */
     async closeCrest() {
-        console.log('closecrest');
-
         this.crest.kill();
         delete this.crest;
-
         return;
     }
 
@@ -245,8 +314,71 @@ export default class CrestProcessor {
      * @returns 
      */
     async processData(data) {
-        console.log(data);
+        const ready = await isReady(data);
+        if (!ready) {
+            await this.ParticipantsFactory.reset();
+            await this.EventTimingsFactory.reset();
+            await this.FuelFactory.reset();
+            return null;
+        }
+        
+        // Apply missing data to participant data directly from crest
+        // - participants/mParticipantInfo/Array
+        // -- mCurrentLapTimes
+        // -- mNameMain (mName with community tag removed)
+        // -- mNameShort (short version of mNameDisplay)
+        // -- mNameTag (mName extracted from community tag)
+        // -- mCarNamesMain
+        // -- mCarClassNamesShort
+        // -- mCarClassColor
+        // -- mIsDriver
+        // -- mOutLap
+        // -- mLapsInfo
+        // --- runID
+        // --- mCurrentLap
+        // --- mCurrentLapTimes
+        // --- mLapsInvalidated
+        // --- mFuelLevel
+        data = await this.ParticipantsFactory.getData(data);
 
+        // Apply better, more usable timings to crest data
+        data = await this.EventTimingsFactory.getData(data);
+
+        // Apply fuel calculations (requires participant/mLapsInfo and eventTimings to be populated)
+        // - fuel
+        // -- mFuelCapacity
+        // -- mFuelLevel
+        // -- mFuelPerLap
+        // -- mFuelToEndSession
+        // -- mPitsToEndSession
+        data = await this.FuelFactory.getData(data);
+
+        // Apply placement data to crest data 
+        // - trackPositionCarousel
+        // - participants/mParticipantInfo/Array
+        // -- mRacingDistance
+        // -- mPlacementIndex
+        // -- mDistanceToActiveUser
+        data = await this.TrackPositionFactory.getData(data);        
+
+        // Apply on track battle data to crest data 
+        // - battle
+        // -- aheadParticipantIndex
+        // -- behindParticipantIndex
+        // -- distance
+        // -- duration
+        // - participants/mParticipantInfo/Array
+        // -- mBattlingParticipantAhead
+        // -- mBattlingParticipantBehind
+        data = await this.BattleFactory.getData(data);
+
+        // Director
+        // - Director
+        data = await this.DirectorFactory.getData(data);
+
+        // console.log(data.director);
+        
+        
         return data;
     }
 }

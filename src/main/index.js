@@ -8,7 +8,6 @@ import DisplayProcessor from './DisplayProcessor.js';
 import CrestProcessor from './CrestProcessor.js';
 import SettingsWindow from './SettingsWindow.js';
 import HudWindow from './HudWindow.js';
-import AutoDirectorWindow from './AutoDirectorWindow.js';
 import DirectorWindow from './DirectorWindow.js';
 
 class Main { 
@@ -43,7 +42,6 @@ class Main {
             await this.registerRendererListeners();
             await this.registerSettingsWindow();
             await this.registerHudWindow();
-            await this.registerAutoDirectorWindow();
             await this.registerDirectorWindow();
             await this.registerMainListeners();
         } catch (error) {
@@ -84,13 +82,6 @@ class Main {
      */
     async registerHudWindow() {
         this.HudWindow = new HudWindow();
-    }
-
-    /**
-     * 
-     */
-    async registerAutoDirectorWindow() {
-        this.AutoDirectorWindow = new AutoDirectorWindow();
     }
 
     /**
@@ -324,13 +315,13 @@ class Main {
                 await this.DisplayProcessor.setDisplay(this.HudWindow.window, value);
             }
     
-            if (key === 'AutoDirectorEnabled') {
-                await this.AutoDirectorWindow.toggle(value);
-            }
+            // if (key === 'AutoDirectorEnabled') {
+            //     await this.AutoDirectorWindow.toggle(value);
+            // }
     
-            if (key === 'AutoDirectorDisplay') {
-                await this.DisplayProcessor.setDisplay(this.AutoDirectorWindow.window, value);
-            }
+            // if (key === 'AutoDirectorDisplay') {
+            //     await this.DisplayProcessor.setDisplay(this.AutoDirectorWindow.window, value);
+            // }
     
             if (key === 'DirectorEnabled') {
                 await this.DirectorWindow.toggle(value);
@@ -339,6 +330,10 @@ class Main {
             if (key === 'DirectorDisplay') {
                 await this.DisplayProcessor.setDisplay(this.DirectorWindow.window, value);
             }
+    
+            if (key === 'DirectorDefaultView') {
+                
+            }            
         });
 
         // update scale

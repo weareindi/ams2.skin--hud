@@ -35,9 +35,10 @@ export default defineConfig({
         build: {
             rollupOptions: {
                 input: [
-                    // 'src/renderer/index.html',
                     'src/renderer/settings.html',
-                    // 'src/renderer/stream.html',
+                    'src/renderer/hud.html',
+                    'src/renderer/autodirector.html',
+                    'src/renderer/director.html',
                 ]
             }
         }
