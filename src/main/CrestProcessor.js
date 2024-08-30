@@ -11,6 +11,7 @@ import EventTimingsFactory from './Factories/EventTimingsFactory';
 import FuelFactory from './Factories/FuelFactory';
 import BattleFactory from './Factories/BattleFactory';
 import DirectorFactory from './Factories/DirectorFactory';
+import ViewFactory from './Factories/ViewFactory';
 
 export default class CrestProcessor {
     constructor() {
@@ -47,6 +48,7 @@ export default class CrestProcessor {
         this.FuelFactory = new FuelFactory();
         this.BattleFactory = new BattleFactory();
         this.DirectorFactory = new DirectorFactory();
+        this.ViewFactory = new ViewFactory();
     }
 
     /**
@@ -59,6 +61,7 @@ export default class CrestProcessor {
         this.FuelFactory.reset();
         this.BattleFactory.reset();
         this.DirectorFactory.reset();
+        this.ViewFactory.reset();
     }
 
     /**
@@ -179,7 +182,8 @@ export default class CrestProcessor {
         const json = await (new MockData()).data(MockState);
 
         // if we got here we should have good data
-        return await this.processData( json );
+        const data = await this.processData( json );
+        return await this.processView(data);
     }
 
     /**
@@ -223,10 +227,11 @@ export default class CrestProcessor {
             return null;
         }
 
-        const json = await this.getJson(response);
+        const json = await this.getJson(response);        
 
         // if we got here we should have good data
-        return await this.processData( json );
+        const data = await this.processData( json );
+        return await this.processView(data);
     }
 
     /**
@@ -319,6 +324,9 @@ export default class CrestProcessor {
             await this.ParticipantsFactory.reset();
             await this.EventTimingsFactory.reset();
             await this.FuelFactory.reset();
+            await this.TrackPositionFactory.reset();
+            await this.BattleFactory.reset();
+            await this.DirectorFactory.reset();
             return null;
         }
         
@@ -374,11 +382,22 @@ export default class CrestProcessor {
 
         // Director
         // - Director
-        data = await this.DirectorFactory.getData(data);
-
-        // console.log(data.director);
-        
+        data = await this.DirectorFactory.getData(data);        
         
         return data;
+    }
+
+    /**
+     * 
+     * @param {*} data 
+     */
+    async processView(data) {        
+        const ready = await isReady(data);
+        if (!ready) {
+            await this.ViewFactory.reset();
+            return null;
+        }     
+
+        return await this.ViewFactory.getData(data);
     }
 }

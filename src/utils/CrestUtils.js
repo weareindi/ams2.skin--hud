@@ -4,7 +4,15 @@
  * @returns 
  */
 export async function isReady(data) {
+    if (data === null) {
+        return false;
+    }
+
     if (!('gameStates' in data)) {
+        return false;
+    }
+    
+    if (!('mGameState' in data.gameStates)) {
         return false;
     }
     
