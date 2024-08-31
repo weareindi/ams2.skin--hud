@@ -1,24 +1,24 @@
-import DisconnectedJson from '../../resources/mock/disconnected.json?json';
-import MenuJson from '../../resources/mock/menu.json?json';
-import PracticeDrivingJson from '../../resources/mock/practice-driving.json?json';
-import PracticePitJson from '../../resources/mock/practice-pit.json?json';
-import QualifyingDrivingJson from '../../resources/mock/qualifying-driving.json?json';
-import QualifyingPitJson from '../../resources/mock/qualifying-pit.json?json';
-import QualifyingStandingsJson from '../../resources/mock/qualifying-standings.json?json';
-import RaceChequeredFlagJson from '../../resources/mock/race-chequered-flag.json?json';
-import RaceDrivingLap1Json from '../../resources/mock/race-driving-lap-1.json?json';
-import RaceDrivingLap4Json from '../../resources/mock/race-driving-lap-4.json?json';
-import RaceLeadersOverStartLineJson from '../../resources/mock/race-leaders-over-start-line.json?json';
-import RaceLobbyJson from '../../resources/mock/race-lobby.json?json';
-import RaceStandingsJson from '../../resources/mock/race-standings.json?json';
-import RaceStartJson from '../../resources/mock/race-start.json?json';
-import ReplayChequredFlagJson from '../../resources/mock/replay-chequered-flag?json';
-import ReplayDrivingLap1Json from '../../resources/mock/replay-driving-lap-1.json?json';
-import ReplayDrivingLap4Json from '../../resources/mock/replay-driving-lap-4.json?json';
-import ReplayLeadersOverStartLineJson from '../../resources/mock/replay-leaders-over-start-line.json?json';
-import ReplayStartJson from '../../resources/mock/replay-start.json?json';
+import DisconnectedJson from '../../../resources/mock/disconnected.json?json';
+import MenuJson from '../../../resources/mock/menu.json?json';
+import PracticeDrivingJson from '../../../resources/mock/practice-driving.json?json';
+import PracticePitJson from '../../../resources/mock/practice-pit.json?json';
+import QualifyingDrivingJson from '../../../resources/mock/qualifying-driving.json?json';
+import QualifyingPitJson from '../../../resources/mock/qualifying-pit.json?json';
+import QualifyingStandingsJson from '../../../resources/mock/qualifying-standings.json?json';
+import RaceChequeredFlagJson from '../../../resources/mock/race-chequered-flag.json?json';
+import RaceDrivingLap1Json from '../../../resources/mock/race-driving-lap-1.json?json';
+import RaceDrivingLap4Json from '../../../resources/mock/race-driving-lap-4.json?json';
+import RaceLeadersOverStartLineJson from '../../../resources/mock/race-leaders-over-start-line.json?json';
+import RaceLobbyJson from '../../../resources/mock/race-lobby.json?json';
+import RaceStandingsJson from '../../../resources/mock/race-standings.json?json';
+import RaceStartJson from '../../../resources/mock/race-start.json?json';
+import ReplayChequredFlagJson from '../../../resources/mock/replay-chequered-flag?json';
+import ReplayDrivingLap1Json from '../../../resources/mock/replay-driving-lap-1.json?json';
+import ReplayDrivingLap4Json from '../../../resources/mock/replay-driving-lap-4.json?json';
+import ReplayLeadersOverStartLineJson from '../../../resources/mock/replay-leaders-over-start-line.json?json';
+import ReplayStartJson from '../../../resources/mock/replay-start.json?json';
 
-export default class MockData {
+export default class MockDataController {
     data(state) {
         if (state === 'disconnected.json') {
             return DisconnectedJson;

@@ -1,15 +1,15 @@
 import { screen } from 'electron';
 import { is } from '@electron-toolkit/utils';
 import storage from 'electron-json-storage';
-import DisplayProcessor from '../main/DisplayProcessor.js';
+import DisplayProcessor from './DisplayController.js';
 
-export default class SettingsVariables {
+export default class SettingsController {
     constructor() {
         // singleton
-        if (typeof global.SettingsVariables !== 'undefined') {
-            return global.SettingsVariables;
+        if (typeof global.SettingsController !== 'undefined') {
+            return global.SettingsController;
         }
-        global.SettingsVariables = this;
+        global.SettingsController = this;
 
         this.init();
     }

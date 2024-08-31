@@ -1,7 +1,7 @@
 import { getActiveParticipant, getParticipantInPostion, getParticipantsSortedByPosition, isReady } from '../../utils/CrestUtils';
 import { random, weightedArray } from '../../utils/DataUtils';
 import { globalShortcut } from 'electron/main';
-import SettingsVariables from '../../variables/SettingsVariables';
+import SettingsController from '../Controllers/SettingsController';
 
 export default class DirectorFactory {
     constructor() {
@@ -36,7 +36,7 @@ export default class DirectorFactory {
      */
     async init() {
         try {
-            await this.registerSettingsVariables();
+            await this.registerSettingsController();
             await this.reset();
         } catch (error) {
             console.error(error);
@@ -46,21 +46,21 @@ export default class DirectorFactory {
     /**
      * 
      */
-    async registerSettingsVariables() {
-        this.SettingsVariables = new SettingsVariables();
+    async registerSettingsController() {
+        this.SettingsController = new SettingsController();
     }
 
     /**
      * 
      */
     async getVariables() {
-        this.defaultView = await this.SettingsVariables.get('DirectorDefaultView');
-        this.commandAuto = await this.SettingsVariables.get('DirectorCommandAuto');
-        this.commandBlank = await this.SettingsVariables.get('DirectorCommandBlank');
-        this.commandSolo = await this.SettingsVariables.get('DirectorCommandSolo');
-        this.commandLeaderboard = await this.SettingsVariables.get('DirectorCommandLeaderboard');
-        this.commandStandings = await this.SettingsVariables.get('DirectorCommandStandings');
-        this.commandBattle = await this.SettingsVariables.get('DirectorCommandBattle');
+        this.defaultView = await this.SettingsController.get('DirectorDefaultView');
+        this.commandAuto = await this.SettingsController.get('DirectorCommandAuto');
+        this.commandBlank = await this.SettingsController.get('DirectorCommandBlank');
+        this.commandSolo = await this.SettingsController.get('DirectorCommandSolo');
+        this.commandLeaderboard = await this.SettingsController.get('DirectorCommandLeaderboard');
+        this.commandStandings = await this.SettingsController.get('DirectorCommandStandings');
+        this.commandBattle = await this.SettingsController.get('DirectorCommandBattle');
     }
 
     /**

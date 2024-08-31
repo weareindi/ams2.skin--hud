@@ -1,25 +1,26 @@
-import SettingsVariables from '../variables/SettingsVariables';
+import { isReady, getActiveParticipant } from '../../utils/CrestUtils';
 import { ipcMain } from 'electron';
 import { execFile } from 'child_process';
-import crest2 from '../../resources/crest2/CREST2.exe?asset';
-import MockData from './MockData';
-import { isReady, getActiveParticipant } from '../utils/CrestUtils';
+import crest2 from '../../../resources/crest2/CREST2.exe?asset';
 
-import ParticipantsFactory from './Factories/ParticipantsFactory';
-import TrackPositionFactory from './Factories/TrackPositionFactory';
-import EventTimingsFactory from './Factories/EventTimingsFactory';
-import FuelFactory from './Factories/FuelFactory';
-import BattleFactory from './Factories/BattleFactory';
-import DirectorFactory from './Factories/DirectorFactory';
-import ViewFactory from './Factories/ViewFactory';
+import SettingsController from './SettingsController';
+import MockDataController from './MockDataController';
 
-export default class CrestProcessor {
+import ParticipantsFactory from '../Factories/ParticipantsFactory';
+import TrackPositionFactory from '../Factories/TrackPositionFactory';
+import EventInformationFactory from '../Factories/EventInformationFactory';
+import FuelFactory from '../Factories/FuelFactory';
+import BattleFactory from '../Factories/BattleFactory';
+import DirectorFactory from '../Factories/DirectorFactory';
+import ViewFactory from '../Factories/ViewFactory';
+
+export default class CrestController {
     constructor() {
         // singleton
-        if (typeof global.CrestProcessor !== 'undefined') {
-            return global.CrestProcessor;
+        if (typeof global.CrestController !== 'undefined') {
+            return global.CrestController;
         }
-        global.CrestProcessor = this;
+        global.CrestController = this;
 
         this.init();
     }
@@ -29,7 +30,7 @@ export default class CrestProcessor {
      */
     async init() {
         try {
-            await this.registerSettingsVariables();
+            await this.registerSettingsController();
             await this.processInitialState();
             await this.registerFactories();
             await this.doTimer();
@@ -44,7 +45,7 @@ export default class CrestProcessor {
     async registerFactories() {
         this.ParticipantsFactory = new ParticipantsFactory();
         this.TrackPositionFactory = new TrackPositionFactory();
-        this.EventTimingsFactory = new EventTimingsFactory();
+        this.EventInformationFactory = new EventInformationFactory();
         this.FuelFactory = new FuelFactory();
         this.BattleFactory = new BattleFactory();
         this.DirectorFactory = new DirectorFactory();
@@ -57,7 +58,7 @@ export default class CrestProcessor {
     async resetProcessors() {
         this.ParticipantsFactory.reset();
         this.TrackPositionFactory.reset();
-        this.EventTimingsFactory.reset();
+        this.EventInformationFactory.reset();
         this.FuelFactory.reset();
         this.BattleFactory.reset();
         this.DirectorFactory.reset();
@@ -80,15 +81,15 @@ export default class CrestProcessor {
     /**
      * 
      */
-    async registerSettingsVariables() {
-        this.SettingsVariables = new SettingsVariables();
+    async registerSettingsController() {
+        this.SettingsController = new SettingsController();
     }
 
     /**
      * 
      */
     async processInitialState() {
-        const ExternalCrest = await this.SettingsVariables.get('ExternalCrest');
+        const ExternalCrest = await this.SettingsController.get('ExternalCrest');
         if (ExternalCrest) {
             return;
         }
@@ -100,12 +101,12 @@ export default class CrestProcessor {
      * 
      */
     async getVariables() {
-        const ExternalCrest = await this.SettingsVariables.get('ExternalCrest');
-        const TickRate = await this.SettingsVariables.get('TickRate');
-        const IP = ExternalCrest ? await this.SettingsVariables.get('IP') : '127.0.0.1';
-        const Port = ExternalCrest ? await this.SettingsVariables.get('Port') : '8881';
-        const MockFetch = await this.SettingsVariables.get('MockFetch');
-        const MockState = await this.SettingsVariables.get('MockState');
+        const ExternalCrest = await this.SettingsController.get('ExternalCrest');
+        const TickRate = await this.SettingsController.get('TickRate');
+        const IP = ExternalCrest ? await this.SettingsController.get('IP') : '127.0.0.1';
+        const Port = ExternalCrest ? await this.SettingsController.get('Port') : '8881';
+        const MockFetch = await this.SettingsController.get('MockFetch');
+        const MockState = await this.SettingsController.get('MockState');
 
         return {
             TickRate,
@@ -125,7 +126,7 @@ export default class CrestProcessor {
         let data = {};
 
         if (MockFetch) {
-            data = await this.fetchMockData(MockState);
+            data = await this.fetchMockDataController(MockState);
         } else {
             data = await this.fetchData(IP, Port);
         }        
@@ -151,7 +152,7 @@ export default class CrestProcessor {
      * 
      */
     async setConnectedState(data) {
-        const ConnectedCurrent = await this.SettingsVariables.get('Connected');
+        const ConnectedCurrent = await this.SettingsController.get('Connected');
 
         let Connected = false;
         if (data !== null) {
@@ -178,8 +179,8 @@ export default class CrestProcessor {
      * 
      * @param {*} MockState 
      */
-    async fetchMockData(MockState) {
-        const json = await (new MockData()).data(MockState);
+    async fetchMockDataController(MockState) {
+        const json = await (new MockDataController()).data(MockState);
 
         // if we got here we should have good data
         const data = await this.processData( json );
@@ -322,13 +323,17 @@ export default class CrestProcessor {
         const ready = await isReady(data);
         if (!ready) {
             await this.ParticipantsFactory.reset();
-            await this.EventTimingsFactory.reset();
+            await this.EventInformationFactory.reset();
             await this.FuelFactory.reset();
             await this.TrackPositionFactory.reset();
             await this.BattleFactory.reset();
             await this.DirectorFactory.reset();
             return null;
         }
+
+        // The aim here to to prepare data for the view, ensure data is as dry as possible and null values are returned if data is not available.
+        // A lot of values from shared memory are replaced in the following factories.
+        // A lot of values are added to the payload.
         
         // Apply missing data to participant data directly from crest
         // - participants/mParticipantInfo/Array
@@ -349,8 +354,8 @@ export default class CrestProcessor {
         // --- mFuelLevel
         data = await this.ParticipantsFactory.getData(data);
 
-        // Apply better, more usable timings to crest data
-        data = await this.EventTimingsFactory.getData(data);
+        // Apply better, more usable event information to crest data
+        data = await this.EventInformationFactory.getData(data);
 
         // Apply fuel calculations (requires participant/mLapsInfo and eventTimings to be populated)
         // - fuel

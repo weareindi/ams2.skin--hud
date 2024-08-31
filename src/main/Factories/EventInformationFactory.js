@@ -1,6 +1,6 @@
 import { isReady } from '../../utils/CrestUtils';
 
-export default class EventTimingsFactory {
+export default class EventInformationFactory {
     constructor() {
         this.init();
     }
@@ -34,7 +34,6 @@ export default class EventTimingsFactory {
      */
     async getData(data) {
         try {
-            // console.log(this.db);
             return await this.prepareData(data);
         } catch (error) {
             console.error(error);
@@ -50,26 +49,16 @@ export default class EventTimingsFactory {
         const ready = await isReady(data);
         if (!ready) {
             return null;
-        }
-
-        data.eventTimings = await this.eventTimings(data);
+        }        
+    
+        data.eventInformation.mEventTimeRemaining = await this.mEventTimeRemaining(data);
+        data.eventInformation.mLapsInEvent = await this.mLapsInEvent(data);
 
         return data;
     }
 
     /**
-     * 
-     * @param {*} data 
-     * @returns 
-     */
-    async eventTimings(data) {
-        return {
-            mEventTimeRemaining: await this.mEventTimeRemaining(data)
-        };
-    }
-
-    /**
-     * 
+     * Only starts counting down if the session has started
      * @param {*} data 
      * @returns 
      */
@@ -87,5 +76,18 @@ export default class EventTimingsFactory {
         }
 
         return data.timings.mEventTimeRemaining;
+    }
+
+    /**
+     * 
+     * @param {*} data 
+     * @returns 
+     */
+    async mLapsInEvent(data) {
+        if (!data.eventInformation.mLapsInEvent) {
+            return null;
+        }
+
+        return data.eventInformation.mLapsInEvent;
     }
 }

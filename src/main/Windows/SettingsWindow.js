@@ -1,21 +1,23 @@
-import { app, BrowserWindow, ipcMain } from 'electron';
+import { app, BrowserWindow } from 'electron';
 import { join } from 'path';
 import { is } from '@electron-toolkit/utils';
-import SettingsVariables from '../variables/SettingsVariables.js';
-import DisplayProcessor from './DisplayProcessor.js';
+import SettingsController from '../Controllers/SettingsController.js';
+import DisplayController from '../Controllers/DisplayController.js';
+import CrestProcessor from '../Controllers/CrestController.js';
 
-export default class DirectorWindow {
+export default class SettingsWindow {
     constructor() {
         this.init();
     }
-
+    
     /**
      * Create the main window
      */
     async init() {
         try {
-            await this.registerSettingsVariables();
-            await this.registerDisplayProcessor();
+            await this.registerSettingsController();
+            await this.registerDisplayController();
+            await this.registerCrestProcessor();
             await this.processInitialState();
         } catch (error) {
             console.log(error);
@@ -25,38 +27,34 @@ export default class DirectorWindow {
     /**
      * 
      */
-    async registerSettingsVariables() {
-        this.SettingsVariables = new SettingsVariables();
+    async registerSettingsController() {
+        this.SettingsController = new SettingsController();
     }
 
     /**
      * 
      */
-    async registerDisplayProcessor() {
-        this.DisplayProcessor = new DisplayProcessor();
+    async registerDisplayController() {
+        this.DisplayController = new DisplayController();
+    }
+
+    /**
+     * 
+     */
+    async registerCrestProcessor() {
+        this.CrestProcessor = new CrestProcessor();
     }
 
     /**
      * 
      */
     async processInitialState() {
-        const DirectorEnabled = await this.SettingsVariables.get('DirectorEnabled');
-        if (!DirectorEnabled) {
+        const SettingsOnStartup = await this.SettingsController.get('SettingsOnStartup');
+        if (!SettingsOnStartup) {
             return;
         }
 
         await this.start();
-    }
-
-    /**
-     * 
-     */
-    async toggle(activate) {
-        if (!activate) {
-            return await this.exit();
-        }
-
-        return await this.start();
     }
 
     /**
@@ -74,7 +72,16 @@ export default class DirectorWindow {
      * 
      */
     async setWindowToStoredDisplay() {
-        await this.DisplayProcessor.setDisplay(this.window, await this.SettingsVariables.get('DirectorDisplay'));
+        await this.DisplayController.setDisplay(this.window, await this.SettingsController.get('SettingsDisplay'));
+    }
+
+    /**
+     * 
+     */
+    async sendSettings() {
+        const settings = await this.SettingsController.getAll();
+        const options = await this.SettingsController.getAllOptions();
+        await this.send('init-settings', {...settings, ...options});
     }
 
     /**
@@ -121,7 +128,7 @@ export default class DirectorWindow {
         this.window.setAlwaysOnTop(true, 'pop-up-menu', 1);
 
         // disable mouse as default
-        this.window.setIgnoreMouseEvents(true);
+        // this.window.setIgnoreMouseEvents(true);
     }
 
     /**
@@ -162,7 +169,7 @@ export default class DirectorWindow {
         // finished loading contents
         this.window.webContents.on('did-finish-load', async () => {
             await this.setTitle();
-            await this.send('init-director');
+            await this.sendSettings();
         });
     }
 
@@ -173,9 +180,9 @@ export default class DirectorWindow {
         // HMR for renderer base on electron-vite cli.
         // Load the remote URL for development or the local html file for production.
         if (is.dev && process.env['ELECTRON_RENDERER_URL']) {
-            this.window.loadURL(`${process.env['ELECTRON_RENDERER_URL']}/director.html`);
+            this.window.loadURL(`${process.env['ELECTRON_RENDERER_URL']}/settings.html`);
         } else {
-            this.window.loadFile(join(__dirname, '../renderer/director.html'));
+            this.window.loadFile(join(__dirname, '../renderer/settings.html'));
         }
     }
 
@@ -198,7 +205,7 @@ export default class DirectorWindow {
     /**
      * 
      */
-    async exit() {
+    async close() {
         return this.window.close();
     }
 
@@ -209,7 +216,7 @@ export default class DirectorWindow {
         if (typeof this.window === 'undefined') {
             return;
         }
-        
+
         if (!data) {
             return this.window.webContents.send(name);
         }

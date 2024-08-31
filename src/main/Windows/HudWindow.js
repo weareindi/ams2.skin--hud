@@ -1,8 +1,8 @@
 import { app, BrowserWindow, ipcMain } from 'electron';
 import { join } from 'path';
 import { is } from '@electron-toolkit/utils';
-import SettingsVariables from '../variables/SettingsVariables';
-import DisplayProcessor from './DisplayProcessor.js';
+import SettingsController from '../Controllers/SettingsController.js';
+import DisplayController from '../Controllers/DisplayController.js';
 
 export default class HudWindow {
     constructor() {
@@ -14,8 +14,8 @@ export default class HudWindow {
      */
     async init() {
         try {
-            await this.registerSettingsVariables();
-            await this.registerDisplayProcessor();
+            await this.registerSettingsController();
+            await this.registerDisplayController();
             await this.processInitialState();
         } catch (error) {
             console.log(error);
@@ -25,22 +25,22 @@ export default class HudWindow {
     /**
      * 
      */
-    async registerSettingsVariables() {
-        this.SettingsVariables = new SettingsVariables();
+    async registerSettingsController() {
+        this.SettingsController = new SettingsController();
     }
 
     /**
      * 
      */
-    async registerDisplayProcessor() {
-        this.DisplayProcessor = new DisplayProcessor();
+    async registerDisplayController() {
+        this.DisplayController = new DisplayController();
     }
 
     /**
      * 
      */
     async processInitialState() {
-        const HudEnabled = await this.SettingsVariables.get('HudEnabled');
+        const HudEnabled = await this.SettingsController.get('HudEnabled');
         if (!HudEnabled) {
             return;
         }
@@ -74,7 +74,7 @@ export default class HudWindow {
      * 
      */
     async setWindowToStoredDisplay() {
-        await this.DisplayProcessor.setDisplay(this.window, await this.SettingsVariables.get('HudDisplay'));
+        await this.DisplayController.setDisplay(this.window, await this.SettingsController.get('HudDisplay'));
     }
 
     /**

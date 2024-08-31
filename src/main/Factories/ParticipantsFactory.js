@@ -134,7 +134,7 @@ export default class ParticipantsFactory {
         }
 
         // apply mRacingDistance
-        data = await this.applyParticipantDistances(data);        
+        data = await this.applyParticipantDistances(data);
 
         return data;
     }
@@ -144,7 +144,8 @@ export default class ParticipantsFactory {
      * @param {*} data 
      * @returns 
      */
-    async applyParticipantDistances(data) {
+    async applyParticipantDistances(data) {        
+
         for (let pii = 0; pii < data.participants.mParticipantInfo.length; pii++) {
             // if not race
             if (data.gameStates.mSessionState !== 5) {
@@ -159,11 +160,16 @@ export default class ParticipantsFactory {
             }
 
             const participant = data.participants.mParticipantInfo[ pii ];
+            
+            if (participant.mRacePosition <= 0) {
+                data.participants.mParticipantInfo[pii].mRacingDistance = null;
+                continue;
+            }
+
             const participantTotalLapDistance = participant.mCurrentLapDistance + ((participant.mCurrentLap - 1) * data.eventInformation.mTrackLength);
             const participantAhead = await getParticipantInPostion(data, participant.mRacePosition - 1);
             const participantAheadTotalLapDistance = participantAhead.mCurrentLapDistance + ((participantAhead.mCurrentLap - 1) * data.eventInformation.mTrackLength);
             const participantDistanceAhead = participantAheadTotalLapDistance - participantTotalLapDistance;
-
             data.participants.mParticipantInfo[pii].mRacingDistance = participantDistanceAhead;
         }
 

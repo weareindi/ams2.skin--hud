@@ -3,12 +3,14 @@ import { electronApp, optimizer } from '@electron-toolkit/utils';
 import iconTrayMac from '../../resources/iconTemplate.png?asset';
 import iconTrayWinLight from '../../resources/iconTemplate.png?asset';
 import iconTrayWinDark from '../../resources/iconTemplateDark.png?asset';
-import SettingsVariables from '../variables/SettingsVariables';
-import DisplayProcessor from './DisplayProcessor.js';
-import CrestProcessor from './CrestProcessor.js';
-import SettingsWindow from './SettingsWindow.js';
-import HudWindow from './HudWindow.js';
-import DirectorWindow from './DirectorWindow.js';
+
+import SettingsController from './Controllers/SettingsController';
+import DisplayController from './Controllers/DisplayController';
+import CrestProcessor from './Controllers/CrestController';
+
+import SettingsWindow from './Windows/SettingsWindow';
+import HudWindow from './Windows/HudWindow';
+import DirectorWindow from './Windows/DirectorWindow';
 
 class Main { 
     constructor() {
@@ -35,8 +37,8 @@ class Main {
             await app.whenReady();
             await this.setElectronVars();
             await this.createTray();
-            await this.registerSettingsVariables();
-            await this.registerDisplayProcessor();
+            await this.registerSettingsController();
+            await this.registerDisplayController();
             await this.registerCrestProcessor();
             await this.registerAppListeners();
             await this.registerRendererListeners();
@@ -52,8 +54,8 @@ class Main {
     /**
      * 
      */
-    async registerSettingsVariables() {
-        this.SettingsVariables = new SettingsVariables();
+    async registerSettingsController() {
+        this.SettingsController = new SettingsController();
     }
 
     /**
@@ -66,8 +68,8 @@ class Main {
     /**
      * 
      */
-    async registerDisplayProcessor() {
-        this.DisplayProcessor = new DisplayProcessor();
+    async registerDisplayController() {
+        this.DisplayController = new DisplayController();
     }
 
     /**
@@ -284,7 +286,7 @@ class Main {
         // update settings storage
         ipcMain.handle('setVariable', async (event, key, value) => {
             // update storage
-            await this.SettingsVariables.set(key, value);
+            await this.SettingsController.set(key, value);
 
             // update vars
             // if (key === 'IP') {
@@ -304,7 +306,7 @@ class Main {
             }
     
             if (key === 'SettingsDisplay') {
-                await this.DisplayProcessor.setDisplay(this.SettingsWindow.window, value);
+                await this.DisplayController.setDisplay(this.SettingsWindow.window, value);
             }
     
             if (key === 'HudEnabled') {
@@ -312,7 +314,7 @@ class Main {
             }
     
             if (key === 'HudDisplay') {
-                await this.DisplayProcessor.setDisplay(this.HudWindow.window, value);
+                await this.DisplayController.setDisplay(this.HudWindow.window, value);
             }
     
             // if (key === 'AutoDirectorEnabled') {
@@ -320,7 +322,7 @@ class Main {
             // }
     
             // if (key === 'AutoDirectorDisplay') {
-            //     await this.DisplayProcessor.setDisplay(this.AutoDirectorWindow.window, value);
+            //     await this.DisplayController.setDisplay(this.AutoDirectorWindow.window, value);
             // }
     
             if (key === 'DirectorEnabled') {
@@ -328,7 +330,7 @@ class Main {
             }
     
             if (key === 'DirectorDisplay') {
-                await this.DisplayProcessor.setDisplay(this.DirectorWindow.window, value);
+                await this.DisplayController.setDisplay(this.DirectorWindow.window, value);
             }
     
             if (key === 'DirectorDefaultView') {
@@ -338,7 +340,7 @@ class Main {
 
         // update scale
         ipcMain.handle('setScale', async (event, windowName, displayVariableName) => {
-            await this.DisplayProcessor.setScale(this[windowName].window, await this.SettingsVariables.get(displayVariableName));
+            await this.DisplayController.setScale(this[windowName].window, await this.SettingsController.get(displayVariableName));
         });
 
         // // enable pointer events

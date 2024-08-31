@@ -246,14 +246,14 @@ export default class FuelFactory {
         }
 
         // // race by time
-        if (data.eventTimings.mEventTimeRemaining > 0) {
+        if (data.eventInformation.mEventTimeRemaining > 0) {
             const mAverageLapTIme = await this.mAverageLapTIme(data);
             if (mAverageLapTIme === null) {
                 return null;
             }
 
             // get max expected laps, add additional lap if required
-            let maxLaps = Math.ceil(data.eventTimings.mEventTimeRemaining / mAverageLapTIme) + data.eventInformation.mSessionAdditionalLaps;        
+            let maxLaps = Math.ceil(data.eventInformation.mEventTimeRemaining / mAverageLapTIme) + data.eventInformation.mSessionAdditionalLaps;        
 
             // get expeceted fuel required
             fuelToEndSession = mFuelPerLap * maxLaps;    

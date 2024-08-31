@@ -1,13 +1,13 @@
 import { screen } from 'electron';
-import SettingsVariables from '../variables/SettingsVariables';
+import SettingsController from './SettingsController';
 
-export default class DisplayProcessor {
+export default class DisplayController {
     constructor() {
         // singleton
-        if (typeof global.DisplayProcessor !== 'undefined') {
-            return global.DisplayProcessor;
+        if (typeof global.DisplayController !== 'undefined') {
+            return global.DisplayController;
         }
-        global.DisplayProcessor = this;
+        global.DisplayController = this;
 
         this.defaultWidth = 1920;
         this.defaultHeight = 1080;
@@ -30,10 +30,10 @@ export default class DisplayProcessor {
      * 
      */
     async getVariables() {
-        this.SettingsDisplay = await (new SettingsVariables()).get('SettingsDisplay');
-        this.HudDisplay = await (new SettingsVariables()).get('HudDisplay');
-        this.AutoDirectorDisplay = await (new SettingsVariables()).get('AutoDirectorDisplay');
-        this.DirectorDisplay = await (new SettingsVariables()).get('DirectorDisplay');
+        this.SettingsDisplay = await (new SettingsController()).get('SettingsDisplay');
+        this.HudDisplay = await (new SettingsController()).get('HudDisplay');
+        this.AutoDirectorDisplay = await (new SettingsController()).get('AutoDirectorDisplay');
+        this.DirectorDisplay = await (new SettingsController()).get('DirectorDisplay');
     }
 
     /**

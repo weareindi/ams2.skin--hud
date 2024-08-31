@@ -41,7 +41,6 @@ export default class BattleFactory {
      */
     async getData(data) {
         try {
-            // console.log(this.db);
             return await this.prepareData(data);
         } catch (error) {
             console.error(error);
@@ -71,11 +70,11 @@ export default class BattleFactory {
      */
     async processBattles(data) {
         // race hasnt started yet (still in lobby/on grid)
-        // if (data.eventTimings.mEventTimeRemaining === data.eventInformation.mSessionDuration) {
+        // if (data.eventInformation.mEventTimeRemaining === data.eventInformation.mSessionDuration) {
         //     return null;
         // }
 
-        data = await this.prepareParticipants(data);
+        data = await this.prepareParticipants(data);        
 
         // race hasnt started yet
         if (data.gameStates.mSessionState !== 5 || data.gameStates.mRaceState !== 2) {
@@ -163,7 +162,6 @@ export default class BattleFactory {
         participants = await this.filterParticipants(participants);
         participants = await this.withinThresholdAhead(participants);
         participants = await this.withinThresholdBehind(data, participants);
-
         return participants;
     }
 
@@ -178,6 +176,11 @@ export default class BattleFactory {
         // work out if battling participant ahead
         for (let pi = 0; pi < participants.length; pi++) {
             participants[pi].mBattlingParticipantAhead = false;
+
+            // skip if no race position defined
+            if (participants[pi].mRacePosition <= 0) {
+                continue;
+            }
 
             // is the leader?
             if (participants[pi].mRacePosition === 1) {
@@ -226,7 +229,13 @@ export default class BattleFactory {
 
         // work out if battling participant ahead
         for (let pi = 0; pi < participants.length; pi++) {
+            // set default state
             participants[pi].mBattlingParticipantBehind = false;
+
+            // skip if no race position defined
+            if (participants[pi].mRacePosition <= 0) {
+                continue;
+            }
 
             // is last?
             if (participants[pi].mRacePosition === participants.length) {
@@ -237,7 +246,7 @@ export default class BattleFactory {
                 continue;
             }
 
-            const participantBehind = await getParticipantInPostion(data, (participants[pi].mRacePosition + 1));
+            const participantBehind = await getParticipantInPostion(data, (participants[pi].mRacePosition + 1));            
 
             // over the distance threshold?
             if (participantBehind.mRacingDistance > this.distance) {
