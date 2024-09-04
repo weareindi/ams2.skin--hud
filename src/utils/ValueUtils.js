@@ -4,7 +4,7 @@
  * @param {*} n 
  * @returns 
  */
-export function zerofill(value = null, total = null) {
+export function getZerofill(value = null, total = null) {
     if (typeof value === 'undefined' || value === null) {
         return null;
     }

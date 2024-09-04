@@ -1,4 +1,6 @@
 import { app, Tray, Menu, ipcMain, nativeTheme } from 'electron';
+import * as fs from 'node:fs';
+
 import { electronApp, optimizer } from '@electron-toolkit/utils';
 import iconTrayMac from '../../resources/iconTemplate.png?asset';
 import iconTrayWinLight from '../../resources/iconTemplate.png?asset';
@@ -12,10 +14,10 @@ import SettingsWindow from './Windows/SettingsWindow';
 import HudWindow from './Windows/HudWindow';
 import DirectorWindow from './Windows/DirectorWindow';
 
-class Main { 
+class Main {
     constructor() {
         this.isFirstInstance = app.requestSingleInstanceLock();
-        if (!this.isFirstInstance) { 
+        if (!this.isFirstInstance) {
             app.quit();
             return;
         }
@@ -52,42 +54,42 @@ class Main {
     }
 
     /**
-     * 
+     *
      */
     async registerSettingsController() {
         this.SettingsController = new SettingsController();
     }
 
     /**
-     * 
+     *
      */
     async registerCrestProcessor() {
         this.CrestProcessor = new CrestProcessor();
     }
 
     /**
-     * 
+     *
      */
     async registerDisplayController() {
         this.DisplayController = new DisplayController();
     }
 
     /**
-     * 
+     *
      */
     async registerSettingsWindow() {
         this.SettingsWindow = new SettingsWindow();
     }
 
     /**
-     * 
+     *
      */
     async registerHudWindow() {
         this.HudWindow = new HudWindow();
     }
 
     /**
-     * 
+     *
      */
     async registerDirectorWindow() {
         this.DirectorWindow = new DirectorWindow();
@@ -125,6 +127,10 @@ class Main {
             data[key] = value;
             await this.SettingsWindow.send('setSetting', data);
         });
+
+        ipcMain.on('data', async (data) => {
+            this.HudWindow.send('data', data);
+        });
     }
 
     /**
@@ -150,14 +156,14 @@ class Main {
         await this.registerTrayEvents();
         await this.setTrayContextMenu();
     }
-    
+
     /**
      * Set system tray tool tip
      */
     async setTrayToolTip() {
         this.tray.setToolTip(this.appName);
     }
-    
+
     /**
      * Register systemn tray events
      */
@@ -170,7 +176,7 @@ class Main {
             this.tray.popUpContextMenu();
         });
     }
-    
+
     /**
      * Build and set the system tray context menu
      */
@@ -198,7 +204,7 @@ class Main {
     /**
      * Register listern for events from renderer
      */
-    async registerRendererListeners() {        
+    async registerRendererListeners() {
         // start/init named window
         ipcMain.handle('startWindow', async (event, win) => {
             if (!(win in this) || !('start' in this[win])) {
@@ -207,7 +213,7 @@ class Main {
 
             this[win].start();
         });
-        
+
         // close named window
         ipcMain.handle('closeWindow', async (event, win) => {
             if (!(win in this) || !('close' in this[win])) {
@@ -218,28 +224,13 @@ class Main {
         });
 
         // dump
+        ipcMain.on('dump', async (data) => {
+            await this.dump(data);
+        });
+
+        // dump
         ipcMain.handle('dump', async (event, data) => {
-            if (!data) { 
-                return false;
-            }
-
-            if (data === 'null') { 
-                return false;
-            }
-
-            if (typeof data === 'object') { 
-                data = JSON.stringify(data);
-            }
-
-            const { default: slash } = await import('slash');
-            const user_documents = app.getPath('documents');
-            const dir = slash(`${user_documents}/${this.appName}/dump`);
-            const date = new Date();
-            const filename = `${date.toISOString().split('-').join('').split(':').join('').split('.').join('')}.log`;
-            const path = `${dir}/${filename}`;
-
-            fs.mkdir(dir, { recursive: true }, (err) => err && console.error(err));
-            fs.writeFileSync(path, data, 'utf-8', (err) => err && console.error(err));
+            await this.dump(data);
         });
 
         // Check for new version on github
@@ -254,7 +245,7 @@ class Main {
                 console.log(error);
                 return null;
             });
-        
+
             // no response?
             if (!response) {
                 // .. bail
@@ -292,50 +283,50 @@ class Main {
             // if (key === 'IP') {
             //     await this.CrestProcessor.setIP(value);
             // }
-    
+
             // if (key === 'Port') {
             //     await this.CrestProcessor.setPort(value);
             // }
-    
+
             // if (key === 'TickRate') {
             //     await this.CrestProcessor.setTickRate(value);
             // }
-    
+
             if (key === 'ExternalCrest') {
                 await this.CrestProcessor.toggle(value);
             }
-    
+
             if (key === 'SettingsDisplay') {
                 await this.DisplayController.setDisplay(this.SettingsWindow.window, value);
             }
-    
+
             if (key === 'HudEnabled') {
                 await this.HudWindow.toggle(value);
             }
-    
+
             if (key === 'HudDisplay') {
                 await this.DisplayController.setDisplay(this.HudWindow.window, value);
             }
-    
+
             // if (key === 'AutoDirectorEnabled') {
             //     await this.AutoDirectorWindow.toggle(value);
             // }
-    
+
             // if (key === 'AutoDirectorDisplay') {
             //     await this.DisplayController.setDisplay(this.AutoDirectorWindow.window, value);
             // }
-    
+
             if (key === 'DirectorEnabled') {
                 await this.DirectorWindow.toggle(value);
             }
-    
+
             if (key === 'DirectorDisplay') {
                 await this.DisplayController.setDisplay(this.DirectorWindow.window, value);
             }
-    
+
             if (key === 'DirectorDefaultView') {
-                
-            }            
+
+            }
         });
 
         // update scale
@@ -354,6 +345,35 @@ class Main {
         //     const mainWindow = await this.mainWindow.getWindow();
         //     mainWindow.setIgnoreMouseEvents(true);
         // });
+    }
+
+    /**
+     *
+     * @param {*} data
+     * @returns
+     */
+    async dump(data) {
+        if (!data) {
+            return false;
+        }
+
+        if (data === 'null') {
+            return false;
+        }
+
+        if (typeof data === 'object') {
+            data = JSON.stringify(data);
+        }
+
+        const { default: slash } = await import('slash');
+        const user_documents = app.getPath('documents');
+        const dir = slash(`${user_documents}/${this.appName}/dump`);
+        const date = new Date();
+        const filename = `${date.toISOString().split('-').join('').split(':').join('').split('.').join('')}.log`;
+        const path = `${dir}/${filename}`;
+
+        fs.mkdir(dir, { recursive: true }, (err) => err && console.error(err));
+        fs.writeFileSync(path, data, 'utf-8', (err) => err && console.error(err));
     }
 }
 

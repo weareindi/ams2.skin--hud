@@ -1,6 +1,6 @@
-import { isReady, getParticipantAtIndex, getParticipantInPostion } from '../../utils/CrestUtils';
+import { isReady, getParticipantAtIndex, getParticipantInPostion, getActiveParticipant } from '../../utils/CrestUtils';
 import ParticipantFactory from './ParticipantFactory';
-import storage from 'electron-json-storage';
+// import storage from 'electron-json-storage';
 
 export default class ParticipantsFactory {
     constructor() {
@@ -8,7 +8,7 @@ export default class ParticipantsFactory {
     }
 
     /**
-     * 
+     *
      */
     async init() {
         try {
@@ -19,7 +19,7 @@ export default class ParticipantsFactory {
     }
 
     /**
-     * 
+     *
      */
     async reset() {
         try {
@@ -31,7 +31,7 @@ export default class ParticipantsFactory {
     }
 
     /**
-     * 
+     *
      */
     async resetParticipantFactories() {
         for (const mName in this.participantFactories) {
@@ -41,9 +41,9 @@ export default class ParticipantsFactory {
     }
 
     /**
-     * 
-     * @param {*} data 
-     * @returns  
+     *
+     * @param {*} data
+     * @returns
      */
     async getData(data) {
         try {
@@ -56,7 +56,7 @@ export default class ParticipantsFactory {
     }
 
     /**
-     * 
+     *
      */
     async getParticipantFactories() {
         return this.participantFactories;
@@ -64,12 +64,12 @@ export default class ParticipantsFactory {
 
     /**
      * When a participant leaves the lobby, remove their participant factory
-     * @param {*} data 
+     * @param {*} data
      */
     async removeDeadParticipants(data) {
         for (const mName in this.participantFactories) {
             const mNameExists = await this.mNameExists(data, mName);
-            
+
             if (mNameExists) {
                 continue;
             }
@@ -79,10 +79,10 @@ export default class ParticipantsFactory {
     }
 
     /**
-     * 
-     * @param {*} data 
-     * @param {*} mName 
-     * @returns 
+     *
+     * @param {*} data
+     * @param {*} mName
+     * @returns
      */
     async mNameExists(data, mName) {
         for (let pii = 0; pii < data.participants.mParticipantInfo.length; pii++) {
@@ -97,19 +97,19 @@ export default class ParticipantsFactory {
     }
 
     /**
-     * 
-     * @param {*} data 
+     *
+     * @param {*} data
      */
     async registerParticipantFactories(data) {
         for (let participantIndex = 0; participantIndex < data.participants.mNumParticipants; participantIndex++) {
-            const participant = await getParticipantAtIndex(data, participantIndex);            
+            const participant = await getParticipantAtIndex(data, participantIndex);
             const mName = participant.mName;
 
             // already exists?
             if (mName in this.participantFactories) {
                 // ... skip
                 continue;
-            }            
+            }
 
             // start new lap factory for participant
             this.participantFactories[mName] = new ParticipantFactory();
@@ -117,9 +117,9 @@ export default class ParticipantsFactory {
     }
 
     /**
-     * 
-     * @param {*} data 
-     * @returns 
+     *
+     * @param {*} data
+     * @returns
      */
     async prepareData(data) {
         const ready = await isReady(data);
@@ -130,8 +130,11 @@ export default class ParticipantsFactory {
         for (let participantIndex = 0; participantIndex < data.participants.mNumParticipants; participantIndex++) {
             let participantFactory = await this.getParticipantFactory(data, participantIndex);
             let participant = await participantFactory.getData(data, participantIndex);
-            data.participants.mParticipantInfo[participantIndex] = participant;            
+            data.participants.mParticipantInfo[participantIndex] = participant;
         }
+
+        // append class info
+        data.participants.mNumClassParticipants = await this.mNumClassParticipants(data);
 
         // apply mRacingDistance
         data = await this.applyParticipantDistances(data);
@@ -140,11 +143,37 @@ export default class ParticipantsFactory {
     }
 
     /**
-     * 
-     * @param {*} data 
-     * @returns 
+     *
+     * @param {*} data
+     * @returns
      */
-    async applyParticipantDistances(data) {        
+    async mNumClassParticipants(data) {
+        const classes = {};
+
+        // count classes
+        for (let participantIndex = 0; participantIndex < data.participants.mNumParticipants; participantIndex++) {
+            let participant = await getParticipantAtIndex(data, participantIndex);
+
+            if (!(participant.mCarClassNames in classes)) {
+                classes[participant.mCarClassNames] = 0;
+            }
+
+            classes[participant.mCarClassNames]++;
+        }
+
+        // get participant car class
+        let participant = await getActiveParticipant(data);
+
+        // return amount for participant class
+        return classes[participant.mCarClassNames];
+    }
+
+    /**
+     *
+     * @param {*} data
+     * @returns
+     */
+    async applyParticipantDistances(data) {
 
         for (let pii = 0; pii < data.participants.mParticipantInfo.length; pii++) {
             // if not race
@@ -160,7 +189,7 @@ export default class ParticipantsFactory {
             }
 
             const participant = data.participants.mParticipantInfo[ pii ];
-            
+
             if (participant.mRacePosition <= 0) {
                 data.participants.mParticipantInfo[pii].mRacingDistance = null;
                 continue;
@@ -177,10 +206,10 @@ export default class ParticipantsFactory {
     }
 
     /**
-     * 
-     * @param {*} data 
-     * @param {*} participantIndex 
-     * @returns 
+     *
+     * @param {*} data
+     * @param {*} participantIndex
+     * @returns
      */
     async getParticipantFactory(data, participantIndex) {
         let participant = await getParticipantAtIndex(data, participantIndex);
@@ -188,7 +217,7 @@ export default class ParticipantsFactory {
 
         if (!(participant.mName in participantFactories)) {
             return null;
-        }        
+        }
 
         return participantFactories[participant.mName];
     }

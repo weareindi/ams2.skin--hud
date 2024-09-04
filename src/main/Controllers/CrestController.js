@@ -1,4 +1,4 @@
-import { isReady, getActiveParticipant } from '../../utils/CrestUtils';
+import { isReady } from '../../utils/CrestUtils';
 import { ipcMain } from 'electron';
 import { execFile } from 'child_process';
 import crest2 from '../../../resources/crest2/CREST2.exe?asset';
@@ -9,6 +9,10 @@ import MockDataController from './MockDataController';
 import ParticipantsFactory from '../Factories/ParticipantsFactory';
 import TrackPositionFactory from '../Factories/TrackPositionFactory';
 import EventInformationFactory from '../Factories/EventInformationFactory';
+import CarStateFactory from '../Factories/CarStateFactory';
+import CarDamageFactory from '../Factories/CarDamageFactory';
+import WeatherFactory from '../Factories/WeatherFactory';
+import WheelsAndTyresFactory from '../Factories/WheelsAndTyresFactory';
 import FuelFactory from '../Factories/FuelFactory';
 import BattleFactory from '../Factories/BattleFactory';
 import DirectorFactory from '../Factories/DirectorFactory';
@@ -26,7 +30,7 @@ export default class CrestController {
     }
 
     /**
-     * 
+     *
      */
     async init() {
         try {
@@ -40,12 +44,16 @@ export default class CrestController {
     }
 
     /**
-     * 
+     *
      */
     async registerFactories() {
         this.ParticipantsFactory = new ParticipantsFactory();
         this.TrackPositionFactory = new TrackPositionFactory();
         this.EventInformationFactory = new EventInformationFactory();
+        this.CarStateFactory = new CarStateFactory();
+        this.CarDamageFactory = new CarDamageFactory();
+        this.WeatherFactory = new WeatherFactory();
+        this.WheelsAndTyresFactory = new WheelsAndTyresFactory();
         this.FuelFactory = new FuelFactory();
         this.BattleFactory = new BattleFactory();
         this.DirectorFactory = new DirectorFactory();
@@ -53,12 +61,16 @@ export default class CrestController {
     }
 
     /**
-     * 
+     *
      */
     async resetProcessors() {
         this.ParticipantsFactory.reset();
         this.TrackPositionFactory.reset();
         this.EventInformationFactory.reset();
+        this.CarStateFactory.reset();
+        this.CarDamageFactory.reset();
+        this.WeatherFactory.reset();
+        this.WheelsAndTyresFactory.reset();
         this.FuelFactory.reset();
         this.BattleFactory.reset();
         this.DirectorFactory.reset();
@@ -66,9 +78,9 @@ export default class CrestController {
     }
 
     /**
-     * 
-     * @param {*} ExternalCrest 
-     * @returns 
+     *
+     * @param {*} ExternalCrest
+     * @returns
      */
     async toggle(ExternalCrest) {
         if (!ExternalCrest) {
@@ -79,14 +91,14 @@ export default class CrestController {
     }
 
     /**
-     * 
+     *
      */
     async registerSettingsController() {
         this.SettingsController = new SettingsController();
     }
 
     /**
-     * 
+     *
      */
     async processInitialState() {
         const ExternalCrest = await this.SettingsController.get('ExternalCrest');
@@ -98,7 +110,7 @@ export default class CrestController {
     }
 
     /**
-     * 
+     *
      */
     async getVariables() {
         const ExternalCrest = await this.SettingsController.get('ExternalCrest');
@@ -118,21 +130,24 @@ export default class CrestController {
     }
 
     /**
-     * 
+     *
      */
     async doTimer() {
         const { TickRate, IP, Port, MockFetch, MockState } = await this.getVariables();
-        
+
         let data = {};
 
         if (MockFetch) {
             data = await this.fetchMockDataController(MockState);
         } else {
             data = await this.fetchData(IP, Port);
-        }        
+        }
 
         // update connected state
         await this.setConnectedState(data);
+
+        //
+        ipcMain.emit('data', data);
 
         // handle sleep/delay before next iteration
 
@@ -145,11 +160,11 @@ export default class CrestController {
 
         // do next iteration
         await this.doTimer();
-        
+
     }
 
     /**
-     * 
+     *
      */
     async setConnectedState(data) {
         const ConnectedCurrent = await this.SettingsController.get('Connected');
@@ -163,21 +178,21 @@ export default class CrestController {
         if (Connected === ConnectedCurrent) {
             return;
         }
-        
+
         ipcMain.emit('setSetting', 'Connected', Connected);
     }
 
     /**
-     * 
-     * @param {*} ms 
+     *
+     * @param {*} ms
      */
     async sleep(ms) {
         await new Promise(resolve => setTimeout(resolve, ms));
     }
 
     /**
-     * 
-     * @param {*} MockState 
+     *
+     * @param {*} MockState
      */
     async fetchMockDataController(MockState) {
         const json = await (new MockDataController()).data(MockState);
@@ -201,7 +216,7 @@ export default class CrestController {
 
         // init fetch request
         const url = `http://${IP}:${Port}/crest2/v1/api`;
-        
+
         // fetch the data
         const response = await fetch(url,
             {
@@ -213,7 +228,7 @@ export default class CrestController {
             }).catch(async (error) => {
                 return null;
             });
-        
+
         // no response?
         if (!response) {
             // .. bail and return a message to parent
@@ -222,13 +237,13 @@ export default class CrestController {
 
         // validate response
         const valid = await this.validate(response);
-        
+
         if (!valid) {
             // .. bail and return a message to parent
             return null;
         }
 
-        const json = await this.getJson(response);        
+        const json = await this.getJson(response);
 
         // if we got here we should have good data
         const data = await this.processData( json );
@@ -237,7 +252,7 @@ export default class CrestController {
 
     /**
      * Do we have valid data?
-     * @param {*} fetchResponse 
+     * @param {*} fetchResponse
      * @returns boolean
      */
     async validate(fetchResponse) {
@@ -250,7 +265,7 @@ export default class CrestController {
 
         // get text from response
         let textResponse = await response.text();
-        
+
         // prep for json
         let passedJson;
 
@@ -270,7 +285,7 @@ export default class CrestController {
     }
 
     /**
-     * 
+     *
      */
     async getJson(fetchResponse) {
         const response = fetchResponse.clone();
@@ -316,14 +331,16 @@ export default class CrestController {
 
     /**
      * Prepare data for all frontend views
-     * @param {*} data 
-     * @returns 
+     * @param {*} data
+     * @returns
      */
     async processData(data) {
+
         const ready = await isReady(data);
         if (!ready) {
             await this.ParticipantsFactory.reset();
             await this.EventInformationFactory.reset();
+            await this.CarStateFactory.reset();
             await this.FuelFactory.reset();
             await this.TrackPositionFactory.reset();
             await this.BattleFactory.reset();
@@ -331,10 +348,13 @@ export default class CrestController {
             return null;
         }
 
-        // The aim here to to prepare data for the view, ensure data is as dry as possible and null values are returned if data is not available.
+        // The aim here to to prepare data for the view:
+        // - ensure data is dry
+        // - null values are returned if data is not ready for the view
+
         // A lot of values from shared memory are replaced in the following factories.
         // A lot of values are added to the payload.
-        
+
         // Apply missing data to participant data directly from crest
         // - participants/mParticipantInfo/Array
         // -- mCurrentLapTimes
@@ -357,24 +377,37 @@ export default class CrestController {
         // Apply better, more usable event information to crest data
         data = await this.EventInformationFactory.getData(data);
 
-        // Apply fuel calculations (requires participant/mLapsInfo and eventTimings to be populated)
+        // Apply better, more usable car state information to crest data
+        data = await this.CarStateFactory.getData(data);
+
+        // Apply better, more usable car damage information to crest data
+        data = await this.CarDamageFactory.getData(data);
+
+        // Apply better, more usable weather information to crest data
+        data = await this.WeatherFactory.getData(data);
+
+        // Apply better, more usable weather information to crest data
+        data = await this.WheelsAndTyresFactory.getData(data);
+
+        // Apply fuel calculations (requires participant/mLapsInfo and additional eventInformation to be populated)
         // - fuel
         // -- mFuelCapacity
         // -- mFuelLevel
         // -- mFuelPerLap
-        // -- mFuelToEndSession
+        // -- mFuelStopsToEndSession
+        // -- mFuelInStop
         // -- mPitsToEndSession
         data = await this.FuelFactory.getData(data);
 
-        // Apply placement data to crest data 
+        // Apply placement data to crest data
         // - trackPositionCarousel
         // - participants/mParticipantInfo/Array
         // -- mRacingDistance
         // -- mPlacementIndex
         // -- mDistanceToActiveUser
-        data = await this.TrackPositionFactory.getData(data);        
+        data = await this.TrackPositionFactory.getData(data);
 
-        // Apply on track battle data to crest data 
+        // Apply on track battle data to crest data
         // - battle
         // -- aheadParticipantIndex
         // -- behindParticipantIndex
@@ -387,21 +420,21 @@ export default class CrestController {
 
         // Director
         // - Director
-        data = await this.DirectorFactory.getData(data);        
-        
+        data = await this.DirectorFactory.getData(data);
+
         return data;
     }
 
     /**
-     * 
-     * @param {*} data 
+     *
+     * @param {*} data
      */
-    async processView(data) {        
+    async processView(data) {
         const ready = await isReady(data);
         if (!ready) {
             await this.ViewFactory.reset();
             return null;
-        }     
+        }
 
         return await this.ViewFactory.getData(data);
     }

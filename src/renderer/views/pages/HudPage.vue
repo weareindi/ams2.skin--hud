@@ -1,7 +1,7 @@
 <template>
     <div class="p">
         <Suspense>
-            HudPage
+            <p>Hud</p>
         </Suspense>
     </div>
 </template>
@@ -14,9 +14,18 @@
 </style>
 
 <script>
+import { inject } from 'vue';
 
 export default {
-    components: {},
+    setup() {
+        const vHudShow = inject('vHudShow');
+        const vHudStatus = inject('vHudStatus');
+        
+        return {
+            vHudShow,
+            vHudStatus,
+        };
+    }
 }
 </script>
 

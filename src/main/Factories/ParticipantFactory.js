@@ -1,4 +1,4 @@
-import { isReady, getParticipantAtIndex } from '../../utils/CrestUtils';
+import { isReady, getParticipantAtIndex, getParticipantInPostion } from '../../utils/CrestUtils';
 import stc from "string-to-color";
 
 export default class ParticipantFactory {
@@ -84,10 +84,13 @@ export default class ParticipantFactory {
         participant.mCarNamesMain = await this.mCarNames(data, mParticipantIndex);
         participant.mCarClassNamesShort = await this.mCarClassNamesShort(data, mParticipantIndex);
         participant.mCarClassColor = await this.mCarClassColor(data, mParticipantIndex);
+        participant.mCarClassPosition = await this.mCarClassPosition(data, mParticipantIndex);
+
+        participant.mKPH = await this.mKPH(data, mParticipantIndex);    
 
         participant.mIsDriver = await this.mIsDriver();
         participant.mOutLap = await this.mOutLap();
-        participant.mLapsInfo = await this.mLapsInfo();        
+        participant.mLapsInfo = await this.mLapsInfo();    
 
         return participant;
     }
@@ -152,9 +155,34 @@ export default class ParticipantFactory {
      * @param {*} mParticipantIndex 
      */
     async mCarClassColor(data, mParticipantIndex) {
-        let participant = await getParticipantAtIndex(data, mParticipantIndex);  
+        const participant = await getParticipantAtIndex(data, mParticipantIndex);  
 
         return stc(participant.mCarClassNames);
+    }
+
+    /**
+     * 
+     * @param {*} data 
+     * @param {*} mParticipantIndex 
+     */
+    async mCarClassPosition(data, mParticipantIndex) {
+        // sort into class groups
+        const mCarClassPositions = {};
+        for (let participantIndex = 1; participantIndex <= data.participants.mNumParticipants; participantIndex++) {
+            let participant = await getParticipantInPostion(data, participantIndex);
+
+            if (!(participant.mCarClassNames in mCarClassPositions)) {
+                mCarClassPositions[participant.mCarClassNames] = [];
+            }
+
+            mCarClassPositions[participant.mCarClassNames].push( participant.mRacePosition );
+        }
+        
+        // get participant
+        const participant = await getParticipantAtIndex(data, mParticipantIndex);
+
+        // get index of race position within class group (plus 1)
+        return mCarClassPositions[participant.mCarClassNames].indexOf( participant.mRacePosition ) + 1;
     }
 
     /**
@@ -477,5 +505,15 @@ export default class ParticipantFactory {
      */
     async mOutLap() {
        return this.isOutLap;
+    }
+
+    /**
+     * 
+     */
+    async mKPH(data, mParticipantIndex) {
+        // get participant
+        const participant = await getParticipantAtIndex(data, mParticipantIndex);
+
+        return Math.floor(participant.mSpeeds * 3.6);        
     }
 }

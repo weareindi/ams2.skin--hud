@@ -37,7 +37,6 @@ export default defineConfig({
                 input: [
                     'src/renderer/settings.html',
                     'src/renderer/hud.html',
-                    'src/renderer/autodirector.html',
                     'src/renderer/director.html',
                 ]
             }

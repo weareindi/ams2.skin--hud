@@ -52,8 +52,9 @@ export default class EventInformationFactory {
         }        
     
         data.eventInformation.mEventTimeRemaining = await this.mEventTimeRemaining(data);
-        data.eventInformation.mLapsInEvent = await this.mLapsInEvent(data);
-
+        data.eventInformation.mLapsInEvent = await this.mLapsInEvent(data);        
+        data.eventInformation.mAdditionalLap = await this.mAdditionalLap(data);        
+        
         return data;
     }
 
@@ -89,5 +90,14 @@ export default class EventInformationFactory {
         }
 
         return data.eventInformation.mLapsInEvent;
+    }
+
+    /**
+     * 
+     * @param {*} data 
+     * @returns 
+     */
+    async mAdditionalLap(data) {
+        return null;
     }
 }

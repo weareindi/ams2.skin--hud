@@ -27,8 +27,8 @@ export default class FuelFactory {
                 mFuelCapacity: null,
                 mFuelLevel: null,
                 mFuelPerLap: null,
-                mFuelToEndSession: null,
-                mPitsToEndSession: null,
+                mFuelStopsToEndSession: null,
+                mFuelInStop: null,
             };
         } catch (error) {
             console.error(error);
@@ -99,8 +99,10 @@ export default class FuelFactory {
         data.fuel.mFuelLevel = await this.mFuelLevel(data);
         data.fuel.mFuelInCar = await this.mFuelInCar(data);
         data.fuel.mFuelPerLap = await this.mFuelPerLap(data);
-        data.fuel.mFuelToEndSession = await this.mFuelToEndSession(data);        
-        data.fuel.mPitsToEndSession = await this.mPitsToEndSession(data);        
+        data.fuel.mLapsToEnd = await this.mLapsToEnd(data);
+        data.fuel.mFuelToEndSession = await this.mFuelToEndSession(data);
+        data.fuel.mFuelStopsToEndSession = await this.mFuelStopsToEndSession(data);
+        data.fuel.mFuelInStop = await this.mFuelInStop(data);
 
         return data;
     }
@@ -136,7 +138,7 @@ export default class FuelFactory {
      * @returns number
      */
     async mFuelPerLap(data) {
-        const lapRuns = await this.lapRuns(data);
+        const lapRuns = await this.lapRuns(data);        
 
         // prep max differences array
         // storing the max difference for each for the runLap groups
@@ -175,7 +177,7 @@ export default class FuelFactory {
             return null;
         }
 
-        return maxDifference;
+        return maxDifference * data.carState.mFuelCapacity;
     }
 
     /**
@@ -224,28 +226,15 @@ export default class FuelFactory {
      * @param {*} data 
      * @returns 
      */
-    async mFuelToEndSession(data) {
-        const participant = await getActiveParticipant(data);      
-        const mFuelPerLap = await this.mFuelPerLap(data);        
+    async mLapsToEnd(data) {
+        const participant = await getActiveParticipant(data);        
 
-        let fuelToEndSession = 0;
-
-        // race by laps
+        // if laps based event
         if (data.eventInformation.mLapsInEvent > 0) {
-            // new lap (or before race start)
-            if (this.mLapsCompleted === null || participant.mCurrentTime < 0 || this.mLapsCompleted != participant.mLapsCompleted) {
-                this.mLapsCompleted = participant.mLapsCompleted;
-                this.fuelAtLapStart = data.carState.mFuelLevel;
-            }
-
-            // get fuel used this lap
-            const fuelUsedThisLap = this.fuelAtLapStart - data.carState.mFuelLevel;
-
-            // estimate fuel for session
-            fuelToEndSession = (mFuelPerLap * (data.eventInformation.mLapsInEvent - participant.mLapsCompleted)) - fuelUsedThisLap;
+            return data.eventInformation.mLapsInEvent - participant.mLapsCompleted;
         }
 
-        // // race by time
+        // if time based event
         if (data.eventInformation.mEventTimeRemaining > 0) {
             const mAverageLapTIme = await this.mAverageLapTIme(data);
             if (mAverageLapTIme === null) {
@@ -253,11 +242,42 @@ export default class FuelFactory {
             }
 
             // get max expected laps, add additional lap if required
-            let maxLaps = Math.ceil(data.eventInformation.mEventTimeRemaining / mAverageLapTIme) + data.eventInformation.mSessionAdditionalLaps;        
-
-            // get expeceted fuel required
-            fuelToEndSession = mFuelPerLap * maxLaps;    
+            return (Math.ceil(data.eventInformation.mSessionDuration / mAverageLapTIme) + data.eventInformation.mSessionAdditionalLaps) - participant.mLapsCompleted;     
         }
+
+        return null;
+    }
+
+    /**
+     * 
+     * @param {*} data 
+     * @returns 
+     */
+    async mFuelToEndSession(data) {
+        const participant = await getActiveParticipant(data);
+
+        let fuelToEndSession = 0;
+
+        // new lap (or before race start) (probably a more elegant way of doing this without the this.mLapsCompleted)
+        if (this.mLapsCompleted === null || participant.mCurrentTime < 0 || this.mLapsCompleted != participant.mLapsCompleted) {
+            this.mLapsCompleted = participant.mLapsCompleted;
+            this.fuelAtLapStart = data.carState.mFuelLevel;
+        }
+
+        // get fuel used this lap
+        const fuelUsedThisLap = this.fuelAtLapStart - data.carState.mFuelLevel;
+
+        // no laps to end defined? 
+        if (data.fuel.mLapsToEnd === null) {
+            return null;
+        }
+
+        // no fuel per lap defined? 
+        if (data.fuel.mFuelPerLap === null) {
+            return null;
+        }        
+
+        fuelToEndSession = ((data.fuel.mLapsToEnd * data.fuel.mFuelPerLap) - fuelUsedThisLap) - data.fuel.mFuelInCar;
 
         // session prediction has elapsed, just show 0
         if (fuelToEndSession < 0) {
@@ -265,6 +285,37 @@ export default class FuelFactory {
         }
 
         return fuelToEndSession;
+    }
+
+    /**
+     * 
+     * @param {*} data 
+     * @returns 
+     */
+    async mFuelStopsToEndSession(data) {    
+        if (data.fuel.mFuelToEndSession === null) {
+            return null;
+        }        
+
+        return Math.ceil( (data.fuel.mFuelToEndSession - data.fuel.mFuelInCar) / data.fuel.mFuelCapacity );
+    }
+
+    /**
+     * 
+     * @param {*} data 
+     */
+    async mFuelInStop(data) {
+        if (data.fuel.mFuelToEndSession === null) {
+            return null;
+        }
+
+        const difference = data.fuel.mFuelToEndSession - data.fuel.mFuelInCar;
+
+        if (difference > data.fuel.mFuelCapacity) {
+            return data.fuel.mFuelCapacity;
+        }
+
+        return difference;
     }
 
     /**
@@ -340,24 +391,24 @@ export default class FuelFactory {
      * 
      * @param {*} data 
      */
-    async mPitsToEndSession(data) {
-        const fuelToEndSession = await this.mFuelToEndSession(data);
+    // async mPitsToEndSession(data) {
+    //     const fuelToEndSession = await this.mFuelStopsToEndSession(data);
 
-        if (isNaN(fuelToEndSession) || fuelToEndSession === null) {
-            return null;
-        }
+    //     if (isNaN(fuelToEndSession) || fuelToEndSession === null) {
+    //         return null;
+    //     }
 
-        const mFuelCapacity = await this.mFuelCapacity(data);
-        const mFuelLevel = await this.mFuelLevel(data);
+    //     const mFuelCapacity = await this.mFuelCapacity(data);
+    //     const mFuelLevel = await this.mFuelLevel(data);
 
-        let pitsToEndSession = 0;
+    //     let pitsToEndSession = 0;
 
-        const fuelToEndSessionLitres = mFuelCapacity * fuelToEndSession;        
+    //     const fuelToEndSessionLitres = mFuelCapacity * fuelToEndSession;        
 
-        if (mFuelLevel < fuelToEndSessionLitres) {
-            pitsToEndSession = Math.ceil( (fuelToEndSessionLitres - mFuelLevel) / mFuelCapacity );
-        }
+    //     if (mFuelLevel < fuelToEndSessionLitres) {
+    //         pitsToEndSession = Math.ceil( (fuelToEndSessionLitres - mFuelLevel) / mFuelCapacity );
+    //     }
 
-        return pitsToEndSession;
-    }
+    //     return pitsToEndSession;
+    // }
 }

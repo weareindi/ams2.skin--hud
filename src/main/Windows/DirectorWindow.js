@@ -206,14 +206,18 @@ export default class DirectorWindow {
      * 
      */
     async send(name, data) {
-        if (typeof this.window === 'undefined') {
-            return;
+        try {
+            if (typeof this.window === 'undefined') {
+                return;
+            }
+            
+            if (!data) {
+                return this.window.webContents.send(name);
+            }
+            
+            return this.window.webContents.send(name, data);
+        } catch (error) {
+            // console.error(error);
         }
-        
-        if (!data) {
-            return this.window.webContents.send(name);
-        }
-
-        return this.window.webContents.send(name, data);
     }
 }

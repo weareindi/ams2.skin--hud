@@ -10,36 +10,39 @@ export function millisecondsToTime(n, r = false) {
 
     // milliseconds
     let milliseconds = Math.round((totalmilliseconds % 1000));
+    let millisecondsZeroFill = (milliseconds < 100) ? `00` : ``;
 
     // ensure milliseconds display is 3 digits long
-    let millisecondsDisplay = ('000' + milliseconds).slice(-3);    
+    // let millisecondsDisplay = ('000' + milliseconds).slice(-3);    
 
     // seconds
     let seconds = Math.floor((totalmilliseconds / 1000) % 60);
-    let secondsDisplay = (seconds < 10) ? "0" + seconds : seconds;
+    let secondsZeroFill = (seconds < 10) ? `0` : ``;
+    // let secondsDisplay = (seconds < 10) ? "0" + seconds : seconds;
 
     // minutes
     let minutes = Math.floor((totalmilliseconds / (1000 * 60)) % 60);
-    let minutesDisplay = (minutes < 10) ? "0" + minutes : minutes;
+    let minutesZeroFill = (minutes < 10) ? `0` : ``;
+    // let minutesDisplay = (minutes < 10) ? "0" + minutes : minutes;
 
     // hours
     let hours = Math.floor((totalmilliseconds / (1000 * 60 * 60)) % 24);
-    let hoursDisplay = (hours < 10) ? "0" + hours : hours;
+    let hoursZeroFill = (hours < 10) ? `0` : ``;
+    // let hoursDisplay = (hours < 10) ? "0" + hours : hours;
 
     if (r) {
         if (hours === 0) {
-            return `${minutesDisplay}:${secondsDisplay}`;
+            return `${minutesZeroFill}${minutes}:${secondsZeroFill}${seconds}`;
         }
 
-        return `${hoursDisplay}:${minutesDisplay}:${secondsDisplay}`;
-    }
-    
-    // return time without hours
-    if (hours === 0) {
-        return `${minutesDisplay}:${secondsDisplay}.${millisecondsDisplay}`;
+        return `${hoursZeroFill}${hours}:${minutesZeroFill}${minutes}:${secondsZeroFill}${seconds}`;
     }
 
-    // if we got here, we've got hours
-    return `${hoursDisplay}:${minutesDisplay}:${secondsDisplay}.${millisecondsDisplay}`;
+    // return time without hours
+    if (hours === 0) {
+        return `${minutesZeroFill}${minutes}:${secondsZeroFill}${seconds}.${millisecondsZeroFill}${milliseconds}`;
+    }
+
+    return `${hoursZeroFill}${hours}:${minutesZeroFill}${minutes}:${secondsZeroFill}${seconds}.${millisecondsZeroFill}${milliseconds}`;
 }
 

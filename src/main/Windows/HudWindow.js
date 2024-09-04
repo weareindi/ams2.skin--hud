@@ -86,7 +86,7 @@ export default class HudWindow {
         }
 
         // open dev tools
-        this.window.webContents.openDevTools();
+        // this.window.webContents.openDevTools();
     }
 
     /**
@@ -206,14 +206,18 @@ export default class HudWindow {
      * 
      */
     async send(name, data) {
-        if (typeof this.window === 'undefined') {
-            return;
+        try {
+            if (typeof this.window === 'undefined') {
+                return;
+            }
+            
+            if (!data) {
+                return this.window.webContents.send(name);
+            }
+            
+            return this.window.webContents.send(name, data);
+        } catch (error) {
+            // console.error(error);
         }
-        
-        if (!data) {
-            return this.window.webContents.send(name);
-        }
-
-        return this.window.webContents.send(name, data);
     }
 }

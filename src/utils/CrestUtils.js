@@ -1,7 +1,7 @@
 /**
- * 
- * @param {*} data 
- * @returns 
+ *
+ * @param {*} data
+ * @returns
  */
 export async function isReady(data) {
     if (data === null) {
@@ -11,15 +11,15 @@ export async function isReady(data) {
     if (!('gameStates' in data)) {
         return false;
     }
-    
+
     if (!('mGameState' in data.gameStates)) {
         return false;
     }
-    
+
     if (data.gameStates.mGameState === 0) {
         return false;
     }
-    
+
     if (data.gameStates.mGameState === 1) {
         return false;
     }
@@ -40,27 +40,27 @@ export async function isReady(data) {
 }
 
 /**
- * 
- * @param {*} data 
- * @returns 
+ *
+ * @param {*} data
+ * @returns
  */
 export async function getActiveParticipant(data) {
     return data.participants.mParticipantInfo[ data.participants.mViewedParticipantIndex ];
 }
 
 /**
- * 
- * @param {*} data 
- * @param {*} index 
- * @returns 
+ *
+ * @param {*} data
+ * @param {*} index
+ * @returns
  */
 export async function getParticipantAtIndex(data, index) {
-    return data.participants.mParticipantInfo[ index ]; 
+    return data.participants.mParticipantInfo[ index ];
 }
 /**
- * 
- * @param {*} data 
- * @param {*} mRacePosition 
+ *
+ * @param {*} data
+ * @param {*} mRacePosition
  */
 export async function getParticipantInPostion(data, mRacePosition) {
     return data.participants.mParticipantInfo.find((participant) => {
@@ -70,8 +70,8 @@ export async function getParticipantInPostion(data, mRacePosition) {
 
 
 /**
- * 
- * @param {*} data 
+ *
+ * @param {*} data
  */
 export async function getParticipantsSortedByPosition(data) {
     return [].concat(data.participants.mParticipantInfo).sort((a, b) => {
