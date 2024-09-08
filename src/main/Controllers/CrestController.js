@@ -15,6 +15,7 @@ import WeatherFactory from '../Factories/WeatherFactory';
 import WheelsAndTyresFactory from '../Factories/WheelsAndTyresFactory';
 import FuelFactory from '../Factories/FuelFactory';
 import BattleFactory from '../Factories/BattleFactory';
+import HudFactory from '../Factories/HudFactory';
 import DirectorFactory from '../Factories/DirectorFactory';
 import ViewFactory from '../Factories/ViewFactory';
 
@@ -25,6 +26,9 @@ export default class CrestController {
             return global.CrestController;
         }
         global.CrestController = this;
+
+        // prepare vars
+        this.MockState = null;
 
         this.init();
     }
@@ -56,6 +60,7 @@ export default class CrestController {
         this.WheelsAndTyresFactory = new WheelsAndTyresFactory();
         this.FuelFactory = new FuelFactory();
         this.BattleFactory = new BattleFactory();
+        this.HudFactory = new HudFactory();
         this.DirectorFactory = new DirectorFactory();
         this.ViewFactory = new ViewFactory();
     }
@@ -73,6 +78,7 @@ export default class CrestController {
         this.WheelsAndTyresFactory.reset();
         this.FuelFactory.reset();
         this.BattleFactory.reset();
+        this.HudFactory.reset();
         this.DirectorFactory.reset();
         this.ViewFactory.reset();
     }
@@ -135,18 +141,25 @@ export default class CrestController {
     async doTimer() {
         const { TickRate, IP, Port, MockFetch, MockState } = await this.getVariables();
 
-        let data = {};
+        let json = {};
 
         if (MockFetch) {
-            data = await this.fetchMockDataController(MockState);
+            this.MockState = MockState;
+            json = await this.fetchMockDataController(MockState);
         } else {
-            data = await this.fetchData(IP, Port);
+            this.MockState = null;
+            json = await this.fetchData(IP, Port);
         }
+
+
+        // if we got here we should have good data
+        let data = await this.processData( json );
+        data = await this.processView(data);
 
         // update connected state
         await this.setConnectedState(data);
 
-        //
+        // send data to renderer
         ipcMain.emit('data', data);
 
         // handle sleep/delay before next iteration
@@ -165,6 +178,8 @@ export default class CrestController {
 
     /**
      *
+     * @param {*} data
+     * @returns
      */
     async setConnectedState(data) {
         const ConnectedCurrent = await this.SettingsController.get('Connected');
@@ -195,11 +210,11 @@ export default class CrestController {
      * @param {*} MockState
      */
     async fetchMockDataController(MockState) {
-        const json = await (new MockDataController()).data(MockState);
+        if (this.MockState !== MockState) {
+            await this.resetData();
+        }
 
-        // if we got here we should have good data
-        const data = await this.processData( json );
-        return await this.processView(data);
+        return await (new MockDataController()).data(MockState);
     }
 
     /**
@@ -245,9 +260,7 @@ export default class CrestController {
 
         const json = await this.getJson(response);
 
-        // if we got here we should have good data
-        const data = await this.processData( json );
-        return await this.processView(data);
+        return json;
     }
 
     /**
@@ -330,6 +343,22 @@ export default class CrestController {
     }
 
     /**
+     *
+     * @returns
+     */
+    async resetData() {
+        await this.ParticipantsFactory.reset();
+        await this.EventInformationFactory.reset();
+        await this.CarStateFactory.reset();
+        await this.FuelFactory.reset();
+        await this.TrackPositionFactory.reset();
+        await this.BattleFactory.reset();
+        await this.HudFactory.reset();
+        await this.DirectorFactory.reset();
+        return null;
+    }
+
+    /**
      * Prepare data for all frontend views
      * @param {*} data
      * @returns
@@ -338,14 +367,7 @@ export default class CrestController {
 
         const ready = await isReady(data);
         if (!ready) {
-            await this.ParticipantsFactory.reset();
-            await this.EventInformationFactory.reset();
-            await this.CarStateFactory.reset();
-            await this.FuelFactory.reset();
-            await this.TrackPositionFactory.reset();
-            await this.BattleFactory.reset();
-            await this.DirectorFactory.reset();
-            return null;
+            return await this.resetData();
         }
 
         // The aim here to to prepare data for the view:
@@ -418,9 +440,12 @@ export default class CrestController {
         // -- mBattlingParticipantBehind
         data = await this.BattleFactory.getData(data);
 
+        //
+        data = await this.HudFactory.getData(data);
+
         // Director
         // - Director
-        data = await this.DirectorFactory.getData(data);
+        // data = await this.DirectorFactory.getData(data);
 
         return data;
     }

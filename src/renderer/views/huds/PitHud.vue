@@ -1,6 +1,6 @@
 <template>
     <div class="c-hud-pit">
-        <!-- <div class="c-hud-pit__fuel-calc"><PitFuelCalcComponent /></div> -->
+        <div class="c-hud-pit__fuel-calc"><PitFuelCalcComponent /></div>
     </div>
 </template>
 
@@ -15,14 +15,11 @@
 </style>
 
 <script>
-// import PitFuelCalcComponent from '../components/PitFuelCalcComponent.vue';
+import PitFuelCalcComponent from '../components/pit/PitFuelCalcComponent.vue';
 
 export default {
-    setup() {
-        return {}
-    },
     components: {
-        // PitFuelCalcComponent
+        PitFuelCalcComponent
     }
 }
 </script>

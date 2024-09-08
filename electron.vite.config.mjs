@@ -6,6 +6,11 @@ import vue from '@vitejs/plugin-vue';
 
 export default defineConfig({
     main: {
+        resolve: {
+            alias: {
+                '@public': resolve(__dirname, 'resources')
+            }
+        },
         plugins: [externalizeDepsPlugin()]
     },
     preload: {

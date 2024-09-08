@@ -4,6 +4,10 @@
  * @returns
  */
 export async function isReady(data) {
+    if (typeof data === 'undefined') {
+        return false;
+    }
+
     if (data === null) {
         return false;
     }
@@ -63,9 +67,17 @@ export async function getParticipantAtIndex(data, index) {
  * @param {*} mRacePosition
  */
 export async function getParticipantInPostion(data, mRacePosition) {
-    return data.participants.mParticipantInfo.find((participant) => {
-        return participant.mRacePosition === mRacePosition;
+    const participant = data.participants.mParticipantInfo.find((participant) => {
+        if ('mRacePosition' in participant) {
+            return participant.mRacePosition === mRacePosition;
+        }
     });
+
+    if (typeof participant === 'undefined') {
+        return null;
+    }
+
+    return participant;
 }
 
 

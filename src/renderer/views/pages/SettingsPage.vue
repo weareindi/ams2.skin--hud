@@ -14,7 +14,7 @@
 </style>
 
 <script>
-import SettingsSection from '../sections/SettingsSection.vue';
+import SettingsSection from '@renderer/views/sections/SettingsSection.vue';
 
 export default {
     components: {

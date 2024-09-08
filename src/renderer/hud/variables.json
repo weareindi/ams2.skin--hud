@@ -5,6 +5,7 @@
     "vCurrentLap",
     "vCurrentPosition",
     "vClassPosition",
+    "vFuelLevel",
     "vFuelInCar",
     "vFuelPerLap",
     "vFuelToEndSession",

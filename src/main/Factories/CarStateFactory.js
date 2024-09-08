@@ -1,4 +1,4 @@
-import { isReady, getActiveParticipant } from '../../utils/CrestUtils';
+import { isReady } from '../../utils/CrestUtils';
 
 export default class CarStateFactory {
     constructor() {
@@ -6,7 +6,7 @@ export default class CarStateFactory {
     }
 
     /**
-     * 
+     *
      */
     async init() {
         try {
@@ -17,7 +17,7 @@ export default class CarStateFactory {
     }
 
     /**
-     * 
+     *
      */
     async reset() {
         try {
@@ -30,10 +30,10 @@ export default class CarStateFactory {
     }
 
     /**
-     * 
-     * @param {*} data 
-     * @param {*} mParticipantIndex 
-     * @returns 
+     *
+     * @param {*} data
+     * @param {*} mParticipantIndex
+     * @returns
      */
     async getData(data, mParticipantIndex) {
         try {
@@ -44,18 +44,19 @@ export default class CarStateFactory {
     }
 
     /**
-     * 
-     * @param {*} data 
-     * @param {*} mParticipantIndex 
-     * @returns 
+     *
+     * @param {*} data
+     * @param {*} mParticipantIndex
+     * @returns
      */
-    async prepareData(data, mParticipantIndex) {        
+    async prepareData(data, mParticipantIndex) {
         const ready = await isReady(data);
         if (!ready) {
             return null;
         }
 
         data.carState.mTachometer = await this.mTachometer(data);
+        data.carState.mTachometerState = await this.mTachometerState(data);
         data.carState.mGear = await this.mGear(data);
 
         data.carState.mAntiLockSetting = await this.mAntiLockSetting(data);
@@ -66,6 +67,7 @@ export default class CarStateFactory {
 
         data.carState.mDrsState = await this.mDrsState(data);
 
+        data.carState.mErsAvailable = await this.mErsAvailable(data);
         data.carState.mErsDeploymentModeLabel = await this.mErsDeploymentModeLabel(data);
         data.carState.mErsState = await this.mErsState(data);
 
@@ -74,23 +76,36 @@ export default class CarStateFactory {
 
         data.carState.mOilTemp = await this.mOilTemp(data);
         data.carState.mOilState = await this.mOilState(data);
-        
+
         return data;
     }
 
     /**
-     * 
-     * @param {*} data 
-     * @returns 
+     *
+     * @param {*} data
+     * @returns
      */
     async mTachometer(data) {
         return data.carState.mRpm / data.carState.mMaxRPM;
     }
 
     /**
-     * 
-     * @param {*} data 
-     * @returns 
+     *
+     * @param {*} data
+     * @returns
+     */
+    async mTachometerState(data) {
+        if (data.carState.mTachometer >= 0.97) {
+            return 4;
+        }
+
+        return 0;
+    }
+
+    /**
+     *
+     * @param {*} data
+     * @returns
      */
     async mGear(data) {
         if (data.carState.mGear === 0) {
@@ -105,9 +120,9 @@ export default class CarStateFactory {
     }
 
     /**
-     * 
-     * @param {*} data 
-     * @returns 
+     *
+     * @param {*} data
+     * @returns
      */
     async mAntiLockSetting(data) {
         if (data.carState.mAntiLockSetting < 0) {
@@ -118,9 +133,9 @@ export default class CarStateFactory {
     }
 
     /**
-     * 
-     * @param {*} data 
-     * @returns 
+     *
+     * @param {*} data
+     * @returns
      */
     async mAntiLockActive(data) {
         // check against mAntiLockSetting (we've just updated it to null or a value)
@@ -132,9 +147,9 @@ export default class CarStateFactory {
     }
 
     /**
-     * 
-     * @param {*} data 
-     * @returns 
+     *
+     * @param {*} data
+     * @returns
      */
     async mTractionControlSetting(data) {
         if (data.carState.mTractionControlSetting < 0) {
@@ -145,9 +160,9 @@ export default class CarStateFactory {
     }
 
     /**
-     * 
-     * @param {*} data 
-     * @returns 
+     *
+     * @param {*} data
+     * @returns
      */
     async mTractionControlActive(data) {
         // check against mTractionControlSetting (we've just updated it to null or a value)
@@ -173,9 +188,9 @@ export default class CarStateFactory {
     }
 
     /**
-     * 
-     * @param {*} data 
-     * @returns 
+     *
+     * @param {*} data
+     * @returns
      */
     async mDrsState(data) {
         if (data.carState.mDrsState === 1) {
@@ -202,9 +217,9 @@ export default class CarStateFactory {
     }
 
     /**
-     * 
-     * @param {*} data 
-     * @returns 
+     *
+     * @param {*} data
+     * @returns
      */
     async mErsDeploymentModeLabel(data) {
         if (data.carState.mErsDeploymentMode === 0) {
@@ -235,11 +250,11 @@ export default class CarStateFactory {
     }
 
     /**
-     * 
-     * @param {*} data 
-     * @returns 
+     *
+     * @param {*} data
+     * @returns
      */
-    async mErsState(data) {
+    async mErsAvailable(data) {
         // if the boost amount at any point is higher than zero, we probably have ers available
         // boost is full in the pits and race start so this is quite a safe thing to test against
         if (data.carState.mBoostAmount > 0) {
@@ -247,7 +262,16 @@ export default class CarStateFactory {
         }
 
         // never had boost?
-        if (!this.ersAvailable) {
+        return this.ersAvailable;
+    }
+
+    /**
+     *
+     * @param {*} data
+     * @returns
+     */
+    async mErsState(data) {
+        if (data.carState.mErsAvailable === false) {
             return null;
         }
 
@@ -285,12 +309,12 @@ export default class CarStateFactory {
             return 1;
             // return 'disabled-charging';
         }
-        
+
         if (data.carState.mBoostActive === false && state === 1) {
             return 2;
             // return 'disabled-depleating';
         }
-        
+
         if (data.carState.mBoostActive === false && state === 0) {
             return 3;
             // return 'disabled-full';
@@ -315,18 +339,18 @@ export default class CarStateFactory {
     }
 
     /**
-     * 
-     * @param {*} data 
-     * @returns 
+     *
+     * @param {*} data
+     * @returns
      */
     async mWaterTemp(data) {
         return Math.round(data.carState.mWaterTempCelsius);
     }
 
     /**
-     * 
-     * @param {*} data 
-     * @returns 
+     *
+     * @param {*} data
+     * @returns
      */
     async mWaterState(data) {
         if (data.carState.mWaterTempCelsius >= 90) {
@@ -336,23 +360,23 @@ export default class CarStateFactory {
         if (data.carState.mWaterTempCelsius > 0) {
             return null;
         }
-        
+
         return null;
     }
 
     /**
-     * 
-     * @param {*} data 
-     * @returns 
+     *
+     * @param {*} data
+     * @returns
      */
     async mOilTemp(data) {
         return Math.round(data.carState.mOilTempCelsius);
     }
 
     /**
-     * 
-     * @param {*} data 
-     * @returns 
+     *
+     * @param {*} data
+     * @returns
      */
     async mOilState(data) {
         if (data.carState.mOilTempCelsius >= 126.6) {
@@ -362,7 +386,7 @@ export default class CarStateFactory {
         if (data.carState.mOilTempCelsius > 0) {
             return null;
         }
-        
+
         return null;
     }
 }

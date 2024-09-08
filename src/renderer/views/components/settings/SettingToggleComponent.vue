@@ -1,5 +1,5 @@
 <template>
-    <div class="c-settings-toggle" @click="click">
+    <div class="c-settings-toggle" @click="click" @click.right="click">
         <span class="c-settings-toggle__icon" v-if="icon"><SvgComponent :svg="`icon--${icon}`" /></span>
         <span class="c-settings-toggle__field">
             <span class="c-settings-toggle__label">{{ label }}</span>
@@ -22,7 +22,7 @@
     display: block;
     width: em(22);
     height: em(22);
-    margin: 0 em(12) 0 0; 
+    margin: 0 em(12) 0 0;
 }
 
 .c-settings-toggle__field {
@@ -65,7 +65,6 @@
     height: 1em;
     font-size: em(18);
     line-height: 1em;
-    letter-spacing: 0;
     border: 0;
     margin: 0;
     padding: 0;
@@ -111,9 +110,20 @@ export default {
             let index = this.options.indexOf(option);
 
             // increment/cycle it to next option
-            index++;
-            if (index > (this.options.length-1)) {
-                index = 0;
+            if (event.which === 1) {
+                index++;
+
+                if (index > (this.options.length - 1)) {
+                    index = 0;
+                }
+            }
+
+            if (event.which === 3) {
+                index--;
+
+                if (index < 0) {
+                    index = this.options.length - 1;
+                }
             }
 
             const { label, value } = this.options[index];

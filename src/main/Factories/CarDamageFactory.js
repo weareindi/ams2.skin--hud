@@ -1,4 +1,4 @@
-import { isReady, getActiveParticipant } from '../../utils/CrestUtils';
+import { isReady } from '../../utils/CrestUtils';
 
 export default class CarDamageFactory {
     constructor() {
@@ -6,7 +6,7 @@ export default class CarDamageFactory {
     }
 
     /**
-     * 
+     *
      */
     async init() {
         try {
@@ -17,21 +17,21 @@ export default class CarDamageFactory {
     }
 
     /**
-     * 
+     *
      */
     async reset() {
         try {
-
+            // console.log('CarDamageFactory reset');
         } catch (error) {
             console.error(error);
         }
     }
 
     /**
-     * 
-     * @param {*} data 
-     * @param {*} mParticipantIndex 
-     * @returns 
+     *
+     * @param {*} data
+     * @param {*} mParticipantIndex
+     * @returns
      */
     async getData(data, mParticipantIndex) {
         try {
@@ -42,12 +42,12 @@ export default class CarDamageFactory {
     }
 
     /**
-     * 
-     * @param {*} data 
-     * @param {*} mParticipantIndex 
-     * @returns 
+     *
+     * @param {*} data
+     * @param {*} mParticipantIndex
+     * @returns
      */
-    async prepareData(data, mParticipantIndex) {        
+    async prepareData(data, mParticipantIndex) {
         const ready = await isReady(data);
         if (!ready) {
             return null;
@@ -66,18 +66,18 @@ export default class CarDamageFactory {
     }
 
     /**
-     * 
-     * @param {*} data 
-     * @returns 
+     *
+     * @param {*} data
+     * @returns
      */
     async mAeroDamageAmount(data) {
         return Math.round(data.carDamage.mAeroDamage * 100);
     }
 
     /**
-     * 
-     * @param {*} data 
-     * @returns 
+     *
+     * @param {*} data
+     * @returns
      */
     async mAeroState(data) {
         if (data.carDamage.mAeroDamage >= 0.5) {
@@ -100,28 +100,28 @@ export default class CarDamageFactory {
     }
 
     /**
-     * 
-     * @param {*} data 
-     * @returns 
+     *
+     * @param {*} data
+     * @returns
      */
     async mClutchDamageAmount(data) {
         return Math.round(data.carState.mClutchWear * 100);
     }
 
     /**
-     * 
-     * @param {*} data 
-     * @returns 
+     *
+     * @param {*} data
+     * @returns
      */
     async mClutchState(data) {
         if (data.carState.mClutchWear >= 1) {
             return 4;
         }
-    
+
         if (data.carState.mClutchWear >= 0.5) {
             return 3;
         }
-    
+
         if (data.carState.mClutchWear >= 0.25) {
             return 2;
         }
@@ -129,23 +129,23 @@ export default class CarDamageFactory {
         if (data.carState.mClutchWear >= 0.1) {
             return 1;
         }
-    
+
         return 0;
     }
 
     /**
-     * 
-     * @param {*} data 
-     * @returns 
+     *
+     * @param {*} data
+     * @returns
      */
     async mEngineDamageAmount(data) {
         return Math.round(data.carDamage.mEngineDamage * 100);
     }
 
     /**
-     * 
-     * @param {*} data 
-     * @returns 
+     *
+     * @param {*} data
+     * @returns
      */
     async mEngineState(data) {
         if (data.carDamage.mEngineDamage >= 1) {

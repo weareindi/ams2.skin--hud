@@ -37,7 +37,7 @@ class Init {
     }
 
     /**
-     * 
+     *
      */
     async registerApp() {
         this.app = createApp(hudView);
@@ -49,7 +49,7 @@ class Init {
     async registerRefs() {
         for (let vi = 0; vi < Variables.length; vi++) {
             const key = Variables[vi];
-            
+
             // key already exists, dont try to add it again
             if (key in this.app._context.provides) {
                 continue;
@@ -60,18 +60,22 @@ class Init {
     }
 
     /**
-     * 
+     *
      */
     async registerDataListener() {
         // data from node
         electron.ipcRenderer.on('data', async (event, data) => {
-            await this.updateRefs(data);
-            await this.updateValues(data);
+            if (data === null) {
+                await this.resetValues();
+            } else {
+                await this.updateRefs(data);
+                await this.updateValues(data);
+            }
         });
     }
 
     /**
-     * 
+     *
      */
     async updateRefs(data) {
         for (const key in data) {
@@ -81,11 +85,11 @@ class Init {
             }
 
             this.app.provide(key, ref(null));
-        }        
+        }
     }
 
     /**
-     * 
+     *
      */
     async updateValues(data) {
         for (const key in data) {
@@ -93,7 +97,13 @@ class Init {
             if (!(key in this.app._context.provides)) {
                 // ... skip
                 continue;
-            }            
+            }
+
+            // skip if the same
+            if (JSON.stringify(this.app._context.provides[key].value) === JSON.stringify(data[key])) {
+                // ... skip
+                continue;
+            }
 
             // update value
             this.app._context.provides[key].value = data[key];
@@ -101,7 +111,16 @@ class Init {
     }
 
     /**
-     * 
+     *
+     */
+    async resetValues() {
+        for (const key in this.app._context.provides) {
+            this.app._context.provides[key].value = null;
+        }
+    }
+
+    /**
+     *
      */
     async registerUses() {
         this.app.use(router);
@@ -109,19 +128,16 @@ class Init {
     }
 
     /**
-     * 
+     *
      */
     async registerComponents() {
         this.app.component('SvgComponent', SvgComponent);
     }
 
     /**
-     * 
+     *
      */
     async mountApp() {
-        console.log(this.app);
-        
-
         this.app.mount('#hud');
     }
 }

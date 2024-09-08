@@ -21,7 +21,7 @@ export default class TrackPositionFactory {
      */
     async reset() {
         try {
-
+            // console.log('TrackPositionFactory reset');
         } catch (error) {
             console.error(error);
         }

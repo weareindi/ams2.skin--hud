@@ -1,31 +1,31 @@
 <template>
-    <div class="c-settings-input" :class="`${readonly ? 'c-settings-input--readonly' : ''}`">
-        <span class="c-settings-input__icon" v-if="icon"><SvgComponent :svg="`icon--${icon}`" /></span>
-        <span class="c-settings-input__field" @click="inputfocus" @wheel="wheel">
-            <span class="c-settings-input__label">{{ label }}</span>
-            <input class="c-settings-input__value" :type="type" :min="min" :max="max" :step="step" :readonly="readonly" :valid="valid" v-model="model" @focus="focus" @blur="blur" @input="input" @change="change">
+    <div class="c-settings-keypress" :class="`${readonly ? 'c-settings-keypress--readonly' : ''}`">
+        <span class="c-settings-keypress__icon" v-if="icon"><SvgComponent :svg="`icon--${icon}`" /></span>
+        <span class="c-settings-keypress__field" @click="inputfocus">
+            <span class="c-settings-keypress__label">{{ label }}</span>
+            <input class="c-settings-keypress__value" :type="type" :readonly="readonly" :valid="valid" v-model="model" @focus="focus" @blur="blur" @input="input" @change="change">
         </span>
     </div>
 </template>
 
 <style lang="scss">
-.c-settings-input {
+.c-settings-keypress {
     display: flex;
     align-items: center;
 }
 
-.c-settings-input--readonly {
+.c-settings-keypress--readonly {
     pointer-events: none;
 }
 
-.c-settings-input__icon {
+.c-settings-keypress__icon {
     display: block;
     width: em(22);
     height: em(22);
-    margin: 0 em(12) 0 0; 
+    margin: 0 em(12) 0 0;
 }
 
-.c-settings-input__field {
+.c-settings-keypress__field {
     @include color('background-color', 'white', 0);
 
     padding: em(4) em(10);
@@ -42,15 +42,15 @@
     }
 }
 
-.c-settings-input__label,
-.c-settings-input__value {
+.c-settings-keypress__label,
+.c-settings-keypress__value {
     display: block;
     width: 100%;
     text-transform: uppercase;
     white-space: nowrap;
 }
 
-.c-settings-input__label {
+.c-settings-keypress__label {
     @include removehighlight();
     @include color('color', 'white', 0.6);
 
@@ -58,14 +58,13 @@
     pointer-events: none;
 }
 
-.c-settings-input__value {
+.c-settings-keypress__value {
     @include removehighlight();
     @include hideAppearance();
 
     height: 1em;
     font-size: em(18);
     line-height: 1em;
-    letter-spacing: 0;
     border: 0;
     margin: 0;
     padding: 0;
@@ -111,42 +110,13 @@ export default {
             type: [String, Boolean],
             default: null
         },
-        min: {
-            type: [String, Number],
-            default: null
-        },
-        max: {
-            type: [String, Number],
-            default: null
-        },
-        step: {
-            type: [String, Number],
-            default: null
-        }
     },
     computed:{
         model:{
             get() {
-                // let value = this.modelValue;
-                // if (value < this.min) {
-                //     value = Number(this.min);
-                // }
-
-                // if (value > this.max) {
-                //     value = Number(this.max);
-                // } 
-
                 return this.modelValue;
             },
             set(value) {
-                if (this.type === 'number' && value < this.min) {
-                    value = Number(this.min);
-                }
-
-                if (this.type === 'number' && value > this.max) {
-                    value = Number(this.max);
-                }
-
                 this.$emit("update:modelValue", value);
             }
         }
@@ -161,51 +131,24 @@ export default {
     },
     methods: {
         inputfocus(event) {
-            const element = event.target.parentNode.querySelector('.c-settings-input__value');
+            const element = event.target.parentNode.querySelector('.c-settings-keypress__value');
             element.focus();
         },
         focus(event) {
-            const element = event.target.closest(".c-settings-input__field");
+            const element = event.target.closest(".c-settings-keypress__field");
             element.classList.add('active');
         },
         blur(event) {
-            const element = event.target.closest(".c-settings-input__field");
+            const element = event.target.closest(".c-settings-keypress__field");
             element.classList.remove('active');
         },
         input() {
             this.triggerAutosize();
         },
-        wheel(event) {
-            let value = this.model;
-            let step = 1;
-            if (this.step) {
-                step = Number(this.step);
-            }
-
-            if (event.deltaY > 0) {
-                value -= step;
-            }
-
-            if (event.deltaY < 0) {
-                value += step;
-            }
-
-            if (value < this.min) {
-                value = this.min;
-            }
-
-            if (value > this.max) {
-                value = this.max;
-            }
-
-            this.model = Math.round(value * 100) / 100;
-            
-            this.triggerAutosize();
-        },
         triggerAutosize() {
             // delay the autosize on content change from "outside" as it triggers before the content has actually changed
             debounce(100, () => {
-                const valueSurface = this.$el.querySelector('.c-settings-input__value');
+                const valueSurface = this.$el.querySelector('.c-settings-keypress__value');
                 autosize(valueSurface);
             })();
         }

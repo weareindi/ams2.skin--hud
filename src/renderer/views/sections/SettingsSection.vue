@@ -40,7 +40,7 @@
                                     <SettingButtonComponent label="Check for updates" color="blue" v-if="updateReady === null" @click="updateCheck" />
                                     <SettingButtonComponent label="No update found" color="blue" v-if="updateReady === false" @click="updateCheck" :disabled="true" />
                                     <SettingButtonComponent label="Download Available" color="green" v-if="updateReady === true" @click="gotoUpdate" />
-                                </div> 
+                                </div>
                                 <div class="s-settings__item">
                                     <SettingButtonComponent label="Hide Settings" color="yellow" @click="hideSettings" />
                                 </div>
@@ -59,7 +59,7 @@
                                 <div class="s-settings__item">
                                     <SettingToggleComponent icon="auto"  label="Debug" v-model="Debug" :options="DebugOptions" />
                                 </div>
-                            </div> 
+                            </div>
                         </div>
                         <div class="s-settings__group">
                             <div class="s-settings__items s-settings__items--prefs">
@@ -230,7 +230,7 @@
 .s-settings__row {
     + .s-settings__row {
         @include color('background-color', 'white', 0.1);
-        
+
         margin-top: em(16);
         padding: em(16);
         border-radius: 4px;
@@ -296,21 +296,21 @@
 
 <script>
 import { inject  } from 'vue';
-import SettingInputComponent from '@renderer/views/components/SettingInputComponent.vue';
-import SettingKeyPressComponent from '@renderer/views/components/SettingKeyPressComponent.vue';
-import SettingButtonComponent from '@renderer/views/components/SettingButtonComponent.vue';
-import SettingToggleComponent from '@renderer/views/components/SettingToggleComponent.vue';
+import SettingInputComponent from '@renderer/views/components/settings/SettingInputComponent.vue';
+import SettingKeyPressComponent from '@renderer/views/components/settings/SettingKeyPressComponent.vue';
+import SettingButtonComponent from '@renderer/views/components/settings/SettingButtonComponent.vue';
+import SettingToggleComponent from '@renderer/views/components/settings/SettingToggleComponent.vue';
 
 export default {
     async setup() {
         // start up
         const SettingsOnStartup = inject('SettingsOnStartup');
-        const SettingsOnStartupOptions = inject('SettingsOnStartupOptions'); 
-        
+        const SettingsOnStartupOptions = inject('SettingsOnStartupOptions');
+
         // debug
         const Debug = inject('Debug');
         const DebugOptions = inject('DebugOptions');
-        
+
         // mock
         const Developer = inject('Developer');
         const MockFetch = inject('MockFetch');

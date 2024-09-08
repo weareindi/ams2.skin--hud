@@ -23,21 +23,21 @@ export default class HudWindow {
     }
 
     /**
-     * 
+     *
      */
     async registerSettingsController() {
         this.SettingsController = new SettingsController();
     }
 
     /**
-     * 
+     *
      */
     async registerDisplayController() {
         this.DisplayController = new DisplayController();
     }
 
     /**
-     * 
+     *
      */
     async processInitialState() {
         const HudEnabled = await this.SettingsController.get('HudEnabled');
@@ -49,7 +49,7 @@ export default class HudWindow {
     }
 
     /**
-     * 
+     *
      */
     async toggle(activate) {
         if (!activate) {
@@ -60,7 +60,7 @@ export default class HudWindow {
     }
 
     /**
-     * 
+     *
      */
     async start() {
         await this.createWindow();
@@ -71,14 +71,14 @@ export default class HudWindow {
     }
 
     /**
-     * 
+     *
      */
     async setWindowToStoredDisplay() {
         await this.DisplayController.setDisplay(this.window, await this.SettingsController.get('HudDisplay'));
     }
 
     /**
-     * 
+     *
      */
     async dev() {
         if (!is.dev) {
@@ -86,20 +86,20 @@ export default class HudWindow {
         }
 
         // open dev tools
-        // this.window.webContents.openDevTools();
+        this.window.webContents.openDevTools();
     }
 
     /**
-     * 
+     *
      */
     async setTitle() {
         this.window.setTitle(`${this.window.getTitle()}: v${app.getVersion()}`);
     }
 
     /**
-     * 
+     *
      */
-    async createWindow() { 
+    async createWindow() {
         this.window = new BrowserWindow({
             width: this.defaultWidth,
             height: this.defaultHeight,
@@ -125,7 +125,7 @@ export default class HudWindow {
     }
 
     /**
-     * 
+     *
      */
     async registerWindowListeners() {
         // on resize
@@ -149,7 +149,7 @@ export default class HudWindow {
                 this.window.setFullScreen(true);
             }
 
-            
+
             this.window.show();
         });
 
@@ -167,7 +167,7 @@ export default class HudWindow {
     }
 
     /**
-     * 
+     *
      */
     async loadUrl() {
         // HMR for renderer base on electron-vite cli.
@@ -180,41 +180,41 @@ export default class HudWindow {
     }
 
     /**
-     * 
-     * @returns 
+     *
+     * @returns
      */
-    async getWindow() { 
+    async getWindow() {
         return this.window;
     }
 
     /**
-     * 
-     * @param {*} bounds 
+     *
+     * @param {*} bounds
      */
     async setBounds(bounds) {
         this.window.setBounds(bounds);
     }
 
     /**
-     * 
+     *
      */
     async exit() {
         return this.window.close();
     }
 
     /**
-     * 
+     *
      */
     async send(name, data) {
         try {
             if (typeof this.window === 'undefined') {
                 return;
             }
-            
+
             if (!data) {
-                return this.window.webContents.send(name);
+                return this.window.webContents.send(name, null);
             }
-            
+
             return this.window.webContents.send(name, data);
         } catch (error) {
             // console.error(error);

@@ -1,6 +1,7 @@
 import { isReady, getParticipantAtIndex, getActiveParticipant } from '../../utils/CrestUtils';
 import { getViewObject } from '../../utils/DataUtils';
 import { millisecondsToTime } from '../../utils/TimeUtils';
+import { ipcMain } from 'electron';
 
 /**
  * The asumption with this factory is that all values in data exist.
@@ -27,7 +28,7 @@ export default class ViewFactory {
      */
     async reset() {
         try {
-
+            // console.log('ViewFactory reset');
         } catch (error) {
             console.error(error);
         }
@@ -64,7 +65,6 @@ export default class ViewFactory {
 
         // we only want to process whats being used by the view
 
-        view.vHudShow = await this.vHudShow(data);
         view.vHudStatus = await this.vHudStatus(data);
 
         view.vEventTimeRemaining = await this.vEventTimeRemaining(data);
@@ -72,6 +72,7 @@ export default class ViewFactory {
         view.vCurrentPosition = await this.vCurrentPosition(data);
         view.vClassPosition = await this.vClassPosition(data);
 
+        view.vFuelLevel = await this.vFuelLevel(data);
         view.vFuelInCar = await this.vFuelInCar(data);
         view.vFuelPerLap = await this.vFuelPerLap(data);
         view.vFuelToEndSession = await this.vFuelToEndSession(data);
@@ -91,7 +92,7 @@ export default class ViewFactory {
 
         view.vTrackTemperature = await this.vTrackTemperature(data);
         view.vAmbientTemperature = await this.vAmbientTemperature(data);
-        view.vRain = await this.vRain(data);
+        view.vWeather = await this.vWeather(data);
 
         view.vDRS = await this.vDRS(data);
         view.vERS = await this.vERS(data);
@@ -103,20 +104,20 @@ export default class ViewFactory {
         view.vWaterTemp = await this.vWaterTemp(data);
         view.vOilTemp = await this.vOilTemp(data);
 
-        view.vSuspensionFL = await this.vSuspensionFL(data);
-        view.vSuspensionFR = await this.vSuspensionFR(data);
-        view.vSuspensionRL = await this.vSuspensionRL(data);
-        view.vSuspensionRR = await this.vSuspensionRR(data);
+        view.vSuspension0 = await this.vSuspension(data, 0);
+        view.vSuspension1 = await this.vSuspension(data, 1);
+        view.vSuspension2 = await this.vSuspension(data, 2);
+        view.vSuspension3 = await this.vSuspension(data, 3);
 
-        view.vBrakeFL = await this.vBrakeFL(data);
-        view.vBrakeFR = await this.vBrakeFR(data);
-        view.vBrakeRL = await this.vBrakeRL(data);
-        view.vBrakeRR = await this.vBrakeRR(data);
+        view.vBrake0 = await this.vBrake(data, 0);
+        view.vBrake1 = await this.vBrake(data, 1);
+        view.vBrake2 = await this.vBrake(data, 2);
+        view.vBrake3 = await this.vBrake(data, 3);
 
-        view.vTyreFL = await this.vTyreFL(data);
-        view.vTyreFR = await this.vTyreFR(data);
-        view.vTyreRL = await this.vTyreRL(data);
-        view.vTyreRR = await this.vTyreRR(data);
+        view.vTyre0 = await this.vTyre(data, 0);
+        view.vTyre1 = await this.vTyre(data, 1);
+        view.vTyre2 = await this.vTyre(data, 2);
+        view.vTyre3 = await this.vTyre(data, 3);
 
         view.vTrackPositionCarousel = await this.vTrackPositionCarousel(data);
 
@@ -133,17 +134,8 @@ export default class ViewFactory {
      * @param {*} data
      * @returns
      */
-    async vHudShow(data) {
-        return null;
-    }
-
-    /**
-     *
-     * @param {*} data
-     * @returns
-     */
     async vHudStatus(data) {
-        return 'incar';
+        return data.mHudStatus;
     }
 
     /**
@@ -156,7 +148,7 @@ export default class ViewFactory {
             return null;
         }
 
-        const time = millisecondsToTime(data.eventInformation.mEventTimeRemaining);
+        const time = millisecondsToTime(data.eventInformation.mEventTimeRemaining, false);
 
         let label = `Remaining`;
         if (data.eventInformation.mSessionAdditionalLaps > 0) {
@@ -184,13 +176,14 @@ export default class ViewFactory {
         }
 
         const suffix = data.eventInformation.mLapsInEvent > 0 ? data.eventInformation.mLapsInEvent : null;
+        const seperator = data.eventInformation.mLapsInEvent > 0 ? '/' : null;
 
         return getViewObject([
             {
                 label: 'Laps',
                 value: participant.mCurrentLap,
                 suffix: suffix,
-                seperator: '/'
+                seperator: seperator
             }
         ]);
     }
@@ -208,7 +201,30 @@ export default class ViewFactory {
                 label: 'Position',
                 value: participant.mRacePosition,
                 zerofill: data.participants.mNumParticipants.toString().length,
-                suffix: data.participants.mNumParticipants,
+                suffix: data.participants.mNumParticipants - data.participants.mNumNonParticipants,
+                seperator: '/'
+            }
+        ]);
+    }x
+
+    /**
+     *
+     * @param {*} data
+     * @returns
+     */
+    async vClassPosition(data) {
+        if (Object.keys(data.participants.mClasses).length <= 1) {
+            return null;
+        }
+
+        const participant = await getActiveParticipant(data);
+
+        return getViewObject([
+            {
+                label: 'Class',
+                value: participant.mCarClassPosition,
+                zerofill: data.participants.mActiveParticipantClassNum.toString().length,
+                suffix: data.participants.mActiveParticipantClassNum,
                 seperator: '/'
             }
         ]);
@@ -219,16 +235,19 @@ export default class ViewFactory {
      * @param {*} data
      * @returns
      */
-    async vClassPosition(data) {
+    async vFuelLevel(data) {
         const participant = await getActiveParticipant(data);
+        if (!participant.mIsDriver) {
+            return null;
+        }
+
+        if (data.fuel.mFuelLevel === null) {
+            return null;
+        }
 
         return getViewObject([
             {
-                label: 'Class',
-                value: participant.mCarClassPosition,
-                zerofill: data.participants.mNumClassParticipants.toString().length,
-                suffix: data.participants.mNumClassParticipants,
-                seperator: '/'
+                value: data.fuel.mFuelLevel
             }
         ]);
     }
@@ -244,10 +263,16 @@ export default class ViewFactory {
             return null;
         }
 
+        if (data.fuel.mFuelInCar === null) {
+            return null;
+        }
+
         return getViewObject([
             {
                 label: 'In Car',
-                value: data.fuel.mFuelInCar
+                value: data.fuel.mFuelInCar.toFixed(2),
+                suffix: 'L',
+                seperator: ' ',
             }
         ]);
     }
@@ -263,10 +288,16 @@ export default class ViewFactory {
             return null;
         }
 
+        if (data.fuel.mFuelPerLap === null) {
+            return null;
+        }
+
         return getViewObject([
             {
                 label: 'Per Lap',
-                value: data.fuel.mFuelPerLap
+                value: data.fuel.mFuelPerLap.toFixed(2),
+                suffix: 'L',
+                seperator: ' ',
             }
         ]);
     }
@@ -282,10 +313,16 @@ export default class ViewFactory {
             return null;
         }
 
+        if (data.fuel.mFuelToEndSession === null) {
+            return null;
+        }
+
         return getViewObject([
             {
                 label: 'To End',
-                value: data.fuel.mFuelToEndSession
+                value: (Math.ceil(data.fuel.mFuelToEndSession * 100) / 100).toFixed(2),
+                suffix: 'L',
+                seperator: ' ',
             }
         ]);
     }
@@ -298,6 +335,10 @@ export default class ViewFactory {
     async vFuelStopsToEndSession(data) {
         const participant = await getActiveParticipant(data);
         if (!participant.mIsDriver) {
+            return null;
+        }
+
+        if (data.fuel.mFuelStopsToEndSession === null) {
             return null;
         }
 
@@ -320,10 +361,16 @@ export default class ViewFactory {
             return null;
         }
 
+        if (data.fuel.mFuelInStop === null) {
+            return null;
+        }
+
         return getViewObject([
             {
-                label: 'Pit Fuel',
-                value: data.fuel.mFuelInStop
+                label: 'Next Pit',
+                value: Math.ceil(data.fuel.mFuelInStop),
+                suffix: 'L',
+                seperator: ' ',
             }
         ]);
     }
@@ -336,6 +383,10 @@ export default class ViewFactory {
     async vInputClutch(data) {
         const participant = await getActiveParticipant(data);
         if (!participant.mIsDriver) {
+            return null;
+        }
+
+        if (data.unfilteredInput.mUnfilteredClutch === null) {
             return null;
         }
 
@@ -357,6 +408,10 @@ export default class ViewFactory {
             return null;
         }
 
+        if (data.unfilteredInput.mUnfilteredBrake === null) {
+            return null;
+        }
+
         return getViewObject([
             {
                 value: data.unfilteredInput.mUnfilteredBrake
@@ -372,6 +427,10 @@ export default class ViewFactory {
     async vInputThrottle(data) {
         const participant = await getActiveParticipant(data);
         if (!participant.mIsDriver) {
+            return null;
+        }
+
+        if (data.unfilteredInput.mUnfilteredThrottle === null) {
             return null;
         }
 
@@ -393,9 +452,14 @@ export default class ViewFactory {
             return null;
         }
 
+        if (data.carState.mTachometer === null) {
+            return null;
+        }
+
         return getViewObject([
             {
-                value: data.carState.mTachometer
+                value: data.carState.mTachometer,
+                state: data.carState.mTachometerState
             }
         ]);
     }
@@ -407,6 +471,9 @@ export default class ViewFactory {
      */
     async vKPH(data) {
         const participant = await getActiveParticipant(data);
+        if (!participant.mIsDriver) {
+            return null;
+        }
 
         return getViewObject([
             {
@@ -427,9 +494,12 @@ export default class ViewFactory {
             return null;
         }
 
+        if (data.carState.mGear === null) {
+            return null;
+        }
+
         return getViewObject([
             {
-                label: 'KPH',
                 value: data.carState.mGear
             }
         ]);
@@ -443,6 +513,10 @@ export default class ViewFactory {
     async vABS(data) {
         const participant = await getActiveParticipant(data);
         if (!participant.mIsDriver) {
+            return null;
+        }
+
+        if (data.carState.mAntiLockSetting === null) {
             return null;
         }
 
@@ -465,6 +539,10 @@ export default class ViewFactory {
             return null;
         }
 
+        if (data.carState.mTractionControlSetting === null) {
+            return null;
+        }
+
         return getViewObject([
             {
                 value: data.carState.mTractionControlSetting,
@@ -479,9 +557,13 @@ export default class ViewFactory {
      * @returns
      */
     async vTrackTemperature(data) {
+        if (data.weather.mTrackTemperature === null) {
+            return null;
+        }
+
         return getViewObject([
             {
-                value:  data.weather.mTrackTemperature,
+                value:  data.weather.mTrackTemperature.toFixed(0),
                 zerofill: 3,
                 suffix: '°'
             }
@@ -495,9 +577,13 @@ export default class ViewFactory {
      * @returns
      */
     async vAmbientTemperature(data) {
+        if (data.weather.mAmbientTemperature === null) {
+            return null;
+        }
+
         return getViewObject([
             {
-                value:  data.weather.mAmbientTemperature,
+                value:  data.weather.mAmbientTemperature.toFixed(0),
                 zerofill: 3,
                 suffix: '°'
             }
@@ -509,7 +595,11 @@ export default class ViewFactory {
      * @param {*} data
      * @returns
      */
-    async vRain(data) {
+    async vWeather(data) {
+        // if (data.weather.mRain === null) {
+        //     return null;
+        // }
+
         return getViewObject([
             {
                 label: data.weather.mRain,
@@ -526,6 +616,10 @@ export default class ViewFactory {
     async vDRS(data) {
         const participant = await getActiveParticipant(data);
         if (!participant.mIsDriver) {
+            return null;
+        }
+
+        if (data.carState.mDrsState === null) {
             return null;
         }
 
@@ -548,12 +642,16 @@ export default class ViewFactory {
             return null;
         }
 
+        if (data.carState.mErsAvailable === null || data.carState.mErsAvailable === false) {
+            return null;
+        }
+
         return getViewObject([
             {
                 label: 'ERS',
-                value: data.carState.mBoostAmount,
+                value: data.carState.mBoostAmount / 100,
                 suffix: data.carState.mErsDeploymentModeLabel,
-                state: data.carState.mErsState
+                state: data.carState.mErsState,
             }
         ]);
     }
@@ -566,6 +664,10 @@ export default class ViewFactory {
     async vAero(data) {
         const participant = await getActiveParticipant(data);
         if (!participant.mIsDriver) {
+            return null;
+        }
+
+        if (data.carDamage.mAeroDamage === null) {
             return null;
         }
 
@@ -590,9 +692,13 @@ export default class ViewFactory {
             return null;
         }
 
+        if (data.carDamage.mClutchDamageAmount === null) {
+            return null;
+        }
+
         return getViewObject([
             {
-                value: data.carDamage.mClutchDamage,
+                value: data.carDamage.mClutchDamageAmount,
                 zerofill: 3,
                 suffix: '%',
                 state: data.carDamage.mClutchState
@@ -610,9 +716,13 @@ export default class ViewFactory {
             return null;
         }
 
+        if (data.carDamage.mEngineDamageAmount === null) {
+            return null;
+        }
+
         return getViewObject([
             {
-                value: data.carDamage.mEngineDamage,
+                value: data.carDamage.mEngineDamageAmount,
                 zerofill: 3,
                 suffix: '%',
                 state: data.carDamage.mEngineState
@@ -631,9 +741,13 @@ export default class ViewFactory {
             return null;
         }
 
+        if (data.carState.mWaterTemp === null) {
+            return null;
+        }
+
         return getViewObject([
             {
-                value: data.carState.mWaterTemp,
+                value: data.carState.mWaterTemp.toFixed(0),
                 zerofill: 3,
                 suffix: '°',
                 state: data.carState.mWaterState
@@ -652,9 +766,13 @@ export default class ViewFactory {
             return null;
         }
 
+        if (data.carState.mOilTemp === null) {
+            return null;
+        }
+
         return getViewObject([
             {
-                value: data.carState.mOilTemp,
+                value: data.carState.mOilTemp.toFixed(0),
                 zerofill: 3,
                 suffix: '°',
                 state: data.carState.mOilState
@@ -667,17 +785,24 @@ export default class ViewFactory {
      * @param {*} data
      * @returns
      */
-    async vSuspensionFL(data) {
+    async vSuspension(data, index) {
         const participant = await getActiveParticipant(data);
         if (!participant.mIsDriver) {
             return null;
         }
 
+        if (data.wheelsAndTyres.mSuspensionDamage === null) {
+            return null;
+        }
+
+        if (data.wheelsAndTyres.mSuspensionDamageState === null) {
+            return null;
+        }
+
         return getViewObject([
             {
-                value: data.wheelsAndTyres.mSuspensionDamage[0],
-                zerofill: 3,
-                state: data.wheelsAndTyres.mSuspensionDamageState[0]
+                value: data.wheelsAndTyres.mSuspensionDamage[index],
+                state: data.wheelsAndTyres.mSuspensionDamageState[index]
             }
         ]);
     }
@@ -687,182 +812,38 @@ export default class ViewFactory {
      * @param {*} data
      * @returns
      */
-    async vSuspensionFR(data) {
+    async vBrake(data, index) {
         const participant = await getActiveParticipant(data);
         if (!participant.mIsDriver) {
             return null;
         }
 
-        return getViewObject([
-            {
-                value: data.wheelsAndTyres.mSuspensionDamage[1],
-                zerofill: 3,
-                state: data.wheelsAndTyres.mSuspensionDamageState[1]
-            }
-        ]);
-    }
+        if (data.wheelsAndTyres.mBrakeDamage === null) {
+            return null;
+        }
 
-    /**
-     *
-     * @param {*} data
-     * @returns
-     */
-    async vSuspensionRL(data) {
-        const participant = await getActiveParticipant(data);
-        if (!participant.mIsDriver) {
+        if (data.wheelsAndTyres.mBrakeDamageState === null) {
+            return null;
+        }
+
+        if (data.wheelsAndTyres.mBrakeTemp === null) {
+            return null;
+        }
+
+        if (data.wheelsAndTyres.mBrakeTempState === null) {
             return null;
         }
 
         return getViewObject([
             {
-                value: data.wheelsAndTyres.mSuspensionDamage[2],
-                zerofill: 3,
-                state: data.wheelsAndTyres.mSuspensionDamageState[2]
-            }
-        ]);
-    }
-
-    /**
-     *
-     * @param {*} data
-     * @returns
-     */
-    async vSuspensionRR(data) {
-        const participant = await getActiveParticipant(data);
-        if (!participant.mIsDriver) {
-            return null;
-        }
-
-        return getViewObject([
-            {
-                value: data.wheelsAndTyres.mSuspensionDamage[3],
-                zerofill: 3,
-                state: data.wheelsAndTyres.mSuspensionDamageState[3]
-            }
-        ]);
-    }
-
-    /**
-     *
-     * @param {*} data
-     * @returns
-     */
-    async vBrakeFL(data) {
-        const participant = await getActiveParticipant(data);
-        if (!participant.mIsDriver) {
-            return null;
-        }
-
-        return getViewObject([
-            {
-                value: data.wheelsAndTyres.mBrakeDamage[0],
-                zerofill: 3,
-                state: data.wheelsAndTyres.mBrakeDamageState[0]
-            }
-        ]);
-    }
-
-    /**
-     *
-     * @param {*} data
-     * @returns
-     */
-    async vBrakeFR(data) {
-        const participant = await getActiveParticipant(data);
-        if (!participant.mIsDriver) {
-            return null;
-        }
-
-        return getViewObject([
-            {
-                value: data.wheelsAndTyres.mBrakeDamage[1],
-                zerofill: 3,
-                state: data.wheelsAndTyres.mBrakeDamageState[1]
-            }
-        ]);
-    }
-
-    /**
-     *
-     * @param {*} data
-     * @returns
-     */
-    async vBrakeRL(data) {
-        const participant = await getActiveParticipant(data);
-        if (!participant.mIsDriver) {
-            return null;
-        }
-
-        return getViewObject([
-            {
-                value: data.wheelsAndTyres.mBrakeDamage[2],
-                zerofill: 3,
-                state: data.wheelsAndTyres.mBrakeDamageState[2]
-            }
-        ]);
-    }
-
-    /**
-     *
-     * @param {*} data
-     * @returns
-     */
-    async vBrakeRR(data) {
-        const participant = await getActiveParticipant(data);
-        if (!participant.mIsDriver) {
-            return null;
-        }
-
-        return getViewObject([
-            {
-                value: data.wheelsAndTyres.mBrakeDamage[3],
-                zerofill: 3,
-                state: data.wheelsAndTyres.mBrakeDamageState[3]
-            }
-        ]);
-    }
-
-    /**
-     *
-     * @param {*} data
-     * @returns
-     */
-    async vTyreFL(data) {
-        const participant = await getActiveParticipant(data);
-        if (!participant.mIsDriver) {
-            return null;
-        }
-
-        return getViewObject([
-            {
-                value: data.wheelsAndTyres.mTyreWear[0],
-                zerofill: 3,
-                state: data.wheelsAndTyres.mTyreWearState[0]
-            }
-        ]);
-    }
-
-    /**
-     *
-     * @param {*} data
-     * @returns
-     */
-    async vTyreFR(data) {
-        const participant = await getActiveParticipant(data);
-        if (!participant.mIsDriver) {
-            return null;
-        }
-
-        return getViewObject([
-            {
-                value: data.wheelsAndTyres.mTyreWear[1],
-                zerofill: 3,
-                state: data.wheelsAndTyres.mTyreWearState[1]
+                value: data.wheelsAndTyres.mBrakeDamage[index],
+                state: data.wheelsAndTyres.mBrakeDamageState[index]
             },
             {
-                value: data.wheelsAndTyres.mTyreTemp[1],
-                zerofill: 3,
-                state: data.wheelsAndTyres.mTyreTempState[1]
+                value: data.wheelsAndTyres.mBrakeTemp[index].toFixed(0),
+                state: data.wheelsAndTyres.mBrakeTempState[index],
+                seperator: ' ',
+                suffix: '°',
             }
         ]);
     }
@@ -872,37 +853,59 @@ export default class ViewFactory {
      * @param {*} data
      * @returns
      */
-    async vTyreRL(data) {
+    async vTyre(data, index) {
         const participant = await getActiveParticipant(data);
         if (!participant.mIsDriver) {
             return null;
         }
 
-        return getViewObject([
-            {
-                value: data.wheelsAndTyres.mTyreWear[2],
-                zerofill: 3,
-                state: data.wheelsAndTyres.mTyreWearState[2]
-            }
-        ]);
-    }
+        if (data.wheelsAndTyres.mTyreWear === null) {
+            return null;
+        }
 
-    /**
-     *
-     * @param {*} data
-     * @returns
-     */
-    async vTyreRR(data) {
-        const participant = await getActiveParticipant(data);
-        if (!participant.mIsDriver) {
+        if (data.wheelsAndTyres.mTyreWearState === null) {
+            return null;
+        }
+
+        if (data.wheelsAndTyres.mTyreCompoundShort === null) {
+            return null;
+        }
+
+        if (data.wheelsAndTyres.mTyreTemp === null) {
+            return null;
+        }
+
+        if (data.wheelsAndTyres.mTyreTempState === null) {
+            return null;
+        }
+
+        if (data.wheelsAndTyres.mAirPressure === null) {
+            return null;
+        }
+
+        if (data.wheelsAndTyres.mAirPressureState === null) {
             return null;
         }
 
         return getViewObject([
             {
-                value: data.wheelsAndTyres.mTyreWear[3],
-                zerofill: 3,
-                state: data.wheelsAndTyres.mTyreWearState[3]
+                value: data.wheelsAndTyres.mTyreWear[index],
+                state: data.wheelsAndTyres.mTyreWearState[index]
+            },
+            {
+                value: data.wheelsAndTyres.mTyreCompoundShort[index]
+            },
+            {
+                value: data.wheelsAndTyres.mTyreTemp[index].toFixed(0),
+                seperator: ' ',
+                suffix: '°',
+                state: data.wheelsAndTyres.mTyreTempState[index]
+            },
+            {
+                value: data.wheelsAndTyres.mAirPressure[index].toFixed(2),
+                seperator: ' ',
+                suffix: 'B',
+                state: data.wheelsAndTyres.mAirPressureState[index]
             }
         ]);
     }
@@ -913,6 +916,10 @@ export default class ViewFactory {
      * @returns
      */
     async vTrackPositionCarousel(data) {
+        if (data.trackPositionCarousel.length <= 0) {
+            return null;
+        }
+
         const viewObjects = [];
 
         for (let index = 0; index < data.trackPositionCarousel.length; index++) {

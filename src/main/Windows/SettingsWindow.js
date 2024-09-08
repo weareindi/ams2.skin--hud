@@ -9,7 +9,7 @@ export default class SettingsWindow {
     constructor() {
         this.init();
     }
-    
+
     /**
      * Create the main window
      */
@@ -25,28 +25,28 @@ export default class SettingsWindow {
     }
 
     /**
-     * 
+     *
      */
     async registerSettingsController() {
         this.SettingsController = new SettingsController();
     }
 
     /**
-     * 
+     *
      */
     async registerDisplayController() {
         this.DisplayController = new DisplayController();
     }
 
     /**
-     * 
+     *
      */
     async registerCrestProcessor() {
         this.CrestProcessor = new CrestProcessor();
     }
 
     /**
-     * 
+     *
      */
     async processInitialState() {
         const SettingsOnStartup = await this.SettingsController.get('SettingsOnStartup');
@@ -58,7 +58,7 @@ export default class SettingsWindow {
     }
 
     /**
-     * 
+     *
      */
     async start() {
         await this.createWindow();
@@ -69,14 +69,14 @@ export default class SettingsWindow {
     }
 
     /**
-     * 
+     *
      */
     async setWindowToStoredDisplay() {
         await this.DisplayController.setDisplay(this.window, await this.SettingsController.get('SettingsDisplay'));
     }
 
     /**
-     * 
+     *
      */
     async sendSettings() {
         const settings = await this.SettingsController.getAll();
@@ -85,7 +85,7 @@ export default class SettingsWindow {
     }
 
     /**
-     * 
+     *
      */
     async dev() {
         if (!is.dev) {
@@ -93,20 +93,20 @@ export default class SettingsWindow {
         }
 
         // open dev tools
-        this.window.webContents.openDevTools();
+        // this.window.webContents.openDevTools();
     }
 
     /**
-     * 
+     *
      */
     async setTitle() {
         this.window.setTitle(`${this.window.getTitle()}: v${app.getVersion()}`);
     }
 
     /**
-     * 
+     *
      */
-    async createWindow() { 
+    async createWindow() {
         this.window = new BrowserWindow({
             width: this.defaultWidth,
             height: this.defaultHeight,
@@ -126,13 +126,10 @@ export default class SettingsWindow {
 
         // show ontop of game at all times
         this.window.setAlwaysOnTop(true, 'pop-up-menu', 1);
-
-        // disable mouse as default
-        // this.window.setIgnoreMouseEvents(true);
     }
 
     /**
-     * 
+     *
      */
     async registerWindowListeners() {
         // on resize
@@ -156,7 +153,7 @@ export default class SettingsWindow {
                 this.window.setFullScreen(true);
             }
 
-            
+
             this.window.show();
         });
 
@@ -174,7 +171,7 @@ export default class SettingsWindow {
     }
 
     /**
-     * 
+     *
      */
     async loadUrl() {
         // HMR for renderer base on electron-vite cli.
@@ -187,41 +184,41 @@ export default class SettingsWindow {
     }
 
     /**
-     * 
-     * @returns 
+     *
+     * @returns
      */
-    async getWindow() { 
+    async getWindow() {
         return this.window;
     }
 
     /**
-     * 
-     * @param {*} bounds 
+     *
+     * @param {*} bounds
      */
     async setBounds(bounds) {
         this.window.setBounds(bounds);
     }
 
     /**
-     * 
+     *
      */
     async close() {
         return this.window.close();
     }
 
     /**
-     * 
+     *
      */
     async send(name, data) {
         try {
             if (typeof this.window === 'undefined') {
                 return;
             }
-            
+
             if (!data) {
                 return this.window.webContents.send(name);
             }
-            
+
             return this.window.webContents.send(name, data);
         } catch (error) {
             // console.error(error);

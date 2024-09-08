@@ -1,4 +1,4 @@
-import { isReady, getParticipantAtIndex, getParticipantInPostion } from '../../utils/CrestUtils';
+import { isReady, getParticipantAtIndex, getParticipantInPostion, getActiveParticipant } from '../../utils/CrestUtils';
 import stc from "string-to-color";
 
 export default class ParticipantFactory {
@@ -7,7 +7,7 @@ export default class ParticipantFactory {
     }
 
     /**
-     * 
+     *
      */
     async init() {
         try {
@@ -18,11 +18,13 @@ export default class ParticipantFactory {
     }
 
     /**
-     * 
+     *
      */
     async reset() {
         try {
-            this.driverIndex = null;   
+            // console.log('ParticipantFactory reset');
+
+            this.driverIndex = null;
             this.hasDriven = false;
             this.hasExitedPitOnce = false;
             this.hasReturnedToGarage = false;
@@ -42,10 +44,10 @@ export default class ParticipantFactory {
     }
 
     /**
-     * 
-     * @param {*} data 
-     * @param {*} mParticipantIndex 
-     * @returns 
+     *
+     * @param {*} data
+     * @param {*} mParticipantIndex
+     * @returns
      */
     async getData(data, mParticipantIndex) {
         try {
@@ -57,12 +59,12 @@ export default class ParticipantFactory {
     }
 
     /**
-     * 
-     * @param {*} data 
-     * @param {*} mParticipantIndex 
-     * @returns 
+     *
+     * @param {*} data
+     * @param {*} mParticipantIndex
+     * @returns
      */
-    async prepareData(data, mParticipantIndex) {        
+    async prepareData(data, mParticipantIndex) {
         const ready = await isReady(data);
         if (!ready) {
             return null;
@@ -86,22 +88,22 @@ export default class ParticipantFactory {
         participant.mCarClassColor = await this.mCarClassColor(data, mParticipantIndex);
         participant.mCarClassPosition = await this.mCarClassPosition(data, mParticipantIndex);
 
-        participant.mKPH = await this.mKPH(data, mParticipantIndex);    
+        participant.mKPH = await this.mKPH(data, mParticipantIndex);
 
         participant.mIsDriver = await this.mIsDriver();
         participant.mOutLap = await this.mOutLap();
-        participant.mLapsInfo = await this.mLapsInfo();    
+        participant.mLapsInfo = await this.mLapsInfo(data, mParticipantIndex);
 
         return participant;
     }
 
     /**
-     * 
-     * @param {*} data 
-     * @param {*} mParticipantIndex 
+     *
+     * @param {*} data
+     * @param {*} mParticipantIndex
      */
     async mCarClassNamesShort(data, mParticipantIndex) {
-        let participant = await getParticipantAtIndex(data, mParticipantIndex);        
+        let participant = await getParticipantAtIndex(data, mParticipantIndex);
 
         // split name underscore
         const parts = participant.mCarClassNames.split('_');
@@ -112,33 +114,33 @@ export default class ParticipantFactory {
             name = parts[0];
         }
 
-        // create shortname from first 3 characters of first item 
+        // create shortname from first 3 characters of first item
         let shortname = name.slice(0, 3);
 
-        if (parts) { 
-            // remove first part as we've used it 
-            parts.shift(); 
- 
-            // any more parts? add the first character from the next part only 
-            if (parts.length) { 
-                if (shortname.length === 1) { 
-                    shortname += parts[0].slice(0, 3); 
+        if (parts) {
+            // remove first part as we've used it
+            parts.shift();
+
+            // any more parts? add the first character from the next part only
+            if (parts.length) {
+                if (shortname.length === 1) {
+                    shortname += parts[0].slice(0, 3);
                 }
-            } 
+            }
         }
-        
+
         // make it uppercase
         return shortname.toUpperCase();
     }
 
     /**
-     * 
-     * @param {*} data 
-     * @param {*} mParticipantIndex 
+     *
+     * @param {*} data
+     * @param {*} mParticipantIndex
      */
     async mCarNames(data, mParticipantIndex) {
-        let participant = await getParticipantAtIndex(data, mParticipantIndex);  
-        
+        let participant = await getParticipantAtIndex(data, mParticipantIndex);
+
         // split name at capitalscv
         const parts = participant.mCarNames.split('-');
 
@@ -150,26 +152,30 @@ export default class ParticipantFactory {
     }
 
     /**
-     * 
-     * @param {*} data 
-     * @param {*} mParticipantIndex 
+     *
+     * @param {*} data
+     * @param {*} mParticipantIndex
      */
     async mCarClassColor(data, mParticipantIndex) {
-        const participant = await getParticipantAtIndex(data, mParticipantIndex);  
+        const participant = await getParticipantAtIndex(data, mParticipantIndex);
 
         return stc(participant.mCarClassNames);
     }
 
     /**
-     * 
-     * @param {*} data 
-     * @param {*} mParticipantIndex 
+     *
+     * @param {*} data
+     * @param {*} mParticipantIndex
      */
     async mCarClassPosition(data, mParticipantIndex) {
         // sort into class groups
         const mCarClassPositions = {};
-        for (let participantIndex = 1; participantIndex <= data.participants.mNumParticipants; participantIndex++) {
-            let participant = await getParticipantInPostion(data, participantIndex);
+        for (let ppi = 1; ppi <= data.participants.mNumParticipants; ppi++) {
+            let participant = await getParticipantInPostion(data, ppi);
+
+            if (participant === null) {
+                continue;
+            }
 
             if (!(participant.mCarClassNames in mCarClassPositions)) {
                 mCarClassPositions[participant.mCarClassNames] = [];
@@ -177,7 +183,11 @@ export default class ParticipantFactory {
 
             mCarClassPositions[participant.mCarClassNames].push( participant.mRacePosition );
         }
-        
+
+        if (!Object.keys(mCarClassPositions).length) {
+            return null;
+        }
+
         // get participant
         const participant = await getParticipantAtIndex(data, mParticipantIndex);
 
@@ -186,10 +196,10 @@ export default class ParticipantFactory {
     }
 
     /**
-     * 
-     * @param {*} data 
-     * @param {*} mParticipantIndex 
-     * @returns 
+     *
+     * @param {*} data
+     * @param {*} mParticipantIndex
+     * @returns
      */
     async mNameParts(data, mParticipantIndex) {
         let participant = await getParticipantAtIndex(data, mParticipantIndex);
@@ -225,10 +235,10 @@ export default class ParticipantFactory {
     }
 
     /**
-     * 
-     * @param {*} data 
-     * @param {*} mParticipantIndex 
-     * @returns 
+     *
+     * @param {*} data
+     * @param {*} mParticipantIndex
+     * @returns
      */
     async mNameMain(data, mParticipantIndex) {
         const mNameParts = await this.mNameParts(data, mParticipantIndex);
@@ -237,15 +247,15 @@ export default class ParticipantFactory {
     }
 
     /**
-     * 
-     * @param {*} data 
-     * @param {*} mParticipantIndex 
-     * @returns 
+     *
+     * @param {*} data
+     * @param {*} mParticipantIndex
+     * @returns
      */
     async mNameShort(data, mParticipantIndex) {
         const mNameParts = await this.mNameParts(data, mParticipantIndex);
         const nameSplit = mNameParts.name.split(' ');
-        
+
         let nameShort = '';
         for (let index = 0; index < nameSplit.length - 1; index++) {
             const nameSplitPart = nameSplit[index];
@@ -258,10 +268,10 @@ export default class ParticipantFactory {
     }
 
     /**
-     * 
-     * @param {*} data 
-     * @param {*} mParticipantIndex 
-     * @returns 
+     *
+     * @param {*} data
+     * @param {*} mParticipantIndex
+     * @returns
      */
     async mNameTag(data, mParticipantIndex) {
         const mNameParts = await this.mNameParts(data, mParticipantIndex);
@@ -276,10 +286,10 @@ export default class ParticipantFactory {
     }
 
     /**
-     * 
-     * @param {*} data 
-     * @returns 
-     */ 
+     *
+     * @param {*} data
+     * @returns
+     */
     async processHasDriven(data, mParticipantIndex) {
         if (data.participants.mViewedParticipantIndex !== mParticipantIndex) {
             return this.hasDriven = false;
@@ -291,7 +301,7 @@ export default class ParticipantFactory {
             || data.unfilteredInput.mUnfilteredBrake !== 1
             // || data.unfilteredInput.mUnfilteredSteering !== 0
             || data.unfilteredInput.mUnfilteredClutch !== 0
-        ) {            
+        ) {
             this.driverIndex = data.participants.mViewedParticipantIndex;
         }
 
@@ -305,23 +315,23 @@ export default class ParticipantFactory {
     }
 
     /**
-     * 
+     *
      */
     async mIsDriver() {
         return this.hasDriven;
     }
 
     /**
-     * 
-     * @param {*} data 
-     * @param {*} mParticipantIndex 
+     *
+     * @param {*} data
+     * @param {*} mParticipantIndex
      */
     async processHasExitedPitLaneState(data, mParticipantIndex) {
         if (this.hasExitedPitOnce) {
             return this.hasExitedPitOnce;
         }
 
-        const currentLap = await this.getCurrentLap(data, mParticipantIndex);        
+        const currentLap = await this.getCurrentLap(data, mParticipantIndex);
 
         if (currentLap.mCurrentLapTimes < 0) {
             return this.hasExitedPitOnce;
@@ -332,9 +342,9 @@ export default class ParticipantFactory {
 
 
     /**
-     * 
-     * @param {*} data 
-     * @param {*} mParticipantIndex 
+     *
+     * @param {*} data
+     * @param {*} mParticipantIndex
      */
     async processHasReturnedToGarageState(data, mParticipantIndex) {
         const participant = await getParticipantAtIndex(data, mParticipantIndex);
@@ -351,9 +361,9 @@ export default class ParticipantFactory {
     }
 
     /**
-     * 
-     * @param {*} data 
-     * @param {*} mParticipantIndex 
+     *
+     * @param {*} data
+     * @param {*} mParticipantIndex
      */
     async processCurrentLapState(data, mParticipantIndex) {
         const participant = await getParticipantAtIndex(data, mParticipantIndex);
@@ -404,18 +414,18 @@ export default class ParticipantFactory {
             // add stored lap to laps array
             this.laps.push( this.lap );
         }
-        
+
         // update stored lap with current lap data
         this.lap = currentLap;
     }
 
     /**
-     * 
-     * @param {*} data 
-     * @param {*} mParticipantIndex 
+     *
+     * @param {*} data
+     * @param {*} mParticipantIndex
      */
     async getCurrentLap(data, mParticipantIndex) {
-        const participant = await getParticipantAtIndex(data, mParticipantIndex);       
+        const participant = await getParticipantAtIndex(data, mParticipantIndex);
 
         return {
             runID: await this.getRunID(data, mParticipantIndex),
@@ -427,49 +437,49 @@ export default class ParticipantFactory {
     }
 
     /**
-     * 
-     * @param {*} data 
+     *
+     * @param {*} data
      */
     async mFuelLevel(data) {
         if (this.driverIndex !== null && this.driverIndex === data.participants.mViewedParticipantIndex) {
             return data.carState.mFuelLevel;
-        } 
+        }
 
         return null;
     }
 
     /**
-     * 
-     * @param {*} data 
-     * @param {*} mParticipantIndex 
+     *
+     * @param {*} data
+     * @param {*} mParticipantIndex
      */
     async getRunID(data, mParticipantIndex) {
         const participant = await getParticipantAtIndex(data, mParticipantIndex);
 
-        if (participant.mPitModes !== 0) {       
+        if (participant.mPitModes !== 0) {
             return await this.generateRunID(participant);
         }
 
-        if (this.runID === null) {            
+        if (this.runID === null) {
             return await this.generateRunID(participant);
         }
-        
+
         return this.runID;
     }
 
     /**
      * Get a new run ID
-     * @returns 
+     * @returns
      */
-    async generateRunID(participant) {        
+    async generateRunID(participant) {
         // nothing complex, just the current timestamp
         return this.runID = Date.now();
     }
 
     /**
-     * 
-     * @param {*} data 
-     * @param {*} mParticipantIndex 
+     *
+     * @param {*} data
+     * @param {*} mParticipantIndex
      */
     async mCurrentLapTimes(data, mParticipantIndex) {
         const participant = await getParticipantAtIndex(data, mParticipantIndex);
@@ -490,30 +500,37 @@ export default class ParticipantFactory {
         }
 
         return mCurrentLapTimes;
-        
+
     }
 
     /**
-     * 
+     *
      */
-    async mLapsInfo() {
-       return this.laps;
+    async mLapsInfo(data, mParticipantIndex) {
+        // get participant
+        const participant = await getParticipantAtIndex(data, mParticipantIndex);
+
+        if (!('mLapsInfo' in participant)) {
+            return this.laps;
+        }
+
+        return participant.mLapsInfo.concat(this.laps);
     }
 
     /**
-     * 
+     *
      */
     async mOutLap() {
        return this.isOutLap;
     }
 
     /**
-     * 
+     *
      */
     async mKPH(data, mParticipantIndex) {
         // get participant
         const participant = await getParticipantAtIndex(data, mParticipantIndex);
 
-        return Math.floor(participant.mSpeeds * 3.6);        
+        return Math.floor(participant.mSpeeds * 3.6);
     }
 }
