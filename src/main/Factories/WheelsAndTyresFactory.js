@@ -97,20 +97,24 @@ export default class WeatherFactory {
      */
     async mSuspensionDamageState(data) {
         const state = (value) => {
-            if (value >= 1) {
-                return 4;
+            if (value >= 0.4) {
+                return 6;
             }
 
-            if (value >= 0.2) {
-                return 3;
+            if (value >= 0.25) {
+                return 5;
             }
 
-            if (value >= 0.15) {
-                return 2;
-            }
+            // if (value >= 0.2) {
+            //     return 3;
+            // }
+
+            // if (value >= 0.15) {
+            //     return 2;
+            // }
 
             if (value > 0) {
-                return 1;
+                return 3;
             }
 
             return 0;
@@ -145,20 +149,24 @@ export default class WeatherFactory {
      */
     async mBrakeDamageState(data) {
         const state = (value) => {
-            if (value >= 1) {
-                return 4;
-            }
-
-            if (value >= 0.5) {
-                return 3;
+            if (value >= 0.4) {
+                return 6;
             }
 
             if (value >= 0.25) {
-                return 2;
+                return 5;
             }
 
-            if (value >= 0.1) {
-                return 1;
+            // if (value >= 0.2) {
+            //     return 3;
+            // }
+
+            // if (value >= 0.15) {
+            //     return 2;
+            // }
+
+            if (value > 0) {
+                return 3;
             }
 
             return 0;
@@ -193,23 +201,19 @@ export default class WeatherFactory {
      */
     async mBrakeTempState(data) {
         const state = (value) => {
-            // if (value >= 1) {
-            //     return 4;
-            // }
+            if (value >= 1000) {
+                return 6;
+            }
 
-            // if (value >= 0.5) {
-            //     return 3;
-            // }
+            if (value >= 800) {
+                return 5;
+            }
 
-            // if (value >= 0.25) {
-            //     return 2;
-            // }
+            if (value >= 100) {
+                return 0;
+            }
 
-            // if (value >= 0.1) {
-            //     return 1;
-            // }
-
-            return 0;
+            return 1;
         }
 
         return [
@@ -242,19 +246,15 @@ export default class WeatherFactory {
     async mTyreWearState(data) {
         const state = (value) => {
             if (value >= 1) {
-                return 4;
+                return 6;
             }
 
             if (value >= 0.5) {
-                return 3;
+                return 5;
             }
 
             if (value >= 0.25) {
-                return 2;
-            }
-
-            if (value >= 0.1) {
-                return 1;
+                return 3;
             }
 
             return 0;
@@ -289,23 +289,20 @@ export default class WeatherFactory {
      */
     async mTyreTempState(data) {
         const state = (value) => {
-            if (value >= 1) {
-                return 4;
+            if (value >= 110) {
+                return 6;
             }
 
-            if (value >= 0.5) {
-                return 3;
+
+            if (value >= 100) {
+                return 5;
             }
 
-            if (value >= 0.25) {
-                return 2;
+            if (value >= 60) {
+                return 0;
             }
 
-            if (value >= 0.1) {
-                return 1;
-            }
-
-            return 0;
+            return 1;
         }
 
         return [
@@ -323,32 +320,8 @@ export default class WeatherFactory {
      */
     async mTyreCompoundShort(data) {
         const short = (string) => {
-            // if (string === 'Soft Slick') {
-            //     return 'S';
-            // }
-
-            // if (string === 'Medium Slick') {
-            //     return 'M';
-            // }
-
-            // if (string === 'Hard Slick') {
-            //     return 'H';
-            // }
-
-            // if (string === 'Wet') {
-            //     return 'W';
-            // }
-
-            // if (string === 'Intermediate') {
-            //     return 'I';
-            // }
-
-            // if (string === 'Extreme') {
-            //     return 'E';
-            // }
-
+            // use first character
             return string.substring(0, 1);
-            // return string;
         }
 
         return [
@@ -380,22 +353,6 @@ export default class WeatherFactory {
      */
     async mAirPressureState(data) {
         const state = (value) => {
-            if (value >= 1) {
-                return 4;
-            }
-
-            if (value >= 0.5) {
-                return 3;
-            }
-
-            if (value >= 0.25) {
-                return 2;
-            }
-
-            if (value >= 0.1) {
-                return 1;
-            }
-
             return 0;
         }
 

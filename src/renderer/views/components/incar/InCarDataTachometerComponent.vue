@@ -32,6 +32,8 @@
 
     transform: scaleX(0);
     transform-origin: 0 0;
+    transition: 50ms transform 0ms linear;
+    will-change: transform;
 
     &[state="0"] {
         // same as default

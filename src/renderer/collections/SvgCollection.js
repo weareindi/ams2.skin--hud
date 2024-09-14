@@ -19,7 +19,7 @@ export default class SvgCollection {
     }
 
     /**
-     * 
+     *
      */
     async registerRefs() {
         this.app.provide('svgcollection', ref(null));
@@ -27,13 +27,13 @@ export default class SvgCollection {
     }
 
     /**
-     * 
-     * @returns 
+     *
+     * @returns
      */
     async populateItems() {
         // prepare items object
         const items = [];
-        
+
         // get files in svg directory
         const files = import.meta.glob('@renderer/assets/svg/**.svg', {
             query: '?raw',
@@ -42,14 +42,15 @@ export default class SvgCollection {
 
         // loop through found files
         for (const path in files) {
+
             const file = await files[path]();
 
             // get basename
             const basename = path.split('/').pop();
-            
+
             // get filename
             const filename = basename.replace('.svg', '');
-            
+
             // split filename into parts
             const filename_parts = filename.split('--');
 

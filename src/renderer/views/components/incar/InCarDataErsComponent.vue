@@ -2,11 +2,11 @@
     <div class="c-in-car-data-ers" v-for="item in vERS">
         <span class="c-in-car-data-ers__state" :state="item.state"></span>
         <span class="c-in-car-data-ers__label">{{ item.label }}</span>
-        <span class="c-in-car-data-ers__mode">
+        <span class="c-in-car-data-ers__mode" v-if="item.suffix !== null">
             <span class="c-in-car-data-ers__icon">
                 <SvgComponent svg="icon--power" />
             </span>
-            <span class="c-in-car-data-ers__text" v-if="item.suffix !== null">{{ item.suffix }}</span>
+            <span class="c-in-car-data-ers__text">{{ item.suffix }}</span>
         </span>
         <span class="c-in-car-data-ers__level" v-if="item.value !== null">
             <span class="c-in-car-data-ers__amount" :style="`transform: scaleX(${item.value})`">

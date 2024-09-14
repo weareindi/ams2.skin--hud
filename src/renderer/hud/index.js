@@ -62,6 +62,22 @@ class Init {
     /**
      *
      */
+    async resetValues() {
+        for (let vi = 0; vi < Variables.length; vi++) {
+            const key = Variables[vi];
+
+            // key already exists, dont try to add it again
+            if (!(key in this.app._context.provides)) {
+                continue;
+            }
+
+            this.app._context.provides[key].value = null;
+        }
+    }
+
+    /**
+     *
+     */
     async registerDataListener() {
         // data from node
         electron.ipcRenderer.on('data', async (event, data) => {
@@ -107,15 +123,6 @@ class Init {
 
             // update value
             this.app._context.provides[key].value = data[key];
-        }
-    }
-
-    /**
-     *
-     */
-    async resetValues() {
-        for (const key in this.app._context.provides) {
-            this.app._context.provides[key].value = null;
         }
     }
 

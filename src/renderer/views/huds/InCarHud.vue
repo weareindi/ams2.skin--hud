@@ -2,12 +2,12 @@
     <div class="c-hud-incar">
         <div class="c-hud-incar__top">
             <div class="c-hud-incar__a"></div>
-            <div class="c-hud-incar__b">standings</div>
+            <div class="c-hud-incar__b"><InCarStandingsComponent /></div>
             <div class="c-hud-incar__c"></div>
         </div>
         <div class="c-hud-incar__middle">
             <div class="c-hud-incar__a"></div>
-            <div class="c-hud-incar__b">message</div>
+            <div class="c-hud-incar__b"></div>
             <div class="c-hud-incar__c"></div>
         </div>
         <div class="c-hud-incar__bottom">
@@ -192,6 +192,7 @@
 
 <script>
 import { inject } from 'vue';
+import InCarStandingsComponent from '../components/incar/InCarStandingsComponent.vue';
 import InCarEventComponent from '../components/incar/InCarEventComponent.vue';
 import InCarFuelComponent from '../components/incar/InCarFuelComponent.vue';
 import InCarInputsComponent from '../components/incar/InCarInputsComponent.vue';
@@ -228,6 +229,7 @@ export default {
         };
     },
     components: {
+        InCarStandingsComponent,
         InCarEventComponent,
         InCarFuelComponent,
         InCarInputsComponent,

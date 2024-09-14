@@ -1,8 +1,8 @@
 <template>
     <div class="c-pit-data-value" v-if="data">
         <div class="c-pit-data-value__item" v-for="item in data">
-            <span class="c-pit-data-value__label" v-if="item.label !== null">{{ item.label }}</span>
-            <span class="c-pit-data-value__value" v-if="item.value !== null">{{ item.value }}<span class="c-pit-data-value__seperator" v-if="item.seperator !== null">{{ item.seperator }}</span><span class="c-pit-data-value__suffix" v-if="item.suffix !== null">{{ item.suffix }}</span></span>
+            <span class="c-pit-data-value__label" v-if="item.label !== null" v-html="item.label"></span>
+            <span class="c-pit-data-value__value" v-if="item.value !== null"><span v-html="item.value"></span><span class="c-pit-data-value__seperator" v-if="item.seperator !== null" v-html="item.seperator"></span><span class="c-pit-data-value__suffix" v-if="item.suffix !== null" v-html="item.suffix"></span></span>
         </div>
     </div>
 </template>
@@ -20,7 +20,9 @@
     @include removehighlight();
     @include color('color', 'white', 0.6);
 
-    font-size: em(16);
+    font-family: 'uifont', sans-serif;
+    font-size: em(10);
+    letter-spacing: 0;
     line-height: 1em;
     pointer-events: none;
 }
@@ -29,9 +31,10 @@
     @include removehighlight();
     @include hideAppearance();
 
-    font-family: 'firacode', monospace;
-    font-size: em(15);
-    font-weight: bold;
+    margin: em(6, 10) 0 0;
+    font-family: 'uifont', sans-serif;
+    font-size: em(10);
+    letter-spacing: 0;
     line-height: 1em;
 }
 

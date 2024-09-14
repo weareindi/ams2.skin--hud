@@ -86,7 +86,7 @@ export default class HudWindow {
         }
 
         // open dev tools
-        this.window.webContents.openDevTools();
+        // this.window.webContents.openDevTools();
     }
 
     /**

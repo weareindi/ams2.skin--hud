@@ -258,20 +258,19 @@ export default class ViewFactory {
      * @returns
      */
     async vFuelInCar(data) {
-        const participant = await getActiveParticipant(data);
-        if (!participant.mIsDriver) {
-            return null;
-        }
+        let value = '&#x231A;';
+        let suffix = null;
 
-        if (data.fuel.mFuelInCar === null) {
-            return null;
+        if (data.fuel.mFuelInCar !== null) {
+            value = data.fuel.mFuelInCar.toFixed(2);
+            suffix = 'L'
         }
 
         return getViewObject([
             {
                 label: 'In Car',
-                value: data.fuel.mFuelInCar.toFixed(2),
-                suffix: 'L',
+                value: value,
+                suffix: suffix,
                 seperator: ' ',
             }
         ]);
@@ -283,20 +282,19 @@ export default class ViewFactory {
      * @returns
      */
     async vFuelPerLap(data) {
-        const participant = await getActiveParticipant(data);
-        if (!participant.mIsDriver) {
-            return null;
-        }
+        let value = '&#x231A;';
+        let suffix = null;
 
-        if (data.fuel.mFuelPerLap === null) {
-            return null;
+        if (data.fuel.mFuelPerLap !== null) {
+            value = data.fuel.mFuelPerLap.toFixed(2);
+            suffix = 'L'
         }
 
         return getViewObject([
             {
                 label: 'Per Lap',
-                value: data.fuel.mFuelPerLap.toFixed(2),
-                suffix: 'L',
+                value: value,
+                suffix: suffix,
                 seperator: ' ',
             }
         ]);
@@ -308,20 +306,19 @@ export default class ViewFactory {
      * @returns
      */
     async vFuelToEndSession(data) {
-        const participant = await getActiveParticipant(data);
-        if (!participant.mIsDriver) {
-            return null;
-        }
+        let value = '&#x231A;';
+        let suffix = null;
 
-        if (data.fuel.mFuelToEndSession === null) {
-            return null;
+        if (data.fuel.mFuelToEndSession !== null) {
+            value = (Math.ceil(data.fuel.mFuelToEndSession * 100) / 100).toFixed(2);
+            suffix = 'L'
         }
 
         return getViewObject([
             {
                 label: 'To End',
-                value: (Math.ceil(data.fuel.mFuelToEndSession * 100) / 100).toFixed(2),
-                suffix: 'L',
+                value: value,
+                suffix: suffix,
                 seperator: ' ',
             }
         ]);
@@ -333,19 +330,16 @@ export default class ViewFactory {
      * @returns
      */
     async vFuelStopsToEndSession(data) {
-        const participant = await getActiveParticipant(data);
-        if (!participant.mIsDriver) {
-            return null;
-        }
+        let value = '&#x231A;';
 
-        if (data.fuel.mFuelStopsToEndSession === null) {
-            return null;
+        if (data.fuel.mFuelStopsToEndSession !== null) {
+            value = data.fuel.mFuelStopsToEndSession;
         }
 
         return getViewObject([
             {
                 label: 'Pit Stops',
-                value: data.fuel.mFuelStopsToEndSession
+                value: value
             }
         ]);
     }
@@ -356,20 +350,19 @@ export default class ViewFactory {
      * @returns
      */
     async vFuelInStop(data) {
-        const participant = await getActiveParticipant(data);
-        if (!participant.mIsDriver) {
-            return null;
-        }
+        let value = '&#x231A;';
+        let suffix = null;
 
-        if (data.fuel.mFuelInStop === null) {
-            return null;
+        if (data.fuel.mFuelInStop !== null) {
+            value = Math.ceil(data.fuel.mFuelInStop);
+            suffix = 'L'
         }
 
         return getViewObject([
             {
                 label: 'Next Pit',
-                value: Math.ceil(data.fuel.mFuelInStop),
-                suffix: 'L',
+                value: value,
+                suffix: suffix,
                 seperator: ' ',
             }
         ]);
@@ -564,7 +557,7 @@ export default class ViewFactory {
         return getViewObject([
             {
                 value:  data.weather.mTrackTemperature.toFixed(0),
-                zerofill: 3,
+                zerofill: 2,
                 suffix: '°'
             }
         ]);
@@ -584,7 +577,7 @@ export default class ViewFactory {
         return getViewObject([
             {
                 value:  data.weather.mAmbientTemperature.toFixed(0),
-                zerofill: 3,
+                zerofill: 2,
                 suffix: '°'
             }
         ]);
@@ -602,8 +595,9 @@ export default class ViewFactory {
 
         return getViewObject([
             {
-                label: data.weather.mRain,
-                value: data.weather.mRainDensity
+                label: data.weather.mRainDensityLabel,
+                value: data.weather.mRainDensity,
+                state: data.weather.mRainState
             }
         ]);
     }
@@ -620,6 +614,10 @@ export default class ViewFactory {
         }
 
         if (data.carState.mDrsState === null) {
+            return null;
+        }
+
+        if (data.carState.mDrsState === 0) {
             return null;
         }
 
@@ -667,13 +665,17 @@ export default class ViewFactory {
             return null;
         }
 
-        if (data.carDamage.mAeroDamage === null) {
+        if (data.carDamage.mAeroDamageAmount === null) {
+            return null;
+        }
+
+        if (data.carDamage.mAeroState === null) {
             return null;
         }
 
         return getViewObject([
             {
-                value: data.carDamage.mAeroDamage,
+                value: data.carDamage.mAeroDamageAmount,
                 zerofill: 3,
                 suffix: '%',
                 state: data.carDamage.mAeroState
@@ -932,22 +934,26 @@ export default class ViewFactory {
                         label: participant.mNameShort,
                         value: participant.mCarClassPosition,
                         suffix: participant.mCarClassNamesShort,
-                        additional: item.mDistanceToActiveUser
+                        additional: Math.abs(Math.round(item.mDistanceToActiveUser)),
+                        additional_seperator: ' ',
+                        additional_suffix: 'm',
+                        index: `{${index}}${participant.mParticipantIndex}`,
+                        state: participant.mCarClassColor,
                     },
                     {
-                        status: item.mStatusToUser
+                        state: item.mStatusToUser
                     },
                     {
                         label: 'Best',
-                        value: participant.mFastestLapTimes,
+                        value: millisecondsToTime(participant.mFastestLapTimes),
                     },
                     {
                         label: 'Last',
-                        value: participant.mLastLapTimes,
+                        value: millisecondsToTime(participant.mLastLapTimes),
                     },
                     {
                         label: 'Current',
-                        value: participant.mCurrentLapTimes,
+                        value: millisecondsToTime(participant.mCurrentLapTimes),
                     }
                 ])
             );

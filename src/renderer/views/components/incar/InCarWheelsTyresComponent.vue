@@ -3,44 +3,44 @@
         <div class="c-in-car-wheels-tyres__rows">
             <div class="c-in-car-wheels-tyres__row">
                 <div class="c-in-car-wheels-tyres__items c-in-car-wheels-tyres__items--alignend">
-                    <div class="c-in-car-wheels-tyres__item">
+                    <div class="c-in-car-wheels-tyres__item" v-if="vSuspension0">
                         <InCarDataSuspensionComponent index="0" :data="vSuspension0" />
                     </div>
-                    <div class="c-in-car-wheels-tyres__item">
+                    <div class="c-in-car-wheels-tyres__item" v-if="vBrake0">
                         <InCarDataBrakeComponent index="0" :data="vBrake0" />
                     </div>
-                    <div class="c-in-car-wheels-tyres__item">
+                    <div class="c-in-car-wheels-tyres__item" v-if="vTyre0">
                         <InCarDataTyreComponent index="0" :data="vTyre0" />
                     </div>
-                    <div class="c-in-car-wheels-tyres__item">
+                    <div class="c-in-car-wheels-tyres__item" v-if="vTyre1">
                         <InCarDataTyreComponent index="1" :data="vTyre1" />
                     </div>
-                    <div class="c-in-car-wheels-tyres__item">
+                    <div class="c-in-car-wheels-tyres__item" v-if="vBrake1">
                         <InCarDataBrakeComponent index="1" :data="vBrake1" />
                     </div>
-                    <div class="c-in-car-wheels-tyres__item">
+                    <div class="c-in-car-wheels-tyres__item" v-if="vSuspension1">
                         <InCarDataSuspensionComponent index="1" :data="vSuspension1" />
                     </div>
                 </div>
             </div>
             <div class="c-in-car-wheels-tyres__row">
                 <div class="c-in-car-wheels-tyres__items c-in-car-wheels-tyres__items--alignstart">
-                    <div class="c-in-car-wheels-tyres__item">
+                    <div class="c-in-car-wheels-tyres__item" v-if="vSuspension2">
                         <InCarDataSuspensionComponent index="2" :data="vSuspension2" />
                     </div>
-                    <div class="c-in-car-wheels-tyres__item">
+                    <div class="c-in-car-wheels-tyres__item" v-if="vBrake2">
                         <InCarDataBrakeComponent index="2" :data="vBrake2" />
                     </div>
-                    <div class="c-in-car-wheels-tyres__item">
+                    <div class="c-in-car-wheels-tyres__item" v-if="vTyre2">
                         <InCarDataTyreComponent index="2" :data="vTyre2" />
                     </div>
-                    <div class="c-in-car-wheels-tyres__item">
+                    <div class="c-in-car-wheels-tyres__item" v-if="vTyre3">
                         <InCarDataTyreComponent index="3" :data="vTyre3" />
                     </div>
-                    <div class="c-in-car-wheels-tyres__item">
+                    <div class="c-in-car-wheels-tyres__item" v-if="vBrake3">
                         <InCarDataBrakeComponent index="3" :data="vBrake3" />
                     </div>
-                    <div class="c-in-car-wheels-tyres__item">
+                    <div class="c-in-car-wheels-tyres__item" v-if="vSuspension3">
                         <InCarDataSuspensionComponent index="3" :data="vSuspension3" />
                     </div>
                 </div>

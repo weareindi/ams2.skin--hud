@@ -1,5 +1,5 @@
 <template>
-    <div class="c-pit-fuel-calc" v-if="true">
+    <div class="c-pit-fuel-calc">
         <div class="c-pit-fuel-calc__heading">
             <PitDataHeadingComponent text="Fuel Estimate" />
         </div>

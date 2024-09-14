@@ -36,6 +36,17 @@
     }
 
     &[state="2"] {
+        @include color('background-color', 'green', 1);
+
+        animation-name: flash;
+        animation-duration: 150ms;
+        animation-timing-function: linear;
+        animation-direction: alternate;
+        animation-fill-mode: forwards;
+        animation-iteration-count: infinite;
+    }
+
+    &[state="3"] {
         @include color('background-color', 'yellow', 1);
 
         ~ .c-in-car-icon__svg {
@@ -47,11 +58,30 @@
         }
     }
 
-    &[state="3"] {
+    &[state="4"] {
+        @include color('background-color', 'yellow', 1);
+
+        animation-name: flash;
+        animation-duration: 150ms;
+        animation-timing-function: linear;
+        animation-direction: alternate;
+        animation-fill-mode: forwards;
+        animation-iteration-count: infinite;
+
+        ~ .c-in-car-icon__svg {
+            svg {
+                path {
+                    @include color('fill', 'black');
+                }
+            }
+        }
+    }
+
+    &[state="5"] {
         @include color('background-color', 'red', 1);
     }
 
-    &[state="4"] {
+    &[state="6"] {
         @include color('background-color', 'red', 1);
 
         animation-name: flash;

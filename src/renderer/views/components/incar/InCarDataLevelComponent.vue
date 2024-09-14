@@ -33,8 +33,8 @@
     left: 0;
     transform: scaleY(0);
     transform-origin: 50% 100%;
-
-    transition: 150ms transform 0ms ease;
+    transition: 50ms transform 0ms linear;
+    will-change: transform;
 }
 
 </style>

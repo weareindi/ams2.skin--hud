@@ -48,6 +48,35 @@ export async function isReady(data) {
  * @param {*} data
  * @returns
  */
+export async function isInMenu(data) {
+    if (typeof data === 'undefined') {
+        return false;
+    }
+
+    if (data === null) {
+        return false;
+    }
+
+    if (!('gameStates' in data)) {
+        return false;
+    }
+
+    if (!('mGameState' in data.gameStates)) {
+        return false;
+    }
+
+    if (data.gameStates.mGameState !== 1) {
+        return false;
+    }
+
+    return true;
+}
+
+/**
+ *
+ * @param {*} data
+ * @returns
+ */
 export async function getActiveParticipant(data) {
     return data.participants.mParticipantInfo[ data.participants.mViewedParticipantIndex ];
 }

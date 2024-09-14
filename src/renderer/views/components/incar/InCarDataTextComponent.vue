@@ -1,14 +1,14 @@
 <template>
     <div class="c-in-car-data-text">
         <span class="c-in-car-data-text__v">
-            <span class="c-in-car-data-text__zerofill">{{ data.zerofill }}</span>
-            <span class="c-in-car-data-text__value">{{ data.value }}</span>
-            <span class="c-in-car-data-text__seperator">{{ data.seperator }}</span>
-            <span class="c-in-car-data-text__suffix">{{ data.suffix }}</span>
+            <span class="c-in-car-data-text__zerofill" v-html="data.zerofill"></span>
+            <span class="c-in-car-data-text__value" v-html="data.value"></span>
+            <span class="c-in-car-data-text__seperator" v-html="data.seperator"></span>
+            <span class="c-in-car-data-text__suffix" v-html="data.suffix"></span>
         </span>
         <span class="c-in-car-data-text__k">
-            <span class="c-in-car-data-text__label">{{ data.label }}</span>
-            <span class="c-in-car-data-text__additional">{{ data.additional }}</span>
+            <span class="c-in-car-data-text__label" v-html="data.label"></span>
+            <span class="c-in-car-data-text__additional" v-html="data.additional"></span>
         </span>
     </div>
 </template>
@@ -38,7 +38,7 @@
 
 .c-in-car-data-text__label,
 .c-in-car-data-text__additional {
-    font-family: "uifont", monospace;
+    font-family: "uifont", sans-serif;
 }
 
 .c-in-car-data-text__zerofill,
@@ -69,7 +69,6 @@
 </style>
 
 <script>
-
 export default {
     props: {
         data: {},

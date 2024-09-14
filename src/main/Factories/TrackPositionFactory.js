@@ -129,6 +129,10 @@ export default class TrackPositionFactory {
                 continue;
             }
 
+            if (participant.mCarClassNames === 'SafetyCar') {
+                continue;
+            }
+
             if (participant.mPlacementIndex < activeParticipant.mPlacementIndex) {
                 aheadA.push( {...trackPosition[pi]} );
                 aheadB.push( {...trackPosition[pi]} );

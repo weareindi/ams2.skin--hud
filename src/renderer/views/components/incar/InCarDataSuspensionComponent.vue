@@ -1,6 +1,6 @@
 <template>
-    <div class="c-in-car-data-suspension" :index="index">
-        <div class="c-in-car-data-suspension__graphic" v-if="data[0]">
+    <div class="c-in-car-data-suspension" v-if="data[0]" :index="index">
+        <div class="c-in-car-data-suspension__graphic">
             <div class="c-in-car-data-suspension__damage">
                 <InCarDataDamageComponent :data="data[0]" icon="icon--suspension" :index="index" />
             </div>
@@ -53,7 +53,6 @@ import InCarDataTextSmallComponent from './InCarDataTextSmallComponent.vue';
 import InCarDataDamageComponent from './InCarDataDamageComponent.vue';
 
 export default {
-    setup() {},
     props: {
         index: null,
         data: {},

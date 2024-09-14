@@ -71,7 +71,7 @@ export default class CarDamageFactory {
      * @returns
      */
     async mAeroDamageAmount(data) {
-        return Math.round(data.carDamage.mAeroDamage * 100);
+        return Math.floor(data.carDamage.mAeroDamage * 100);
     }
 
     /**
@@ -81,19 +81,15 @@ export default class CarDamageFactory {
      */
     async mAeroState(data) {
         if (data.carDamage.mAeroDamage >= 0.5) {
-            return 4;
+            return 6;
         }
 
         if (data.carDamage.mAeroDamage >= 0.2) {
-            return 3;
-        }
-
-        if (data.carDamage.mAeroDamage >= 0.1) {
-            return 2;
+            return 5;
         }
 
         if (data.carDamage.mAeroDamage > 0) {
-            return 1;
+            return 3;
         }
 
         return 0;
@@ -114,21 +110,21 @@ export default class CarDamageFactory {
      * @returns
      */
     async mClutchState(data) {
-        if (data.carState.mClutchWear >= 1) {
-            return 4;
-        }
+        // if (data.carState.mClutchWear >= 1) {
+        //     return 6;
+        // }
 
-        if (data.carState.mClutchWear >= 0.5) {
-            return 3;
-        }
+        // if (data.carState.mClutchWear >= 0.5) {
+        //     return 5;
+        // }
 
-        if (data.carState.mClutchWear >= 0.25) {
-            return 2;
-        }
+        // if (data.carState.mClutchWear >= 0.25) {
+        //     return 3;
+        // }
 
-        if (data.carState.mClutchWear >= 0.1) {
-            return 1;
-        }
+        // if (data.carState.mClutchWear >= 0.1) {
+        //     return 1;
+        // }
 
         return 0;
     }
@@ -148,20 +144,20 @@ export default class CarDamageFactory {
      * @returns
      */
     async mEngineState(data) {
-        if (data.carDamage.mEngineDamage >= 1) {
-            return 4;
+        // if (data.carDamage.mEngineDamage >= 1) {
+        //     return 6;
+        // }
+
+        if (data.carDamage.mEngineDamage >= 0.4) {
+            return 6;
         }
 
         if (data.carDamage.mEngineDamage >= 0.2) {
-            return 3;
-        }
-
-        if (data.carDamage.mEngineDamage >= 0.15) {
-            return 2;
+            return 5;
         }
 
         if (data.carDamage.mEngineDamage >= 0.1) {
-            return 1;
+            return 3;
         }
 
         return 0;

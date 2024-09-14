@@ -95,14 +95,15 @@ export default class FuelFactory {
             data.fuel = this.fuel;
         }
 
+        data.fuel.mFuelCapacity = await this.mFuelCapacity(data);
+        data.fuel.mFuelInCar = await this.mFuelInCar(data);
+
         const participant = await getActiveParticipant(data);
         if (!participant.mIsDriver) {
             return data;
         }
 
-        data.fuel.mFuelCapacity = await this.mFuelCapacity(data);
         data.fuel.mFuelLevel = await this.mFuelLevel(data);
-        data.fuel.mFuelInCar = await this.mFuelInCar(data);
         data.fuel.mFuelPerLap = await this.mFuelPerLap(data);
         data.fuel.mLapsToEnd = await this.mLapsToEnd(data);
         data.fuel.mFuelToEndSession = await this.mFuelToEndSession(data);

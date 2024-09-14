@@ -1,6 +1,7 @@
-import { isReady } from '../../utils/CrestUtils';
+import { isReady, isInMenu } from '../../utils/CrestUtils';
 import { ipcMain } from 'electron';
 import { execFile } from 'child_process';
+import storage from 'electron-json-storage';
 import crest2 from '../../../resources/crest2/CREST2.exe?asset';
 
 import SettingsController from './SettingsController';
@@ -68,20 +69,20 @@ export default class CrestController {
     /**
      *
      */
-    async resetProcessors() {
-        this.ParticipantsFactory.reset();
-        this.TrackPositionFactory.reset();
-        this.EventInformationFactory.reset();
-        this.CarStateFactory.reset();
-        this.CarDamageFactory.reset();
-        this.WeatherFactory.reset();
-        this.WheelsAndTyresFactory.reset();
-        this.FuelFactory.reset();
-        this.BattleFactory.reset();
-        this.HudFactory.reset();
-        this.DirectorFactory.reset();
-        this.ViewFactory.reset();
-    }
+    // async resetProcessors() {
+    //     this.ParticipantsFactory.reset();
+    //     this.TrackPositionFactory.reset();
+    //     this.EventInformationFactory.reset();
+    //     this.CarStateFactory.reset();
+    //     this.CarDamageFactory.reset();
+    //     this.WeatherFactory.reset();
+    //     this.WheelsAndTyresFactory.reset();
+    //     this.FuelFactory.reset();
+    //     this.BattleFactory.reset();
+    //     this.HudFactory.reset();
+    //     this.DirectorFactory.reset();
+    //     this.ViewFactory.reset();
+    // }
 
     /**
      *
@@ -151,9 +152,9 @@ export default class CrestController {
             json = await this.fetchData(IP, Port);
         }
 
-
         // if we got here we should have good data
-        let data = await this.processData( json );
+        let data = await this.processData(json);
+
         data = await this.processView(data);
 
         // update connected state
@@ -359,11 +360,23 @@ export default class CrestController {
     }
 
     /**
+     *
+     */
+    async removeLapStorage() {
+        storage.remove('laps');
+    }
+
+    /**
      * Prepare data for all frontend views
      * @param {*} data
      * @returns
      */
     async processData(data) {
+
+        const inMenu = await isInMenu(data);
+        if (inMenu) {
+            await this.removeLapStorage();
+        }
 
         const ready = await isReady(data);
         if (!ready) {
@@ -438,7 +451,7 @@ export default class CrestController {
         // - participants/mParticipantInfo/Array
         // -- mBattlingParticipantAhead
         // -- mBattlingParticipantBehind
-        data = await this.BattleFactory.getData(data);
+        // data = await this.BattleFactory.getData(data);
 
         //
         data = await this.HudFactory.getData(data);

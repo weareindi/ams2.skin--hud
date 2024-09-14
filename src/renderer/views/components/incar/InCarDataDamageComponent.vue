@@ -53,9 +53,16 @@
 
     &[state="2"] {
         .c-in-car-data-damage__amount {
+            animation-name: flash;
+            animation-duration: 150ms;
+            animation-timing-function: linear;
+            animation-direction: alternate;
+            animation-fill-mode: forwards;
+            animation-iteration-count: infinite;
+
             svg {
                 path {
-                    @include color('fill', 'yellow');
+                    @include color('fill', 'green');
                 }
             }
         }
@@ -65,13 +72,40 @@
         .c-in-car-data-damage__amount {
             svg {
                 path {
-                    @include color('fill', 'red');
+                    @include color('fill', 'yellow');
                 }
             }
         }
     }
 
     &[state="4"] {
+        .c-in-car-data-damage__amount {
+            animation-name: flash;
+            animation-duration: 150ms;
+            animation-timing-function: linear;
+            animation-direction: alternate;
+            animation-fill-mode: forwards;
+            animation-iteration-count: infinite;
+
+            svg {
+                path {
+                    @include color('fill', 'yellow');
+                }
+            }
+        }
+    }
+
+    &[state="5"] {
+        .c-in-car-data-damage__amount {
+            svg {
+                path {
+                    @include color('fill', 'red');
+                }
+            }
+        }
+    }
+
+    &[state="6"] {
         .c-in-car-data-damage__amount {
             animation-name: flash;
             animation-duration: 150ms;

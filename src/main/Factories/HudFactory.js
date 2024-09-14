@@ -65,12 +65,27 @@ export default class HudFactory {
      */
     async mHudStatus(data) {
         // in pit box
-        if (data.gameStates.mGameState === 4) {
+        if (data.gameStates.mGameState === 4
+            && (
+                data.unfilteredInput.mUnfilteredThrottle === 0
+                && data.unfilteredInput.mUnfilteredBrake === 1
+                && data.unfilteredInput.mUnfilteredSteering === 0
+                && data.unfilteredInput.mUnfilteredClutch === 0
+            )
+        ) {
             return 1;
         }
 
         // in car
-        if (data.gameStates.mGameState === 2) {
+        if (
+            data.gameStates.mGameState === 2
+            && (
+                data.unfilteredInput.mUnfilteredThrottle !== 0
+                || data.unfilteredInput.mUnfilteredBrake !== 1
+                || data.unfilteredInput.mUnfilteredSteering !== 0
+                || data.unfilteredInput.mUnfilteredClutch !== 0
+            )
+        ) {
             return 2;
         }
 

@@ -41,12 +41,20 @@
 }
 
 .c-in-car-speedometer__item {
+    flex-grow: 1;
+    flex-shrink: 0;
+    flex-basis: auto;
+
     display: flex;
     align-items: center;
+    justify-content: flex-end;
     padding: 0 em(24);
+    width: 50%;
 
     + .c-in-car-speedometer__item {
         @include color('border-left-color', 'white', 0.4);
+
+        justify-content: flex-start;
 
         border-left-style: solid;
         border-left-width: 2px;

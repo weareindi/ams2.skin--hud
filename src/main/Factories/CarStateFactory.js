@@ -222,31 +222,29 @@ export default class CarStateFactory {
      * @returns
      */
     async mErsDeploymentModeLabel(data) {
-        if (data.carState.mErsDeploymentMode === 0) {
-            return 'Auto';
-        }
+        const prefix = data.carState.mErsAutoModeEnabled ? '[A]' : '';
 
         if (data.carState.mErsDeploymentMode === 1) {
-            return 'Off';
+            return `${prefix} Off`;
         }
 
         if (data.carState.mErsDeploymentMode === 2) {
-            return 'Build';
+            return `${prefix} Build`;
         }
 
         if (data.carState.mErsDeploymentMode === 3) {
-            return 'Balanced';
+            return `${prefix} Balanced`;
         }
 
         if (data.carState.mErsDeploymentMode === 4) {
-            return 'Attack';
+            return `${prefix} Attack`;
         }
 
         if (data.carState.mErsDeploymentMode === 5) {
-            return 'Qualify';
+            return `${prefix} Qualify`;
         }
 
-        return '';
+        return null;
     }
 
     /**
@@ -353,15 +351,15 @@ export default class CarStateFactory {
      * @returns
      */
     async mWaterState(data) {
-        if (data.carState.mWaterTempCelsius >= 90) {
-            return 4;
+        if (data.carState.mWaterTempCelsius >= 100) {
+            return 6;
         }
 
-        if (data.carState.mWaterTempCelsius > 0) {
-            return null;
+        if (data.carState.mWaterTempCelsius >= 98) {
+            return 5;
         }
 
-        return null;
+        return 0;
     }
 
     /**
@@ -379,8 +377,16 @@ export default class CarStateFactory {
      * @returns
      */
     async mOilState(data) {
-        if (data.carState.mOilTempCelsius >= 126.6) {
-            return 4;
+        // if (data.carState.mOilTempCelsius >= 126.6) {
+        //     return 6;
+        // }
+
+        if (data.carState.mOilTempCelsius >= 120) {
+            return 6;
+        }
+
+        if (data.carState.mOilTempCelsius >= 115) {
+            return 5;
         }
 
         if (data.carState.mOilTempCelsius > 0) {

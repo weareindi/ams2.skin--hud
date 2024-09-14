@@ -1,6 +1,5 @@
 import { isReady, getParticipantAtIndex, getParticipantInPostion, getActiveParticipant } from '../../utils/CrestUtils';
 import ParticipantFactory from './ParticipantFactory';
-// import storage from 'electron-json-storage';
 
 export default class ParticipantsFactory {
     constructor() {
@@ -23,12 +22,9 @@ export default class ParticipantsFactory {
      */
     async reset() {
         try {
-            // console.log('ParticipantsFactory reset');
-
             await this.resetParticipantFactories();
 
             this.participantFactories = {};
-
         } catch (error) {
             console.error(error);
         }

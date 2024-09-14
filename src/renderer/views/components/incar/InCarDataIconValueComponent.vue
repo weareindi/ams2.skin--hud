@@ -4,10 +4,10 @@
             <InCarIconComponent :svg="icon" :state="data.state"/>
         </span>
         <span class="c-in-car-data-icon-value__v">
-            <span class="c-in-car-data-icon-value__zerofill">{{ data.zerofill }}</span>
-            <span class="c-in-car-data-icon-value__value">{{ data.value }}</span>
-            <span class="c-in-car-data-icon-value__seperator">{{ data.seperator }}</span>
-            <span class="c-in-car-data-icon-value__suffix">{{ data.suffix }}</span>
+            <span class="c-in-car-data-icon-value__zerofill" v-html="data.zerofill"></span>
+            <span class="c-in-car-data-icon-value__value" v-html="data.value"></span>
+            <span class="c-in-car-data-icon-value__seperator" v-html="data.seperator"></span>
+            <span class="c-in-car-data-icon-value__suffix" v-html="data.suffix"></span>
         </span>
     </div>
 </template>

@@ -1,5 +1,6 @@
 import { isReady, getParticipantAtIndex, getParticipantInPostion, getActiveParticipant } from '../../utils/CrestUtils';
 import stc from "string-to-color";
+import storage from 'electron-json-storage';
 
 export default class ParticipantFactory {
     constructor() {
@@ -22,14 +23,15 @@ export default class ParticipantFactory {
      */
     async reset() {
         try {
-            // console.log('ParticipantFactory reset');
+            this.hasReinflated = false;
 
             this.driverIndex = null;
-            this.hasDriven = false;
-            this.hasExitedPitOnce = false;
-            this.hasReturnedToGarage = false;
+            this.isDriver = false;
+
+            this.outlap = false;
+            this.outlapNumber = false;
+
             this.runID = null;
-            this.isOutLap = false;
             this.lap = {
                 runID: null,
                 mCurrentLap: null,
@@ -45,13 +47,61 @@ export default class ParticipantFactory {
 
     /**
      *
+     */
+    async reinflateLaps(data, participant) {
+        if (this.hasReinflated) {
+            return this.laps;
+        }
+
+        if (!participant.mIsDriver) {
+            return this.laps;
+        }
+
+        // set to true so we dont run again
+        this.hasReinflated = true;
+
+        // update laps laps data
+        return this.laps = await this.getStoredLaps();
+    }
+
+    /**
+     *
+     */
+    async getStoredLaps() {
+        let storedData = await new Promise((resolve, reject) => {
+            storage.get(`laps`, function(error, data) {
+                if (error) {
+                    reject(error);
+                }
+
+                if (JSON.stringify(data).length <= 2) {
+                    resolve([]);
+                }
+
+                resolve(data);
+            });
+        });
+
+        return storedData;
+    }
+
+    /**
+     *
+     * @param {*} laps
+     * @returns
+     */
+    async setStoredLaps(laps) {
+        storage.set(`laps`, laps);
+    }
+
+    /**
+     *
      * @param {*} data
      * @param {*} mParticipantIndex
      * @returns
      */
     async getData(data, mParticipantIndex) {
         try {
-            // console.log(this.db);
             return await this.prepareData(data, mParticipantIndex);
         } catch (error) {
             console.error(error);
@@ -71,14 +121,16 @@ export default class ParticipantFactory {
         }
 
         let participant = await getParticipantAtIndex(data, mParticipantIndex);
-        await this.processHasDriven(data, mParticipantIndex);
-        await this.processHasExitedPitLaneState(data, mParticipantIndex);
-        await this.processHasReturnedToGarageState(data, mParticipantIndex);
-        await this.processCurrentLapState(data, mParticipantIndex);
 
+        participant.mIsDriver = await this.mIsDriver(data, mParticipantIndex);
         participant.mParticipantIndex = mParticipantIndex;
 
+        await this.reinflateLaps(data, participant);
+
+        await this.processCurrentLapState(data, participant);
+
         participant.mCurrentLapTimes = await this.mCurrentLapTimes(data, mParticipantIndex);
+
         participant.mNameMain = await this.mNameMain(data, mParticipantIndex);
         participant.mNameShort = await this.mNameShort(data, mParticipantIndex);
         participant.mNameTag = await this.mNameTag(data, mParticipantIndex);
@@ -90,9 +142,12 @@ export default class ParticipantFactory {
 
         participant.mKPH = await this.mKPH(data, mParticipantIndex);
 
-        participant.mIsDriver = await this.mIsDriver();
-        participant.mOutLap = await this.mOutLap();
+        participant.mOutLap = await this.mOutLap(data, mParticipantIndex);
+        participant.mInvalidLap = await this.mInvalidLap(data, mParticipantIndex);
         participant.mLapsInfo = await this.mLapsInfo(data, mParticipantIndex);
+
+        participant.mFastestLapTimes = await this.mFastestLapTimes(data, mParticipantIndex);
+        participant.mLastLapTimes = await this.mLastLapTimes(data, mParticipantIndex);
 
         return participant;
     }
@@ -113,6 +168,9 @@ export default class ParticipantFactory {
             // use first part of name
             name = parts[0];
         }
+
+        // remove special chars
+        name = name.replaceAll('-', '');
 
         // create shortname from first 3 characters of first item
         let shortname = name.slice(0, 3);
@@ -290,9 +348,9 @@ export default class ParticipantFactory {
      * @param {*} data
      * @returns
      */
-    async processHasDriven(data, mParticipantIndex) {
+    async mIsDriver(data, mParticipantIndex) {
         if (data.participants.mViewedParticipantIndex !== mParticipantIndex) {
-            return this.hasDriven = false;
+            return this.isDriver = false;
         }
 
         // update driver index when ever we are in the car
@@ -308,17 +366,10 @@ export default class ParticipantFactory {
         // if we have a driver index and driver index is same as participant
         if (this.driverIndex !== null && this.driverIndex === data.participants.mViewedParticipantIndex) {
             // ... its almost certainly the current driver rather than a monitored driver
-            return this.hasDriven = true;
+            return this.isDriver = true;
         }
 
-        return this.hasDriven = false;
-    }
-
-    /**
-     *
-     */
-    async mIsDriver() {
-        return this.hasDriven;
+        return this.isDriver = false;
     }
 
     /**
@@ -326,85 +377,47 @@ export default class ParticipantFactory {
      * @param {*} data
      * @param {*} mParticipantIndex
      */
-    async processHasExitedPitLaneState(data, mParticipantIndex) {
-        if (this.hasExitedPitOnce) {
-            return this.hasExitedPitOnce;
-        }
+    // async processHasExitedPitLaneState(data, mParticipantIndex) {
+    //     if (this.hasExitedPitOnce) {
+    //         return this.hasExitedPitOnce;
+    //     }
 
-        const currentLap = await this.getCurrentLap(data, mParticipantIndex);
+    //     const currentLap = await this.getCurrentLap(data, mParticipantIndex);
 
-        if (currentLap.mCurrentLapTimes < 0) {
-            return this.hasExitedPitOnce;
-        }
+    //     if (currentLap.mCurrentLapTimes < 0) {
+    //         return this.hasExitedPitOnce;
+    //     }
 
-        return this.hasExitedPitOnce = true;
-    }
+    //     return this.hasExitedPitOnce = true;
+    // }
 
-
-    /**
-     *
-     * @param {*} data
-     * @param {*} mParticipantIndex
-     */
-    async processHasReturnedToGarageState(data, mParticipantIndex) {
-        const participant = await getParticipantAtIndex(data, mParticipantIndex);
-
-        if (!this.hasExitedPitOnce) {
-            return this.hasReturnedToGarage;
-        }
-
-        if (participant.mPitModes === 4 || participant.mPitModes === 5) {
-            return this.hasReturnedToGarage = true;
-        }
-
-        return this.hasReturnedToGarage;
-    }
 
     /**
      *
      * @param {*} data
      * @param {*} mParticipantIndex
      */
-    async processCurrentLapState(data, mParticipantIndex) {
-        const participant = await getParticipantAtIndex(data, mParticipantIndex);
-        const currentLap = await this.getCurrentLap(data, mParticipantIndex);
+    // async processHasReturnedToGarageState(data, mParticipantIndex) {
+    //     const participant = await getParticipantAtIndex(data, mParticipantIndex);
 
-        // if in the garage
-        if (participant.mPitModes === 4 || participant.mPitModes === 5) {
-            this.isOutLap = true;
-        }
+    //     if (!this.hasExitedPitOnce) {
+    //         return this.hasReturnedToGarage;
+    //     }
 
-        // if participant has exited the pit
-        // and has not returned to circuit (first time out)
-        // and is on the circuit
-        // and the current lap is the same as stored lap despite going over the line (this happens on the first flying lap)
-        // and the lap is not invalid (laps are invalid when leaving the pits for first time)
-        if (
-            this.hasExitedPitOnce
-            && !this.hasReturnedToGarage
-            && participant.mPitModes === 0
-            && currentLap.mCurrentLap === this.lap.mCurrentLap
-            && !currentLap.mLapsInvalidated
-        ) {
-            // ... set outlap to false
-            this.isOutLap = false;
-        }
+    //     if (participant.mPitModes === 4 || participant.mPitModes === 5) {
+    //         return this.hasReturnedToGarage = true;
+    //     }
 
-        // if participant has exited the pit
-        // and has returned to circuit (second+ time out)
-        // and is on the circuit
-        // and the current lap is greater than stored lap (starting a new lap)
-        // and the lap is not invalid
-        if (
-            this.hasExitedPitOnce
-            && this.hasReturnedToGarage
-            && participant.mPitModes === 0
-            && currentLap.mCurrentLap > this.lap.mCurrentLap
-            && !currentLap.mLapsInvalidated
-        ) {
-            // ... set outlap to false
-            this.isOutLap = false;
-        }
+    //     return this.hasReturnedToGarage;
+    // }
+
+    /**
+     *
+     * @param {*} data
+     * @param {*} participant
+     */
+    async processCurrentLapState(data, participant) {
+        const currentLap = await this.getCurrentLap(data, participant.mParticipantIndex);
 
         if (
             this.runID !== null
@@ -413,6 +426,11 @@ export default class ParticipantFactory {
         ) {
             // add stored lap to laps array
             this.laps.push( this.lap );
+
+            // store driver laps is driver for reinflation if app closes mid-session
+            if (participant.mIsDriver) {
+                await this.setStoredLaps(this.laps);
+            }
         }
 
         // update stored lap with current lap data
@@ -496,7 +514,7 @@ export default class ParticipantFactory {
         }
 
         if (mCurrentLapTimes < 0) {
-            return -1;
+            return 0;
         }
 
         return mCurrentLapTimes;
@@ -520,8 +538,103 @@ export default class ParticipantFactory {
     /**
      *
      */
-    async mOutLap() {
-       return this.isOutLap;
+    async mFastestLapTimes(data, mParticipantIndex) {
+        // get participant
+        const participant = await getParticipantAtIndex(data, mParticipantIndex);
+
+        if (participant.mFastestLapTimes <=0 ) {
+            return 0;
+        }
+
+        return participant.mFastestLapTimes;
+    }
+
+    /**
+     *
+     */
+    async mLastLapTimes(data, mParticipantIndex) {
+        // get participant
+        const participant = await getParticipantAtIndex(data, mParticipantIndex);
+
+        if (participant.mLastLapTimes <=0 ) {
+            return 0;
+        }
+
+        return participant.mLastLapTimes;
+    }
+
+    /**
+     *
+     */
+    async mOutLap(data, mParticipantIndex) {
+        // // if in the garage
+        // if (participant.mPitModes !== 0) {
+        //     this.isOutLap = true;
+        // }
+
+        // // if participant has exited the pit
+        // // and has not returned to circuit (first time out)
+        // // and is on the circuit
+        // // and the current lap is the same as stored lap despite going over the line (this happens on the first flying lap)
+        // // and the lap is not invalid (laps are invalid when leaving the pits for first time)
+        // if (
+        //     this.hasExitedPitOnce
+        //     && !this.hasReturnedToGarage
+        //     && participant.mPitModes === 0
+        //     && currentLap.mCurrentLap === this.lap.mCurrentLap
+        //     && !currentLap.mLapsInvalidated
+        // ) {
+        //     // ... set outlap to false
+        //     this.isOutLap = false;
+        // }
+
+        // // if participant has exited the pit
+        // // and has returned to circuit (second+ time out)
+        // // and is on the circuit
+        // // and the current lap is greater than stored lap (starting a new lap)
+        // // and the lap is not invalid
+        // if (
+        //     this.hasExitedPitOnce
+        //     && this.hasReturnedToGarage
+        //     && participant.mPitModes === 0
+        //     && currentLap.mCurrentLap > this.lap.mCurrentLap
+        //     && !currentLap.mLapsInvalidated
+        // ) {
+        //     // ... set outlap to false
+        //     this.isOutLap = false;
+        // }
+
+        // get participant
+        const participant = await getParticipantAtIndex(data, mParticipantIndex);
+
+        // not on circuit
+        if (participant.mPitModes !== 0) {
+            this.outlap = true;
+            this.outlapNumber = participant.mCurrentLap;
+        }
+
+        // has crossed line not in pit
+        if (
+            participant.mPitModes === 0
+            && (participant.mCurrentLap > this.outlapNumber || participant.mCurrentLap === 1 && participant.mLapsInvalidated === 0)
+        ) {
+            this.outlap = false;
+        }
+
+        return this.outlap;
+    }
+
+    /**
+     *
+     * @param {*} data
+     * @param {*} mParticipantIndex
+     * @returns
+     */
+    async mInvalidLap(data, mParticipantIndex) {
+        // get participant
+        const participant = await getParticipantAtIndex(data, mParticipantIndex);
+
+        return participant.mLapsInvalidated;
     }
 
     /**
