@@ -32,7 +32,7 @@ export default class DirectorFactory {
     }
 
     /**
-     * 
+     *
      */
     async init() {
         try {
@@ -44,14 +44,14 @@ export default class DirectorFactory {
     }
 
     /**
-     * 
+     *
      */
     async registerSettingsController() {
         this.SettingsController = new SettingsController();
     }
 
     /**
-     * 
+     *
      */
     async getVariables() {
         this.defaultView = await this.SettingsController.get('DirectorDefaultView');
@@ -64,18 +64,18 @@ export default class DirectorFactory {
     }
 
     /**
-     * 
+     *
      */
     async reset() {
         try {
-            
+            // console.log('DirectorFactory reset');
         } catch (error) {
             console.error(error);
         }
     }
 
     /**
-     * 
+     *
      */
     async updateBinds() {
         if (
@@ -85,7 +85,7 @@ export default class DirectorFactory {
             || !globalShortcut.isRegistered(this.commandLeaderboard)
             || !globalShortcut.isRegistered(this.commandStandings)
             || !globalShortcut.isRegistered(this.commandBattle)
-        ) {            
+        ) {
             globalShortcut.unregisterAll();
         }
 
@@ -118,13 +118,13 @@ export default class DirectorFactory {
             console.log('battle view selected');
             this.view = 'battle';
         });
-        
+
     }
 
     /**
-     * 
-     * @param {*} data 
-     * @returns 
+     *
+     * @param {*} data
+     * @returns
      */
     async getData(data) {
         try {
@@ -136,21 +136,21 @@ export default class DirectorFactory {
     }
 
     /**
-     * 
-     * @param {*} data 
-     * @returns 
+     *
+     * @param {*} data
+     * @returns
      */
-    async prepareData(data) {        
+    async prepareData(data) {
         const ready = await isReady(data);
         if (!ready) {
             return null;
         }
 
         // update vars
-        await this.getVariables();  
-        await this.updateBinds();      
+        await this.getVariables();
+        await this.updateBinds();
 
-        let view = await this.getCurrentView(data);        
+        let view = await this.getCurrentView(data);
 
         // if auto, then get
         if (view === 'auto') {
@@ -176,8 +176,8 @@ export default class DirectorFactory {
     }
 
     /**
-     * 
-     * @param {*} data 
+     *
+     * @param {*} data
      */
     async getCurrentView(data) {
         if (this.view === null) {
@@ -188,9 +188,9 @@ export default class DirectorFactory {
     }
 
     /**
-     * 
-     * @param {*} data 
-     * @param {*} view 
+     *
+     * @param {*} data
+     * @param {*} view
      */
     async getViewData(data, view) {
         if (view === null) {
@@ -229,14 +229,14 @@ export default class DirectorFactory {
             const battle = await this.getBattle(data);
             return battle;
         }
-        
+
 
         return null;
     }
 
     /**
-     * 
-     * @param {*} data 
+     *
+     * @param {*} data
      */
     async getBattle(data) {
         const participant = await getActiveParticipant(data);
@@ -257,9 +257,9 @@ export default class DirectorFactory {
     }
 
     /**
-     * 
-     * @param {*} data 
-     * @returns 
+     *
+     * @param {*} data
+     * @returns
      */
     async getLeaderboard(data) {
         // sorted by position
@@ -272,9 +272,9 @@ export default class DirectorFactory {
     }
 
     /**
-     * 
-     * @param {*} data 
-     * @returns 
+     *
+     * @param {*} data
+     * @returns
      */
     async getStandings(data) {
         // sorted by position
@@ -290,7 +290,7 @@ export default class DirectorFactory {
         for (let pi = 0; pi < participants.length; pi += 6) {
             pages.push( participants.slice(pi, pi + 6) );
         }
-        
+
         let duration = Date.now() - this.timeStart;
         let pageDuration = this.minTimes.standings / pages.length;
 
@@ -298,7 +298,7 @@ export default class DirectorFactory {
         for (let pi = 0; pi < pages.length; pi++) {
             if (duration >= (pageDuration * pi)) {
                 currentPage = pi;
-            }      
+            }
         }
 
         return {
@@ -308,8 +308,8 @@ export default class DirectorFactory {
     }
 
     /**
-     * 
-     * @param {*} data 
+     *
+     * @param {*} data
      */
     async setMinTimes(data) {
         // blank / show nothing
@@ -327,7 +327,7 @@ export default class DirectorFactory {
 
         // battle
         const battleMinTIme = 120000;
-        
+
         this.minTimes = {
             blank: blankMinTIme,
             solo: soloMinTIme,
@@ -338,9 +338,9 @@ export default class DirectorFactory {
     }
 
     /**
-     * 
-     * @param {*} data 
-     * @param {*} views 
+     *
+     * @param {*} data
+     * @param {*} views
      */
     async selectAutoView(data, views) {
         if (!views.length) {
@@ -368,8 +368,8 @@ export default class DirectorFactory {
     }
 
     /**
-     * 
-     * @param {*} data 
+     *
+     * @param {*} data
      */
     async getWeightedViews(data) {
         let views = [];
@@ -414,9 +414,9 @@ export default class DirectorFactory {
     }
 
     /**
-     * 
-     * @param {*} data 
-     * @param {*} views 
+     *
+     * @param {*} data
+     * @param {*} views
      */
     async filterToPointsOfInterest(data, views) {
         const participant = await getActiveParticipant(data);

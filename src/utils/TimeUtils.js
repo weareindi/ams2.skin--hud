@@ -2,7 +2,7 @@
  * Covert milliseconds to readable time
  * @param {*} n The number in milliseconds
  * @param {*} r Are we rounding to nearest second?
- * @returns 
+ * @returns
  */
 export function millisecondsToTime(n, r = false) {
     // convert to total milliseconds
@@ -10,10 +10,16 @@ export function millisecondsToTime(n, r = false) {
 
     // milliseconds
     let milliseconds = Math.round((totalmilliseconds % 1000));
-    let millisecondsZeroFill = (milliseconds < 100) ? `00` : ``;
+    let millisecondsZeroFill = ``;
+    if (milliseconds < 100) {
+        millisecondsZeroFill = `0`;
+    }
+    if (milliseconds < 10) {
+        millisecondsZeroFill = `00`;
+    }
 
     // ensure milliseconds display is 3 digits long
-    // let millisecondsDisplay = ('000' + milliseconds).slice(-3);    
+    // let millisecondsDisplay = ('000' + milliseconds).slice(-3);
 
     // seconds
     let seconds = Math.floor((totalmilliseconds / 1000) % 60);

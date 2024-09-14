@@ -24,33 +24,33 @@ export default class SettingsController {
     }
 
     /**
-     * 
-     * @returns 
+     *
+     * @returns
      */
     async updateStoredSettings() {
         return this.storedSettings = storage.getSync('settings');
     }
 
     /**
-     * 
+     *
      */
     async registerDisplayProcessor() {
         this.DisplayProcessor = new DisplayProcessor();
     }
 
     /**
-     * 
-     * @param {*} key 
-     * @returns 
+     *
+     * @param {*} key
+     * @returns
      */
     async clear() {
         storage.remove('settings');
     }
 
     /**
-     * 
-     * @param {*} key 
-     * @returns 
+     *
+     * @param {*} key
+     * @returns
      */
     async set(key, value) {
         // get all settings (as we store them in a single object)
@@ -64,9 +64,9 @@ export default class SettingsController {
     }
 
     /**
-     * 
-     * @param {*} key 
-     * @returns 
+     *
+     * @param {*} key
+     * @returns
      */
     async get(key = null) {
         let settings = await this.getAll();
@@ -79,8 +79,8 @@ export default class SettingsController {
     }
 
     /**
-     * 
-     * @returns 
+     *
+     * @returns
      */
     async getAll() {
         // get defaults
@@ -94,8 +94,8 @@ export default class SettingsController {
     }
 
     /**
-     * 
-     * @returns 
+     *
+     * @returns
      */
     async getDefaultData() {
         const primaryDisplay = screen.getPrimaryDisplay();
@@ -123,7 +123,7 @@ export default class SettingsController {
         data.DirectorCommandLeaderboard = 'ctrl+Num3';
         data.DirectorCommandStandings = 'ctrl+Num4';
         data.DirectorCommandBattle = 'ctrl+Num5';
-        
+
         data.Developer = false;
         data.MockFetch = false;
         data.MockState = (await this.getMockStateOptions())[0].value;
@@ -132,8 +132,8 @@ export default class SettingsController {
     }
 
     /**
-     * 
-     * @returns 
+     *
+     * @returns
      */
     async getStoredData() {
         let storedSettings = await new Promise((resolve, reject) => {
@@ -144,7 +144,7 @@ export default class SettingsController {
 
                 resolve(data);
             });
-        });        
+        });
 
         // check displays exist
         storedSettings = await this.checkStoredDeveloper(storedSettings);
@@ -154,7 +154,7 @@ export default class SettingsController {
     }
 
     /**
-     * 
+     *
      */
     async checkStoredDeveloper(storedSettings) {
         if (is.dev) {
@@ -165,7 +165,7 @@ export default class SettingsController {
     }
 
     /**
-     * 
+     *
      */
     async checkStoredDisplays(storedSettings) {
         if ('SettingsDisplay' in storedSettings) {
@@ -188,7 +188,7 @@ export default class SettingsController {
     }
 
     /**
-     * 
+     *
      */
     async getAllOptions() {
         const options = {};
@@ -215,7 +215,7 @@ export default class SettingsController {
     }
 
     /**
-     * 
+     *
      */
     async getDefaultYesNo() {
         return [
@@ -225,7 +225,7 @@ export default class SettingsController {
     }
 
     /**
-     * 
+     *
      */
     async getDefaultDisplays() {
         const defaultDisplays = [];
@@ -241,7 +241,7 @@ export default class SettingsController {
     }
 
     /**
-     * 
+     *
      */
     async getDirectorDefaultViewOptions() {
         return [
@@ -255,7 +255,7 @@ export default class SettingsController {
     }
 
     /**
-     * 
+     *
      */
     async getMockStateOptions() {
         return [

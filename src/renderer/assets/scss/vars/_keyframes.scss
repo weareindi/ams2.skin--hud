@@ -1,6 +1,6 @@
-@keyframes warning {
+@keyframes flash {
     0% {
-        opacity: 0%;
+        opacity: 20%;
     }
 
     100%{
@@ -27,16 +27,6 @@
 
     100%{
         transform: translateX(100%);
-    }
-}
-
-@keyframes flash {
-    0% {
-        opacity: 0;
-    }
-
-    100%{
-        opacity: 1;
     }
 }
 

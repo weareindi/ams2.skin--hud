@@ -1,4 +1,4 @@
-import { isReady, getActiveParticipant } from '../../utils/CrestUtils';
+import { isReady } from '../../utils/CrestUtils';
 
 export default class WeatherFactory {
     constructor() {
@@ -21,6 +21,8 @@ export default class WeatherFactory {
      */
     async reset() {
         try {
+            // console.log('WeatherFactory reset');
+
             this.mRainDensity = null;
         } catch (error) {
             console.error(error);
@@ -55,12 +57,20 @@ export default class WeatherFactory {
 
         data.wheelsAndTyres.mSuspensionDamage = await this.mSuspensionDamage(data);
         data.wheelsAndTyres.mSuspensionDamageState = await this.mSuspensionDamageState(data);
+
         data.wheelsAndTyres.mBrakeDamage = await this.mBrakeDamage(data);
         data.wheelsAndTyres.mBrakeDamageState = await this.mBrakeDamageState(data);
+        data.wheelsAndTyres.mBrakeTemp = await this.mBrakeTemp(data);
+        data.wheelsAndTyres.mBrakeTempState = await this.mBrakeTempState(data);
+
         data.wheelsAndTyres.mTyreWear = await this.mTyreWear(data);
         data.wheelsAndTyres.mTyreWearState = await this.mTyreWearState(data);
         data.wheelsAndTyres.mTyreTemp = await this.mTyreTemp(data);
         data.wheelsAndTyres.mTyreTempState = await this.mTyreTempState(data);
+        data.wheelsAndTyres.mTyreCompoundShort = await this.mTyreCompoundShort(data);
+
+        data.wheelsAndTyres.mAirPressure = await this.mAirPressure(data);
+        data.wheelsAndTyres.mAirPressureState = await this.mAirPressureState(data);
 
 
         return data;
@@ -87,20 +97,24 @@ export default class WeatherFactory {
      */
     async mSuspensionDamageState(data) {
         const state = (value) => {
-            if (value >= 1) {
-                return 4;
+            if (value >= 0.4) {
+                return 6;
             }
 
-            if (value >= 0.2) {
-                return 3;
+            if (value >= 0.25) {
+                return 5;
             }
 
-            if (value >= 0.15) {
-                return 2;
-            }
+            // if (value >= 0.2) {
+            //     return 3;
+            // }
+
+            // if (value >= 0.15) {
+            //     return 2;
+            // }
 
             if (value > 0) {
-                return 1;
+                return 3;
             }
 
             return 0;
@@ -135,20 +149,24 @@ export default class WeatherFactory {
      */
     async mBrakeDamageState(data) {
         const state = (value) => {
-            if (value >= 1) {
-                return 4;
-            }
-
-            if (value >= 0.5) {
-                return 3;
+            if (value >= 0.4) {
+                return 6;
             }
 
             if (value >= 0.25) {
-                return 2;
+                return 5;
             }
 
-            if (value >= 0.1) {
-                return 1;
+            // if (value >= 0.2) {
+            //     return 3;
+            // }
+
+            // if (value >= 0.15) {
+            //     return 2;
+            // }
+
+            if (value > 0) {
+                return 3;
             }
 
             return 0;
@@ -159,6 +177,50 @@ export default class WeatherFactory {
             state(data.wheelsAndTyres.mBrakeDamage[1]),
             state(data.wheelsAndTyres.mBrakeDamage[2]),
             state(data.wheelsAndTyres.mBrakeDamage[3])
+        ];
+    }
+
+    /**
+     *
+     * @param {*} data
+     * @returns
+     */
+    async mBrakeTemp(data) {
+        return [
+            Math.round(data.wheelsAndTyres.mBrakeTempCelsius[0] * 100) / 100,
+            Math.round(data.wheelsAndTyres.mBrakeTempCelsius[1] * 100) / 100,
+            Math.round(data.wheelsAndTyres.mBrakeTempCelsius[2] * 100) / 100,
+            Math.round(data.wheelsAndTyres.mBrakeTempCelsius[3] * 100) / 100,
+        ];
+    }
+
+    /**
+     *
+     * @param {*} data
+     * @returns
+     */
+    async mBrakeTempState(data) {
+        const state = (value) => {
+            if (value >= 1000) {
+                return 6;
+            }
+
+            if (value >= 800) {
+                return 5;
+            }
+
+            if (value >= 100) {
+                return 0;
+            }
+
+            return 1;
+        }
+
+        return [
+            state(data.wheelsAndTyres.mBrakeTemp[0]),
+            state(data.wheelsAndTyres.mBrakeTemp[1]),
+            state(data.wheelsAndTyres.mBrakeTemp[2]),
+            state(data.wheelsAndTyres.mBrakeTemp[3])
         ];
     }
 
@@ -184,19 +246,15 @@ export default class WeatherFactory {
     async mTyreWearState(data) {
         const state = (value) => {
             if (value >= 1) {
-                return 4;
+                return 6;
             }
 
             if (value >= 0.5) {
-                return 3;
+                return 5;
             }
 
             if (value >= 0.25) {
-                return 2;
-            }
-
-            if (value >= 0.1) {
-                return 1;
+                return 3;
             }
 
             return 0;
@@ -231,23 +289,20 @@ export default class WeatherFactory {
      */
     async mTyreTempState(data) {
         const state = (value) => {
-            if (value >= 1) {
-                return 4;
+            if (value >= 110) {
+                return 6;
             }
 
-            if (value >= 0.5) {
-                return 3;
+
+            if (value >= 100) {
+                return 5;
             }
 
-            if (value >= 0.25) {
-                return 2;
+            if (value >= 60) {
+                return 0;
             }
 
-            if (value >= 0.1) {
-                return 1;
-            }
-
-            return 0;
+            return 1;
         }
 
         return [
@@ -255,6 +310,57 @@ export default class WeatherFactory {
             state(data.wheelsAndTyres.mTyreTemp[1]),
             state(data.wheelsAndTyres.mTyreTemp[2]),
             state(data.wheelsAndTyres.mTyreTemp[3])
+        ];
+    }
+
+    /**
+     *
+     * @param {*} data
+     * @returns
+     */
+    async mTyreCompoundShort(data) {
+        const short = (string) => {
+            // use first character
+            return string.substring(0, 1);
+        }
+
+        return [
+            short(data.wheelsAndTyres.mTyreCompound[0]),
+            short(data.wheelsAndTyres.mTyreCompound[1]),
+            short(data.wheelsAndTyres.mTyreCompound[2]),
+            short(data.wheelsAndTyres.mTyreCompound[3]),
+        ];
+    }
+
+    /**
+     *
+     * @param {*} data
+     * @returns
+     */
+    async mAirPressure(data) {
+        return [
+            Math.round(data.wheelsAndTyres.mAirPressure[0]) / 100,
+            Math.round(data.wheelsAndTyres.mAirPressure[1]) / 100,
+            Math.round(data.wheelsAndTyres.mAirPressure[2]) / 100,
+            Math.round(data.wheelsAndTyres.mAirPressure[3]) / 100,
+        ];
+    }
+
+    /**
+     *
+     * @param {*} data
+     * @returns
+     */
+    async mAirPressureState(data) {
+        const state = (value) => {
+            return 0;
+        }
+
+        return [
+            state(data.wheelsAndTyres.mAirPressure[0]),
+            state(data.wheelsAndTyres.mAirPressure[1]),
+            state(data.wheelsAndTyres.mAirPressure[2]),
+            state(data.wheelsAndTyres.mAirPressure[3])
         ];
     }
 }

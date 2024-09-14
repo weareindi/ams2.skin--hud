@@ -1,5 +1,5 @@
 <template>
-    <span class="c-svg" :class="'c-svg--' + svg" v-if="item" :style="`padding-top: ${item.impheight};`">
+    <span class="c-svg" :class="'c-svg--' + svg" v-if="item" :style="`padding-top: ${item.impheight};`" :fill="fill">
         <span class="c-svg__image" :style="`top: ${item.offsetY}; right: ${item.offsetX}; bottom: ${item.offsetY}; left: ${item.offsetX};`" v-html="item.file"></span>
     </span>
 </template>
@@ -26,6 +26,12 @@
     display: block;
     overflow: visible;
     pointer-events: none;
+
+    &[fill="true"] {
+        padding-top: 0 !important;
+        width: 100%;
+        height: 100%;
+    }
 }
 
 .c-svg__image {
@@ -76,6 +82,7 @@ export default {
                 const item = this.items.find((item) => {
                     return item.id === this.svg;
                 });
+
 
                 return item;
             }

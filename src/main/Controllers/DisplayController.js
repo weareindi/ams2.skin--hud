@@ -16,7 +16,7 @@ export default class DisplayController {
     }
 
     /**
-     * 
+     *
      */
     async init() {
         try {
@@ -27,7 +27,7 @@ export default class DisplayController {
     }
 
     /**
-     * 
+     *
      */
     async getVariables() {
         this.SettingsDisplay = await (new SettingsController()).get('SettingsDisplay');
@@ -37,7 +37,7 @@ export default class DisplayController {
     }
 
     /**
-     * 
+     *
      */
     async getDisplay(displayID) {
         let requestedDisplay = screen.getPrimaryDisplay();
@@ -55,14 +55,14 @@ export default class DisplayController {
     }
 
     /**
-     * 
+     *
      */
     async getDisplayID(displayID) {
         return (await this.getDisplay(displayID)).id;
     }
 
     /**
-     * 
+     *
      */
     async setDisplay(win, displayId) {
         const display = await this.getDisplay(displayId);
@@ -81,7 +81,7 @@ export default class DisplayController {
     }
 
     /**
-     * 
+     *
      */
     async setScale(win, displayId) {
         const display = await this.getDisplay(displayId);
@@ -90,12 +90,9 @@ export default class DisplayController {
     }
 
     /**
-     * 
+     *
      */
     async exists(displayId) {
-        console.log('displayId');
-        console.log(displayId);
-
         return true;
     }
 }

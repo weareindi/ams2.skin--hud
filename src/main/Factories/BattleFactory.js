@@ -13,7 +13,7 @@ export default class BattleFactory {
     }
 
     /**
-     * 
+     *
      */
     async init() {
         try {
@@ -24,20 +24,20 @@ export default class BattleFactory {
     }
 
     /**
-     * 
+     *
      */
     async reset() {
         try {
-            
+            // console.log('BattleFactory reset');
         } catch (error) {
             console.error(error);
         }
     }
 
     /**
-     * 
-     * @param {*} data 
-     * @returns 
+     *
+     * @param {*} data
+     * @returns
      */
     async getData(data) {
         try {
@@ -48,11 +48,11 @@ export default class BattleFactory {
     }
 
     /**
-     * 
-     * @param {*} data 
-     * @returns 
+     *
+     * @param {*} data
+     * @returns
      */
-    async prepareData(data) {        
+    async prepareData(data) {
         const ready = await isReady(data);
         if (!ready) {
             return null;
@@ -64,9 +64,9 @@ export default class BattleFactory {
     }
 
     /**
-     * 
-     * @param {*} data 
-     * @returns 
+     *
+     * @param {*} data
+     * @returns
      */
     async processBattles(data) {
         // race hasnt started yet (still in lobby/on grid)
@@ -74,7 +74,7 @@ export default class BattleFactory {
         //     return null;
         // }
 
-        data = await this.prepareParticipants(data);        
+        data = await this.prepareParticipants(data);
 
         // race hasnt started yet
         if (data.gameStates.mSessionState !== 5 || data.gameStates.mRaceState !== 2) {
@@ -86,9 +86,9 @@ export default class BattleFactory {
     }
 
     /**
-     * 
-     * @param {*} data 
-     * @returns 
+     *
+     * @param {*} data
+     * @returns
      */
     async prepareParticipants(data) {
         for (let ppi = 0; ppi < data.participants.mParticipantInfo.length; ppi++) {
@@ -101,10 +101,10 @@ export default class BattleFactory {
     }
 
     /**
-     * 
-     * @param {*} data 
-     * @param {*} participants 
-     * @returns 
+     *
+     * @param {*} data
+     * @param {*} participants
+     * @returns
      */
     async battles(data, participants) {
         // group battles for easy digestion
@@ -153,9 +153,9 @@ export default class BattleFactory {
     }
 
     /**
-     * 
-     * @param {*} data 
-     * @returns 
+     *
+     * @param {*} data
+     * @returns
      */
     async processParticipants(data) {
         let participants = await getParticipantsSortedByPosition(data);
@@ -166,8 +166,8 @@ export default class BattleFactory {
     }
 
     /**
-     * 
-     * @param {*} participants 
+     *
+     * @param {*} participants
      */
     async withinThresholdAhead(participants) {
         // get current timestamp
@@ -220,8 +220,8 @@ export default class BattleFactory {
     }
 
     /**
-     * 
-     * @param {*} participants 
+     *
+     * @param {*} participants
      */
     async withinThresholdBehind(data, participants) {
         // get current timestamp
@@ -246,11 +246,11 @@ export default class BattleFactory {
                 continue;
             }
 
-            const participantBehind = await getParticipantInPostion(data, (participants[pi].mRacePosition + 1));            
+            const participantBehind = await getParticipantInPostion(data, (participants[pi].mRacePosition + 1));
 
             // over the distance threshold?
             if (participantBehind.mRacingDistance > this.distance) {
-                
+
                 // ... delete from potential
                 delete this.potentialBehind[ participants[pi].mName ];
 
@@ -278,8 +278,8 @@ export default class BattleFactory {
     }
 
     /**
-     * 
-     * @param {*} participants 
+     *
+     * @param {*} participants
      */
     async filterParticipants(participants) {
         for (let pi = 0; pi < participants.length; pi++) {

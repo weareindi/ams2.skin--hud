@@ -6,7 +6,7 @@ export default class EventInformationFactory {
     }
 
     /**
-     * 
+     *
      */
     async init() {
         try {
@@ -17,20 +17,20 @@ export default class EventInformationFactory {
     }
 
     /**
-     * 
+     *
      */
     async reset() {
         try {
-            
+            // console.log('EventInformationFactory reset');
         } catch (error) {
             console.error(error);
         }
     }
 
     /**
-     * 
-     * @param {*} data 
-     * @returns 
+     *
+     * @param {*} data
+     * @returns
      */
     async getData(data) {
         try {
@@ -41,38 +41,38 @@ export default class EventInformationFactory {
     }
 
     /**
-     * 
-     * @param {*} data 
-     * @returns 
+     *
+     * @param {*} data
+     * @returns
      */
-    async prepareData(data) {        
+    async prepareData(data) {
         const ready = await isReady(data);
         if (!ready) {
             return null;
-        }        
-    
+        }
+
         data.eventInformation.mEventTimeRemaining = await this.mEventTimeRemaining(data);
-        data.eventInformation.mLapsInEvent = await this.mLapsInEvent(data);        
-        data.eventInformation.mAdditionalLap = await this.mAdditionalLap(data);        
-        
+        data.eventInformation.mLapsInEvent = await this.mLapsInEvent(data);
+        data.eventInformation.mAdditionalLap = await this.mAdditionalLap(data);
+
         return data;
     }
 
     /**
      * Only starts counting down if the session has started
-     * @param {*} data 
-     * @returns 
+     * @param {*} data
+     * @returns
      */
     async mEventTimeRemaining(data) {
         if (!data.eventInformation.mSessionDuration) {
             return null;
         }
-        
+
         // before race start?
         if (
             data.timings.mCurrentTime < 0
             && data.gameStates.mSessionState === 5
-        ) {            
+        ) {
             return data.eventInformation.mSessionDuration;
         }
 
@@ -80,9 +80,9 @@ export default class EventInformationFactory {
     }
 
     /**
-     * 
-     * @param {*} data 
-     * @returns 
+     *
+     * @param {*} data
+     * @returns
      */
     async mLapsInEvent(data) {
         if (!data.eventInformation.mLapsInEvent) {
@@ -93,9 +93,9 @@ export default class EventInformationFactory {
     }
 
     /**
-     * 
-     * @param {*} data 
-     * @returns 
+     *
+     * @param {*} data
+     * @returns
      */
     async mAdditionalLap(data) {
         return null;

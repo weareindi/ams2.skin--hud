@@ -1,6 +1,5 @@
 import { isReady, getParticipantAtIndex, getParticipantInPostion, getActiveParticipant } from '../../utils/CrestUtils';
 import ParticipantFactory from './ParticipantFactory';
-// import storage from 'electron-json-storage';
 
 export default class ParticipantsFactory {
     constructor() {
@@ -24,6 +23,7 @@ export default class ParticipantsFactory {
     async reset() {
         try {
             await this.resetParticipantFactories();
+
             this.participantFactories = {};
         } catch (error) {
             console.error(error);
@@ -133,8 +133,14 @@ export default class ParticipantsFactory {
             data.participants.mParticipantInfo[participantIndex] = participant;
         }
 
+        // append non-pariticpant count (ie. safety car)
+        data.participants.mNumNonParticipants = await this.mNumNonParticipants(data);
+
+        // append classes
+        data.participants.mClasses = await this.mClasses(data);
+
         // append class info
-        data.participants.mNumClassParticipants = await this.mNumClassParticipants(data);
+        data.participants.mActiveParticipantClassNum = await this.mActiveParticipantClassNum(data);
 
         // apply mRacingDistance
         data = await this.applyParticipantDistances(data);
@@ -147,12 +153,34 @@ export default class ParticipantsFactory {
      * @param {*} data
      * @returns
      */
-    async mNumClassParticipants(data) {
+    async mNumNonParticipants(data) {
+        let nonParticipants = 0;
+
+        for (let participantIndex = 0; participantIndex < data.participants.mNumParticipants; participantIndex++) {
+            const participant = await getParticipantAtIndex(data, participantIndex);
+
+            if (participant.mCarClassNames === 'SafetyCar') {
+                nonParticipants++;
+            }
+        }
+
+        return nonParticipants;
+    }
+
+    /**
+     * Count total valid classes
+     * @param {*} data
+     * @returns
+     */
+    async mClasses(data) {
         const classes = {};
 
-        // count classes
         for (let participantIndex = 0; participantIndex < data.participants.mNumParticipants; participantIndex++) {
             let participant = await getParticipantAtIndex(data, participantIndex);
+
+            if (participant.mCarClassNames === 'SafetyCar') {
+                continue;
+            }
 
             if (!(participant.mCarClassNames in classes)) {
                 classes[participant.mCarClassNames] = 0;
@@ -161,8 +189,21 @@ export default class ParticipantsFactory {
             classes[participant.mCarClassNames]++;
         }
 
-        // get participant car class
+        return classes;
+    }
+
+    /**
+     * Count active participant class participants
+     * @param {*} data
+     * @returns
+     */
+    async mActiveParticipantClassNum(data) {
+
+        // get participant
         let participant = await getActiveParticipant(data);
+
+        // get classes
+        const classes = await this.mClasses(data);
 
         // return amount for participant class
         return classes[participant.mCarClassNames];

@@ -21,7 +21,7 @@ export default class TrackPositionFactory {
      */
     async reset() {
         try {
-
+            // console.log('TrackPositionFactory reset');
         } catch (error) {
             console.error(error);
         }
@@ -126,6 +126,10 @@ export default class TrackPositionFactory {
             const participant = trackPosition[pi];
 
             if (participant.mParticipantIndex === activeParticipant.mParticipantIndex) {
+                continue;
+            }
+
+            if (participant.mCarClassNames === 'SafetyCar') {
                 continue;
             }
 

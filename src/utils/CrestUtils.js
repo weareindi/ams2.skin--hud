@@ -4,6 +4,10 @@
  * @returns
  */
 export async function isReady(data) {
+    if (typeof data === 'undefined') {
+        return false;
+    }
+
     if (data === null) {
         return false;
     }
@@ -44,6 +48,35 @@ export async function isReady(data) {
  * @param {*} data
  * @returns
  */
+export async function isInMenu(data) {
+    if (typeof data === 'undefined') {
+        return false;
+    }
+
+    if (data === null) {
+        return false;
+    }
+
+    if (!('gameStates' in data)) {
+        return false;
+    }
+
+    if (!('mGameState' in data.gameStates)) {
+        return false;
+    }
+
+    if (data.gameStates.mGameState !== 1) {
+        return false;
+    }
+
+    return true;
+}
+
+/**
+ *
+ * @param {*} data
+ * @returns
+ */
 export async function getActiveParticipant(data) {
     return data.participants.mParticipantInfo[ data.participants.mViewedParticipantIndex ];
 }
@@ -63,9 +96,17 @@ export async function getParticipantAtIndex(data, index) {
  * @param {*} mRacePosition
  */
 export async function getParticipantInPostion(data, mRacePosition) {
-    return data.participants.mParticipantInfo.find((participant) => {
-        return participant.mRacePosition === mRacePosition;
+    const participant = data.participants.mParticipantInfo.find((participant) => {
+        if ('mRacePosition' in participant) {
+            return participant.mRacePosition === mRacePosition;
+        }
     });
+
+    if (typeof participant === 'undefined') {
+        return null;
+    }
+
+    return participant;
 }
 
 

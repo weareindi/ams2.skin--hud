@@ -1,7 +1,14 @@
 <template>
-    <div class="p">
+    <div>
         <Suspense>
-            <p>Hud</p>
+            <div class="p">
+                <div class="p__pit" v-if="vHudStatus === 1">
+                    <PitHud />
+                </div>
+                <div class="p__car" v-if="vHudStatus === 2">
+                    <InCarHud />
+                </div>
+            </div>
         </Suspense>
     </div>
 </template>
@@ -15,16 +22,20 @@
 
 <script>
 import { inject } from 'vue';
+import PitHud from '@renderer/views/huds/PitHud.vue';
+import InCarHud from '@renderer/views/huds/InCarHud.vue';
 
 export default {
     setup() {
-        const vHudShow = inject('vHudShow');
         const vHudStatus = inject('vHudStatus');
-        
+
         return {
-            vHudShow,
             vHudStatus,
         };
+    },
+    components: {
+        PitHud,
+        InCarHud
     }
 }
 </script>
