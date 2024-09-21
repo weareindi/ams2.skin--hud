@@ -7,7 +7,23 @@
         </div>
         <div class="c-hud-incar__middle">
             <div class="c-hud-incar__a"></div>
-            <div class="c-hud-incar__b"></div>
+            <div class="c-hud-incar__b">
+                <div class="c-hud-incar__rows">
+                    <div class="c-hud-incar__row">
+                        <div class="c-hud-incar__items">
+                            <div class="c-hud-incar__item">
+                                <InCarSplitComponent :data="vSplitTimeAhead" />
+                            </div>
+                            <div class="c-hud-incar__item">
+                                <InCarSplitComponent :data="vSplitTime" />
+                            </div>
+                            <div class="c-hud-incar__item">
+                                <InCarSplitComponent :data="vSplitTimeBehind" inverted="true" />
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            </div>
             <div class="c-hud-incar__c"></div>
         </div>
         <div class="c-hud-incar__bottom">
@@ -120,11 +136,39 @@
 }
 
 .c-hud-incar__top {
+
     align-items: flex-start;
 }
 
 .c-hud-incar__middle {
-    align-items: center;
+    align-items: flex-start;
+    min-height: em(420);
+
+    .c-hud-incar__b {
+        width: em(680);
+
+        .c-hud-incar__items {
+        }
+
+        .c-hud-incar__item {
+            display: flex;
+            align-items: center;
+
+            width: calc(100% / 3);
+
+            &:nth-of-type(1) {
+                justify-content: flex-start;
+            }
+
+            &:nth-of-type(2) {
+                justify-content: center;
+            }
+
+            &:nth-of-type(3) {
+                justify-content: flex-end;
+            }
+        }
+    }
 }
 
 .c-hud-incar__bottom {
@@ -183,7 +227,7 @@
     display: flex;
     flex-direction: row;
     justify-content: space-between;
-    align-items: center;
+    align-items: flex-end;
 }
 
 .c-hud-incar__item {}
@@ -201,6 +245,7 @@ import InCarDataWeatherComponent from '../components/incar/InCarDataWeatherCompo
 import InCarSpeedometerComponent from '../components/incar/InCarSpeedometerComponent.vue';
 import InCarFeaturesComponent from '../components/incar/InCarFeaturesComponent.vue';
 import InCarWheelsTyresComponent from '../components/incar/InCarWheelsTyresComponent.vue';
+import InCarSplitComponent from '../components/incar/InCarSplitComponent.vue';
 
 export default {
     setup() {
@@ -215,6 +260,12 @@ export default {
         const vWaterTemp = inject('vWaterTemp');
         const vOilTemp = inject('vOilTemp');
 
+        const vDistanceAhead = inject('vDistanceAhead');
+        const vDistanceBehind = inject('vDistanceBehind');
+        const vSplitTimeAhead = inject('vSplitTimeAhead');
+        const vSplitTimeBehind = inject('vSplitTimeBehind');
+        const vSplitTime = inject('vSplitTime');
+
         return {
             vABS,
             vTC,
@@ -226,6 +277,11 @@ export default {
             vEngine,
             vWaterTemp,
             vOilTemp,
+            vDistanceAhead,
+            vDistanceBehind,
+            vSplitTimeAhead,
+            vSplitTimeBehind,
+            vSplitTime,
         };
     },
     components: {
@@ -238,6 +294,7 @@ export default {
         InCarSpeedometerComponent,
         InCarFeaturesComponent,
         InCarWheelsTyresComponent,
+        InCarSplitComponent,
     }
 }
 </script>

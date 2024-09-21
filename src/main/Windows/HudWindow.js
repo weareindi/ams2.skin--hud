@@ -4,9 +4,15 @@ import { is } from '@electron-toolkit/utils';
 import SettingsController from '../Controllers/SettingsController.js';
 import DisplayController from '../Controllers/DisplayController.js';
 
+import { Worker } from 'node:worker_threads';
+import HudWorkerPath from '../Workers/HudWorker?modulePath';
+
 export default class HudWindow {
     constructor() {
         this.init();
+
+        this.HudWorker = null;
+        this.HudWorkerReady = false;
     }
 
     /**
@@ -45,6 +51,7 @@ export default class HudWindow {
             return;
         }
 
+
         await this.start();
     }
 
@@ -53,8 +60,11 @@ export default class HudWindow {
      */
     async toggle(activate) {
         if (!activate) {
-            return await this.exit();
+            await this.unregisterWorker();
+            await this.exit();
+            return;
         }
+
 
         return await this.start();
     }
@@ -63,11 +73,77 @@ export default class HudWindow {
      *
      */
     async start() {
+        await this.registerWorker();
+        await this.registerWorkerListener();
         await this.createWindow();
         await this.setWindowToStoredDisplay();
         await this.registerWindowListeners();
         await this.loadUrl();
         await this.dev();
+    }
+
+    /**
+     *
+     */
+    async registerWorker() {
+        this.HudWorker = new Worker(HudWorkerPath);
+        this.HudWorker.postMessage({
+            name: 'setup'
+        });
+    }
+
+    /**
+     *
+     */
+    async unregisterWorker() {
+        const terminated = await this.HudWorker.terminate();
+        if (!terminated) {
+            return;
+        }
+
+        this.HudWorkerReady = false;
+    }
+
+    /**
+     *
+     */
+    async registerWorkerListener() {
+        this.HudWorker.on('message', async (event) => {
+            if (event.name === 'setup') {
+                this.HudWorkerReady = true;
+            }
+
+            if (event.name === 'data') {
+                // send data to hud worker for view processing
+                this.HudWorker.postMessage({
+                    name: 'view',
+                    data: event.data
+                });
+            }
+
+            if (event.name === 'view') {
+
+                // console.timeEnd('test');
+                this.send('data', event.data);
+            }
+
+        });
+    }
+
+    /**
+     *
+     */
+    async data(data) {
+        if (!this.HudWorkerReady) {
+            return;
+        }
+
+        // console.time('test');
+
+        this.HudWorker.postMessage({
+            name: 'data',
+            data: data
+        });
     }
 
     /**
@@ -86,7 +162,7 @@ export default class HudWindow {
         }
 
         // open dev tools
-        // this.window.webContents.openDevTools();
+        this.window.webContents.openDevTools({ mode: 'detach' });
     }
 
     /**

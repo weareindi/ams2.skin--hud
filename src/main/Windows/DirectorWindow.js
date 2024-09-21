@@ -4,9 +4,15 @@ import { is } from '@electron-toolkit/utils';
 import SettingsController from '../Controllers/SettingsController.js';
 import DisplayController from '../Controllers/DisplayController.js';
 
+import { Worker } from 'node:worker_threads';
+import DirectorWorkerPath from '../Workers/DirectorWorker?modulePath';
+
 export default class DirectorWindow {
     constructor() {
         this.init();
+
+        this.DirectorWorker = null;
+        this.DirectorWorkerReady = false;
     }
 
     /**
@@ -23,21 +29,21 @@ export default class DirectorWindow {
     }
 
     /**
-     * 
+     *
      */
     async registerSettingsController() {
         this.SettingsController = new SettingsController();
     }
 
     /**
-     * 
+     *
      */
     async registerDisplayController() {
         this.DisplayController = new DisplayController();
     }
 
     /**
-     * 
+     *
      */
     async processInitialState() {
         const DirectorEnabled = await this.SettingsController.get('DirectorEnabled');
@@ -49,20 +55,24 @@ export default class DirectorWindow {
     }
 
     /**
-     * 
+     *
      */
     async toggle(activate) {
         if (!activate) {
-            return await this.exit();
+            await this.unregisterWorker();
+            await this.exit();
+            return;
         }
 
         return await this.start();
     }
 
     /**
-     * 
+     *
      */
     async start() {
+        await this.registerWorker();
+        await this.registerWorkerListener();
         await this.createWindow();
         await this.setWindowToStoredDisplay();
         await this.registerWindowListeners();
@@ -71,14 +81,77 @@ export default class DirectorWindow {
     }
 
     /**
-     * 
+     *
+     */
+    async registerWorker() {
+        this.DirectorWorker = new Worker(DirectorWorkerPath);
+        this.DirectorWorker.postMessage({
+            name: 'setup'
+        });
+    }
+
+    /**
+     *
+     */
+    async unregisterWorker() {
+        const terminated = await this.DirectorWorker.terminate();
+        if (!terminated) {
+            return;
+        }
+
+        this.DirectorWorkerReady = false;
+    }
+
+    /**
+     *
+     */
+    async registerWorkerListener() {
+        this.DirectorWorker.on('message', async (event) => {
+            if (event.name === 'setup') {
+                this.DirectorWorkerReady = true;
+            }
+
+            if (event.name === 'data') {
+                // send data to hud worker for view processing
+                this.DirectorWorker.postMessage({
+                    name: 'view',
+                    data: event.data
+                });
+            }
+
+            if (event.name === 'view') {
+                console.log(event.data);
+
+
+                // console.timeEnd('test');
+                this.send('data', event.data);
+            }
+        });
+    }
+
+    /**
+     *
+     */
+    async data(data) {
+        if (!this.DirectorWorkerReady) {
+            return;
+        }
+
+        this.DirectorWorker.postMessage({
+            name: 'data',
+            data: data
+        });
+    }
+
+    /**
+     *
      */
     async setWindowToStoredDisplay() {
         await this.DisplayController.setDisplay(this.window, await this.SettingsController.get('DirectorDisplay'));
     }
 
     /**
-     * 
+     *
      */
     async dev() {
         if (!is.dev) {
@@ -86,20 +159,20 @@ export default class DirectorWindow {
         }
 
         // open dev tools
-        this.window.webContents.openDevTools();
+        this.window.webContents.openDevTools({ mode: 'detach' });
     }
 
     /**
-     * 
+     *
      */
     async setTitle() {
         this.window.setTitle(`${this.window.getTitle()}: v${app.getVersion()}`);
     }
 
     /**
-     * 
+     *
      */
-    async createWindow() { 
+    async createWindow() {
         this.window = new BrowserWindow({
             width: this.defaultWidth,
             height: this.defaultHeight,
@@ -125,7 +198,7 @@ export default class DirectorWindow {
     }
 
     /**
-     * 
+     *
      */
     async registerWindowListeners() {
         // on resize
@@ -149,7 +222,7 @@ export default class DirectorWindow {
                 this.window.setFullScreen(true);
             }
 
-            
+
             this.window.show();
         });
 
@@ -167,7 +240,7 @@ export default class DirectorWindow {
     }
 
     /**
-     * 
+     *
      */
     async loadUrl() {
         // HMR for renderer base on electron-vite cli.
@@ -180,41 +253,41 @@ export default class DirectorWindow {
     }
 
     /**
-     * 
-     * @returns 
+     *
+     * @returns
      */
-    async getWindow() { 
+    async getWindow() {
         return this.window;
     }
 
     /**
-     * 
-     * @param {*} bounds 
+     *
+     * @param {*} bounds
      */
     async setBounds(bounds) {
         this.window.setBounds(bounds);
     }
 
     /**
-     * 
+     *
      */
     async exit() {
         return this.window.close();
     }
 
     /**
-     * 
+     *
      */
     async send(name, data) {
         try {
             if (typeof this.window === 'undefined') {
                 return;
             }
-            
+
             if (!data) {
-                return this.window.webContents.send(name);
+                return this.window.webContents.send(name, null);
             }
-            
+
             return this.window.webContents.send(name, data);
         } catch (error) {
             // console.error(error);

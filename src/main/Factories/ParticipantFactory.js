@@ -1,6 +1,6 @@
-import { isReady, getParticipantAtIndex, getParticipantInPostion, getActiveParticipant } from '../../utils/CrestUtils';
+import { isReady, getParticipantAtIndex, getParticipantInPostion, getActiveParticipant, getParticipantInClassPostion, getParticipantsSortedByRaceDistance } from '../../utils/CrestUtils';
 import stc from "string-to-color";
-import storage from 'electron-json-storage';
+import * as storage from 'rocket-store';
 
 export default class ParticipantFactory {
     constructor() {
@@ -12,6 +12,7 @@ export default class ParticipantFactory {
      */
     async init() {
         try {
+            this.storage = await storage.Rocketstore();
             await this.reset();
         } catch (error) {
             console.error(error);
@@ -31,6 +32,15 @@ export default class ParticipantFactory {
             this.outlap = false;
             this.outlapNumber = false;
 
+            this.newlap = false;
+            this.newlapTimer = null;
+            this.newlapDistance = 0;
+
+            this.mIntervalTriggered = false;
+
+            this.mRacePositionStartStored = null;
+            this.mCarClassPositionStartStored = null;
+
             this.runID = null;
             this.lap = {
                 runID: null,
@@ -48,41 +58,36 @@ export default class ParticipantFactory {
     /**
      *
      */
-    async reinflateLaps(data, participant) {
+    async reinflate(data, participant) {
         if (this.hasReinflated) {
-            return this.laps;
+            return;
         }
 
-        if (!participant.mIsDriver) {
-            return this.laps;
-        }
+        // if (!participant.mIsDriver) {
+        //     return this.laps;
+        // }
 
         // set to true so we dont run again
         this.hasReinflated = true;
 
         // update laps laps data
-        return this.laps = await this.getStoredLaps();
+        this.laps = await this.getStoredLaps();
+        this.mRacePositionStartStored = await this.getStoredRacePositionStart(participant.mParticipantIndex);
+        this.mCarClassPositionStartStored = await this.getStoredCarClassPositionStart(participant.mParticipantIndex);
     }
 
     /**
      *
      */
     async getStoredLaps() {
-        let storedData = await new Promise((resolve, reject) => {
-            storage.get(`laps`, function(error, data) {
-                if (error) {
-                    reject(error);
-                }
+        return await new Promise(async (resolve, reject) => {
+            const stored = await this.storage.get('laps', 'laps');
+            if (stored.count === 0) {
+                return resolve([]);
+            }
 
-                if (JSON.stringify(data).length <= 2) {
-                    resolve([]);
-                }
-
-                resolve(data);
-            });
+            return resolve(stored.result[0]);
         });
-
-        return storedData;
     }
 
     /**
@@ -91,7 +96,53 @@ export default class ParticipantFactory {
      * @returns
      */
     async setStoredLaps(laps) {
-        storage.set(`laps`, laps);
+        return await this.storage.post('laps', 'laps', laps);
+    }
+
+    /**
+     *
+     */
+    async getStoredRacePositionStart(mParticipantIndex) {
+        return await new Promise(async (resolve, reject) => {
+            const stored = await this.storage.get('mRacePositionStart', mParticipantIndex);
+            if (stored.count === 0) {
+                return resolve(null);
+            }
+
+            return resolve(stored.result[0]);
+        });
+    }
+
+    /**
+     *
+     * @param {*} laps
+     * @returns
+     */
+    async setStoredRacePositionStart(mParticipantIndex, mRacePosition) {
+        return await this.storage.post('mRacePositionStart', mParticipantIndex, mRacePosition);
+    }
+
+    /**
+     *
+     */
+    async getStoredCarClassPositionStart(mParticipantIndex) {
+        return await new Promise(async (resolve, reject) => {
+            const stored = await this.storage.get('mCarClassPositionStart', mParticipantIndex);
+            if (stored.count === 0) {
+                return resolve(null);
+            }
+
+            return resolve(stored.result[0]);
+        });
+    }
+
+    /**
+     *
+     * @param {*} laps
+     * @returns
+     */
+    async setStoredCarClassPositionStart(mParticipantIndex, mCarClassPosition) {
+        return await this.storage.post('mCarClassPositionStart', mParticipantIndex, mCarClassPosition);
     }
 
     /**
@@ -121,45 +172,258 @@ export default class ParticipantFactory {
         }
 
         let participant = await getParticipantAtIndex(data, mParticipantIndex);
+        if (participant === null) {
+            return null;
+        }
 
-        participant.mIsDriver = await this.mIsDriver(data, mParticipantIndex);
-        participant.mParticipantIndex = mParticipantIndex;
+        data.participants.mParticipantInfo[mParticipantIndex].mIsDriver = await this.mIsDriver(data, mParticipantIndex);
+        data.participants.mParticipantInfo[mParticipantIndex].mParticipantIndex = mParticipantIndex;
+        data.participants.mParticipantInfo[mParticipantIndex].mPlacementIndex = await this.mPlacementIndex(data, mParticipantIndex);
 
-        await this.reinflateLaps(data, participant);
+        await this.reinflate(data, data.participants.mParticipantInfo[mParticipantIndex]);
+        await this.processCurrentLapState(data, data.participants.mParticipantInfo[mParticipantIndex]);
 
-        await this.processCurrentLapState(data, participant);
+        data.participants.mParticipantInfo[mParticipantIndex].mCurrentLapTimes = await this.mCurrentLapTimes(data.participants.mParticipantInfo[mParticipantIndex]);
+        data.participants.mParticipantInfo[mParticipantIndex].mNameMain = await this.mNameMain(data.participants.mParticipantInfo[mParticipantIndex]);
+        data.participants.mParticipantInfo[mParticipantIndex].mNameShort = await this.mNameShort(data.participants.mParticipantInfo[mParticipantIndex]);
+        data.participants.mParticipantInfo[mParticipantIndex].mNameTag = await this.mNameTag(data.participants.mParticipantInfo[mParticipantIndex]);
+        data.participants.mParticipantInfo[mParticipantIndex].mCarNamesMain = await this.mCarNames(data.participants.mParticipantInfo[mParticipantIndex]);
+        data.participants.mParticipantInfo[mParticipantIndex].mCarClassName = await this.mCarClassName(data.participants.mParticipantInfo[mParticipantIndex]);
+        data.participants.mParticipantInfo[mParticipantIndex].mCarClassNamesShort = await this.mCarClassNamesShort(data.participants.mParticipantInfo[mParticipantIndex]);
+        data.participants.mParticipantInfo[mParticipantIndex].mCarClassColor = await this.mCarClassColor(data.participants.mParticipantInfo[mParticipantIndex]);
+        data.participants.mParticipantInfo[mParticipantIndex].mCarClassPosition = await this.mCarClassPosition(data, data.participants.mParticipantInfo[mParticipantIndex]);
+        data.participants.mParticipantInfo[mParticipantIndex].mKPH = await this.mKPH(data.participants.mParticipantInfo[mParticipantIndex]);
+        data.participants.mParticipantInfo[mParticipantIndex].mOutLap = await this.mOutLap(data.participants.mParticipantInfo[mParticipantIndex]);
+        data.participants.mParticipantInfo[mParticipantIndex].mOutLapLabel = await this.mOutLapLabel(data.participants.mParticipantInfo[mParticipantIndex]);
+        data.participants.mParticipantInfo[mParticipantIndex].mIsNewLap = await this.mIsNewLap(data.participants.mParticipantInfo[mParticipantIndex]);
+        data.participants.mParticipantInfo[mParticipantIndex].mInvalidLap = await this.mInvalidLap(data.participants.mParticipantInfo[mParticipantIndex]);
+        data.participants.mParticipantInfo[mParticipantIndex].mLapsInfo = await this.mLapsInfo(data.participants.mParticipantInfo[mParticipantIndex]);
+        data.participants.mParticipantInfo[mParticipantIndex].mFastestLapTimes = await this.mFastestLapTimes(data.participants.mParticipantInfo[mParticipantIndex]);
+        data.participants.mParticipantInfo[mParticipantIndex].mLastLapTimes = await this.mLastLapTimes(data.participants.mParticipantInfo[mParticipantIndex]);
+        data.participants.mParticipantInfo[mParticipantIndex].mRacingDistance = await this.mRacingDistance(data, data.participants.mParticipantInfo[mParticipantIndex]);
+        data.participants.mParticipantInfo[mParticipantIndex].mRacingDistanceParticipantAhead = await this.mRacingDistanceParticipantAhead(data, data.participants.mParticipantInfo[mParticipantIndex]);
+        data.participants.mParticipantInfo[mParticipantIndex].mPitModesLabel = await this.mPitModesLabel(data.participants.mParticipantInfo[mParticipantIndex]);
+        data.participants.mParticipantInfo[mParticipantIndex].mPitSchedulesLabel = await this.mPitSchedulesLabel(data.participants.mParticipantInfo[mParticipantIndex]);
+        data.participants.mParticipantInfo[mParticipantIndex].mRacePositionStart = await this.mRacePositionStart(data.participants.mParticipantInfo[mParticipantIndex]);
+        data.participants.mParticipantInfo[mParticipantIndex].mCarClassPositionStart = await this.mCarClassPositionStart(data.participants.mParticipantInfo[mParticipantIndex]);
 
-        participant.mCurrentLapTimes = await this.mCurrentLapTimes(data, mParticipantIndex);
+        // data.participants.mParticipantInfo[mParticipantIndex].mLastSector1Times = await this.mLastSector1Times(data.participants.mParticipantInfo[mParticipantIndex]);
+        // data.participants.mParticipantInfo[mParticipantIndex].mLastSector2Times = await this.mLastSector2Times(data.participants.mParticipantInfo[mParticipantIndex]);
+        // data.participants.mParticipantInfo[mParticipantIndex].mLastSector3Times = await this.mLastSector3Times(data.participants.mParticipantInfo[mParticipantIndex]);
 
-        participant.mNameMain = await this.mNameMain(data, mParticipantIndex);
-        participant.mNameShort = await this.mNameShort(data, mParticipantIndex);
-        participant.mNameTag = await this.mNameTag(data, mParticipantIndex);
+        return data.participants.mParticipantInfo[mParticipantIndex];
+    }
 
-        participant.mCarNamesMain = await this.mCarNames(data, mParticipantIndex);
-        participant.mCarClassNamesShort = await this.mCarClassNamesShort(data, mParticipantIndex);
-        participant.mCarClassColor = await this.mCarClassColor(data, mParticipantIndex);
-        participant.mCarClassPosition = await this.mCarClassPosition(data, mParticipantIndex);
+    // /**
+    //  *
+    //  */
+    // async mLastSector1Times(participant) {
+    //     return -1;
+    // }
 
-        participant.mKPH = await this.mKPH(data, mParticipantIndex);
+    // /**
+    //  *
+    //  */
+    // async mLastSector2Times(participant) {
+    //     return -1;
+    // }
 
-        participant.mOutLap = await this.mOutLap(data, mParticipantIndex);
-        participant.mInvalidLap = await this.mInvalidLap(data, mParticipantIndex);
-        participant.mLapsInfo = await this.mLapsInfo(data, mParticipantIndex);
+    // /**
+    //  *
+    //  */
+    // async mLastSector3Times(participant) {
+    //     return -1;
+    // }
 
-        participant.mFastestLapTimes = await this.mFastestLapTimes(data, mParticipantIndex);
-        participant.mLastLapTimes = await this.mLastLapTimes(data, mParticipantIndex);
+    /**
+     *
+     */
+    async mRacePositionStart(participant) {
+        if (this.mRacePositionStartStored === null) {
+            this.mRacePositionStartStored = participant.mRacePosition;
 
-        return participant;
+            // store just incase hud closes
+            await this.setStoredRacePositionStart(participant.mParticipantIndex, participant.mRacePosition);
+        }
+
+        return this.mRacePositionStartStored;
+    }
+
+    /**
+     *
+     */
+    async mCarClassPositionStart(participant) {
+        if (this.mCarClassPositionStartStored === null) {
+            this.mCarClassPositionStartStored = participant.mCarClassPosition;
+
+            // store just incase hud closes
+            await this.setStoredCarClassPositionStart(participant.mParticipantIndex, participant.mCarClassPosition);
+        }
+
+        return this.mCarClassPositionStartStored;
+    }
+
+    /**
+     *
+     */
+    async mPitModesLabel(participant) {
+        if (participant.mPitModes === 1) {
+            return 'Pit';
+        }
+
+        if (participant.mPitModes === 2) {
+            return 'Pit';
+        }
+
+        if (participant.mPitModes === 3) {
+            return 'Pit';
+        }
+
+        if (participant.mPitModes === 4) {
+            return 'Pit';
+        }
+
+        if (participant.mPitModes === 5) {
+            return 'Pit';
+        }
+
+        return null;
+    }
+
+    /**
+     *
+     */
+    async mPitSchedulesLabel(participant) {
+        if (participant.mPitSchedules === 1) {
+            return 'Pitting';
+        }
+
+        if (participant.mPitSchedules === 2) {
+            return 'Pitting';
+        }
+
+        if (participant.mPitSchedules === 3) {
+            return 'Damage';
+        }
+
+        if (participant.mPitSchedules === 4) {
+            return 'MAND';
+        }
+
+        if (participant.mPitSchedules === 5) {
+            return 'DT';
+        }
+
+        if (participant.mPitSchedules === 6) {
+            // return 'Stop+Go';
+        }
+
+        if (participant.mPitSchedules === 7) {
+            // return 'Occupied';
+        }
+
+        return null;
     }
 
     /**
      *
      * @param {*} data
      * @param {*} mParticipantIndex
+     * @returns
      */
-    async mCarClassNamesShort(data, mParticipantIndex) {
-        let participant = await getParticipantAtIndex(data, mParticipantIndex);
+    async mRacingDistance(data, participant) {
+        // if (data.gameStates.mSessionState !== 5) {
+        //     return null;
+        // }
 
+        if (participant.mCurrentLapDistance === null) {
+            return null;
+        }
+
+        if (participant.mCurrentLap === null) {
+            return null;
+        }
+
+        return participant.mCurrentLapDistance + ((participant.mCurrentLap - 1) * data.eventInformation.mTrackLength);
+    }
+
+    /**
+     *
+     * @param {*} data
+     * @param {*} participant
+     * @returns
+     */
+    async mRacingDistanceParticipantAhead(data, participant) {
+        // if not race, no need to calculate
+        if (data.gameStates.mSessionState !== 5) {
+            return null;
+        }
+
+        // if leader, no need to calculate
+        if (participant.mRacePosition <= 1) {
+            return null;
+        }
+
+        if (participant.mCurrentLapDistance === null) {
+            return null;
+        }
+
+        if (participant.mCurrentLap === null) {
+            return null;
+        }
+
+        const participantTotalLapDistance = participant.mCurrentLapDistance + ((participant.mCurrentLap - 1) * data.eventInformation.mTrackLength);
+        const participantAhead = await getParticipantInPostion(data, participant.mRacePosition - 1);
+        const participantAheadTotalLapDistance = participantAhead.mCurrentLapDistance + ((participantAhead.mCurrentLap - 1) * data.eventInformation.mTrackLength);
+        return participantAheadTotalLapDistance - participantTotalLapDistance;
+    }
+
+    /**
+     *
+     * @param {*} data
+     * @param {*} mParticipantIndex
+     * @returns
+     */
+    async mPlacementIndex(data, mParticipantIndex) {
+        const participants = await getParticipantsSortedByRaceDistance(data);
+        if (participants === null) {
+            return null;
+        }
+
+        for (let pi = 0; pi < participants.length; pi++) {
+            if (participants[pi].mParticipantIndex !== mParticipantIndex) {
+                continue;
+            }
+
+            return pi;
+        }
+
+        return null;
+    }
+
+    /**
+     *
+     * @param {*} participant
+     */
+    async mCarClassName(participant) {
+        // split name underscore
+        const parts = participant.mCarClassNames.split('_');
+
+        let name = participant.mCarClassNames;
+        if (parts) {
+            // use first part of name
+            name = parts[0];
+        }
+
+        // make it uppercase
+        return name;
+    }
+
+    /**
+     *
+     * @param {*} participant
+     */
+    async mCarClassNamesShort(participant) {
         // split name underscore
         const parts = participant.mCarClassNames.split('_');
 
@@ -193,12 +457,9 @@ export default class ParticipantFactory {
 
     /**
      *
-     * @param {*} data
-     * @param {*} mParticipantIndex
+     * @param {*} participant
      */
-    async mCarNames(data, mParticipantIndex) {
-        let participant = await getParticipantAtIndex(data, mParticipantIndex);
-
+    async mCarNames(participant) {
         // split name at capitalscv
         const parts = participant.mCarNames.split('-');
 
@@ -211,43 +472,36 @@ export default class ParticipantFactory {
 
     /**
      *
-     * @param {*} data
-     * @param {*} mParticipantIndex
+     * @param {*} participant
      */
-    async mCarClassColor(data, mParticipantIndex) {
-        const participant = await getParticipantAtIndex(data, mParticipantIndex);
-
+    async mCarClassColor(participant) {
         return stc(participant.mCarClassNames);
     }
 
     /**
      *
      * @param {*} data
-     * @param {*} mParticipantIndex
+     * @param {*} participant
      */
-    async mCarClassPosition(data, mParticipantIndex) {
+    async mCarClassPosition(data, participant) {
         // sort into class groups
         const mCarClassPositions = {};
         for (let ppi = 1; ppi <= data.participants.mNumParticipants; ppi++) {
-            let participant = await getParticipantInPostion(data, ppi);
-
-            if (participant === null) {
+            let loopParticipant = await getParticipantInPostion(data, ppi);
+            if (loopParticipant === null) {
                 continue;
             }
 
-            if (!(participant.mCarClassNames in mCarClassPositions)) {
-                mCarClassPositions[participant.mCarClassNames] = [];
+            if (!(loopParticipant.mCarClassNames in mCarClassPositions)) {
+                mCarClassPositions[loopParticipant.mCarClassNames] = [];
             }
 
-            mCarClassPositions[participant.mCarClassNames].push( participant.mRacePosition );
+            mCarClassPositions[loopParticipant.mCarClassNames].push( loopParticipant.mRacePosition );
         }
 
         if (!Object.keys(mCarClassPositions).length) {
             return null;
         }
-
-        // get participant
-        const participant = await getParticipantAtIndex(data, mParticipantIndex);
 
         // get index of race position within class group (plus 1)
         return mCarClassPositions[participant.mCarClassNames].indexOf( participant.mRacePosition ) + 1;
@@ -255,13 +509,10 @@ export default class ParticipantFactory {
 
     /**
      *
-     * @param {*} data
-     * @param {*} mParticipantIndex
+     * @param {*} participant
      * @returns
      */
-    async mNameParts(data, mParticipantIndex) {
-        let participant = await getParticipantAtIndex(data, mParticipantIndex);
-
+    async mNameParts(participant) {
         // extract tag
         const regex = /([\[|\(|\{].*?[\]|\)|\}])/g;
 
@@ -294,12 +545,11 @@ export default class ParticipantFactory {
 
     /**
      *
-     * @param {*} data
-     * @param {*} mParticipantIndex
+     * @param {*} participant
      * @returns
      */
-    async mNameMain(data, mParticipantIndex) {
-        const mNameParts = await this.mNameParts(data, mParticipantIndex);
+    async mNameMain(participant) {
+        const mNameParts = await this.mNameParts(participant);
 
         return mNameParts.name;
     }
@@ -340,7 +590,7 @@ export default class ParticipantFactory {
             return null;
         }
 
-        return mNameTag;
+        return mNameTag.slice(0, 4);
     }
 
     /**
@@ -375,49 +625,10 @@ export default class ParticipantFactory {
     /**
      *
      * @param {*} data
-     * @param {*} mParticipantIndex
-     */
-    // async processHasExitedPitLaneState(data, mParticipantIndex) {
-    //     if (this.hasExitedPitOnce) {
-    //         return this.hasExitedPitOnce;
-    //     }
-
-    //     const currentLap = await this.getCurrentLap(data, mParticipantIndex);
-
-    //     if (currentLap.mCurrentLapTimes < 0) {
-    //         return this.hasExitedPitOnce;
-    //     }
-
-    //     return this.hasExitedPitOnce = true;
-    // }
-
-
-    /**
-     *
-     * @param {*} data
-     * @param {*} mParticipantIndex
-     */
-    // async processHasReturnedToGarageState(data, mParticipantIndex) {
-    //     const participant = await getParticipantAtIndex(data, mParticipantIndex);
-
-    //     if (!this.hasExitedPitOnce) {
-    //         return this.hasReturnedToGarage;
-    //     }
-
-    //     if (participant.mPitModes === 4 || participant.mPitModes === 5) {
-    //         return this.hasReturnedToGarage = true;
-    //     }
-
-    //     return this.hasReturnedToGarage;
-    // }
-
-    /**
-     *
-     * @param {*} data
      * @param {*} participant
      */
     async processCurrentLapState(data, participant) {
-        const currentLap = await this.getCurrentLap(data, participant.mParticipantIndex);
+        const currentLap = await this.getCurrentLap(data, participant);
 
         if (
             this.runID !== null
@@ -440,17 +651,15 @@ export default class ParticipantFactory {
     /**
      *
      * @param {*} data
-     * @param {*} mParticipantIndex
+     * @param {*} participant
      */
-    async getCurrentLap(data, mParticipantIndex) {
-        const participant = await getParticipantAtIndex(data, mParticipantIndex);
-
+    async getCurrentLap(data, participant) {
         return {
-            runID: await this.getRunID(data, mParticipantIndex),
+            runID: await this.getRunID(participant),
             mCurrentLap: participant.mCurrentLap,
-            mCurrentLapTimes: await this.mCurrentLapTimes(data, mParticipantIndex),
+            mCurrentLapTimes: await this.mCurrentLapTimes(participant),
             mLapsInvalidated: participant.mLapsInvalidated,
-            mFuelLevel: await this.mFuelLevel(data, mParticipantIndex),
+            mFuelLevel: await this.mFuelLevel(data),
         }
     }
 
@@ -468,12 +677,9 @@ export default class ParticipantFactory {
 
     /**
      *
-     * @param {*} data
-     * @param {*} mParticipantIndex
+     * @param {*} participant
      */
-    async getRunID(data, mParticipantIndex) {
-        const participant = await getParticipantAtIndex(data, mParticipantIndex);
-
+    async getRunID(participant) {
         if (participant.mPitModes !== 0) {
             return await this.generateRunID(participant);
         }
@@ -489,19 +695,16 @@ export default class ParticipantFactory {
      * Get a new run ID
      * @returns
      */
-    async generateRunID(participant) {
+    async generateRunID() {
         // nothing complex, just the current timestamp
-        return this.runID = Date.now();
+        return this.runID = performance.now();
     }
 
     /**
      *
-     * @param {*} data
-     * @param {*} mParticipantIndex
+     * @param {*} participant
      */
-    async mCurrentLapTimes(data, mParticipantIndex) {
-        const participant = await getParticipantAtIndex(data, mParticipantIndex);
-
+    async mCurrentLapTimes(participant) {
         const mCurrentSectorTimes = [
             participant.mCurrentSector1Times,
             participant.mCurrentSector2Times,
@@ -518,16 +721,14 @@ export default class ParticipantFactory {
         }
 
         return mCurrentLapTimes;
-
     }
 
     /**
      *
+     * @param {*} participant
+     * @returns
      */
-    async mLapsInfo(data, mParticipantIndex) {
-        // get participant
-        const participant = await getParticipantAtIndex(data, mParticipantIndex);
-
+    async mLapsInfo(participant) {
         if (!('mLapsInfo' in participant)) {
             return this.laps;
         }
@@ -537,11 +738,10 @@ export default class ParticipantFactory {
 
     /**
      *
+     * @param {*} participant
+     * @returns
      */
-    async mFastestLapTimes(data, mParticipantIndex) {
-        // get participant
-        const participant = await getParticipantAtIndex(data, mParticipantIndex);
-
+    async mFastestLapTimes(participant) {
         if (participant.mFastestLapTimes <=0 ) {
             return 0;
         }
@@ -551,11 +751,10 @@ export default class ParticipantFactory {
 
     /**
      *
+     * @param {*} participant
+     * @returns
      */
-    async mLastLapTimes(data, mParticipantIndex) {
-        // get participant
-        const participant = await getParticipantAtIndex(data, mParticipantIndex);
-
+    async mLastLapTimes(participant) {
         if (participant.mLastLapTimes <=0 ) {
             return 0;
         }
@@ -565,48 +764,10 @@ export default class ParticipantFactory {
 
     /**
      *
+     * @param {*} participant
+     * @returns
      */
-    async mOutLap(data, mParticipantIndex) {
-        // // if in the garage
-        // if (participant.mPitModes !== 0) {
-        //     this.isOutLap = true;
-        // }
-
-        // // if participant has exited the pit
-        // // and has not returned to circuit (first time out)
-        // // and is on the circuit
-        // // and the current lap is the same as stored lap despite going over the line (this happens on the first flying lap)
-        // // and the lap is not invalid (laps are invalid when leaving the pits for first time)
-        // if (
-        //     this.hasExitedPitOnce
-        //     && !this.hasReturnedToGarage
-        //     && participant.mPitModes === 0
-        //     && currentLap.mCurrentLap === this.lap.mCurrentLap
-        //     && !currentLap.mLapsInvalidated
-        // ) {
-        //     // ... set outlap to false
-        //     this.isOutLap = false;
-        // }
-
-        // // if participant has exited the pit
-        // // and has returned to circuit (second+ time out)
-        // // and is on the circuit
-        // // and the current lap is greater than stored lap (starting a new lap)
-        // // and the lap is not invalid
-        // if (
-        //     this.hasExitedPitOnce
-        //     && this.hasReturnedToGarage
-        //     && participant.mPitModes === 0
-        //     && currentLap.mCurrentLap > this.lap.mCurrentLap
-        //     && !currentLap.mLapsInvalidated
-        // ) {
-        //     // ... set outlap to false
-        //     this.isOutLap = false;
-        // }
-
-        // get participant
-        const participant = await getParticipantAtIndex(data, mParticipantIndex);
-
+    async mOutLap(participant) {
         // not on circuit
         if (participant.mPitModes !== 0) {
             this.outlap = true;
@@ -616,7 +777,7 @@ export default class ParticipantFactory {
         // has crossed line not in pit
         if (
             participant.mPitModes === 0
-            && (participant.mCurrentLap > this.outlapNumber || participant.mCurrentLap === 1 && participant.mLapsInvalidated === 0)
+            && (participant.mCurrentLap > this.outlapNumber || (participant.mCurrentLap === 1 && participant.mLapsInvalidated === 0))
         ) {
             this.outlap = false;
         }
@@ -626,24 +787,59 @@ export default class ParticipantFactory {
 
     /**
      *
-     * @param {*} data
-     * @param {*} mParticipantIndex
+     * @param {*} participant
      * @returns
      */
-    async mInvalidLap(data, mParticipantIndex) {
-        // get participant
-        const participant = await getParticipantAtIndex(data, mParticipantIndex);
+    async mOutLapLabel(participant) {
+        return participant.mOutLap ? 'Out Lap' : '';
+    }
 
+    /**
+     * Set to true for first X seconds of a lap
+     * @param {*} participant
+     * @returns
+     */
+    async mIsNewLap(participant) {
+        if (this.newlap === true && this.newlapTimer + 6000 >= performance.now()) {
+            return this.newlap;
+        }
+
+        // assign fasle as default
+        this.newlap = false;
+
+        // has crossed line not in pit
+        if (
+            participant.mPitModes === 0
+            && participant.mCurrentLapDistance < this.newlapDistance
+        ) {
+            // assign to true
+            this.newlap = true;
+
+            // set timer
+            this.newlapTimer = performance.now();
+        }
+
+        // update distance for next iternation condition
+        this.newlapDistance = participant.mCurrentLapDistance;
+
+        return this.newlap;
+    }
+
+    /**
+     *
+     * @param {*} participant
+     * @returns
+     */
+    async mInvalidLap(participant) {
         return participant.mLapsInvalidated;
     }
 
     /**
      *
+     * @param {*} participant
+     * @returns
      */
-    async mKPH(data, mParticipantIndex) {
-        // get participant
-        const participant = await getParticipantAtIndex(data, mParticipantIndex);
-
+    async mKPH(participant) {
         return Math.floor(participant.mSpeeds * 3.6);
     }
 }

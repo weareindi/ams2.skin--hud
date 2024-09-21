@@ -8,7 +8,7 @@ import iconTrayWinDark from '../../resources/iconTemplateDark.png?asset';
 
 import SettingsController from './Controllers/SettingsController';
 import DisplayController from './Controllers/DisplayController';
-import CrestProcessor from './Controllers/CrestController';
+import DataController from './Controllers/DataController';
 
 import SettingsWindow from './Windows/SettingsWindow';
 import HudWindow from './Windows/HudWindow';
@@ -27,6 +27,9 @@ class Main {
         this.defaultWidth = 1920;
         this.defaultHeight = 1080;
 
+        this.HudWindow = null;
+        this.DirectorWindow = null;
+
         this.init();
     }
 
@@ -41,7 +44,7 @@ class Main {
             await this.createTray();
             await this.registerSettingsController();
             await this.registerDisplayController();
-            await this.registerCrestProcessor();
+            await this.registerDataController();
             await this.registerAppListeners();
             await this.registerRendererListeners();
             await this.registerSettingsWindow();
@@ -63,8 +66,8 @@ class Main {
     /**
      *
      */
-    async registerCrestProcessor() {
-        this.CrestProcessor = new CrestProcessor();
+    async registerDataController() {
+        this.DataController = new DataController();
     }
 
     /**
@@ -114,6 +117,7 @@ class Main {
 
         // all windows closed?
         app.on('window-all-closed', () => {
+            console.log('window-all-closed');
             // do nothing, keeping this event keeps the app active even when no windows are open
         });
     }
@@ -126,10 +130,6 @@ class Main {
             const data = {};
             data[key] = value;
             await this.SettingsWindow.send('setSetting', data);
-        });
-
-        ipcMain.on('data', async (data) => {
-            this.HudWindow.send('data', data);
         });
     }
 
@@ -223,6 +223,17 @@ class Main {
             this[win].close();
         });
 
+        // data
+        ipcMain.on('data', async (data) => {
+            if (this.HudWindow) {
+                await this.HudWindow.data(data);
+            }
+
+            if (this.DirectorWindow) {
+                await this.DirectorWindow.data(data);
+            }
+        });
+
         // dump
         ipcMain.on('dump', async (data) => {
             await this.dump(data);
@@ -281,19 +292,19 @@ class Main {
 
             // update vars
             // if (key === 'IP') {
-            //     await this.CrestProcessor.setIP(value);
+            //     await this.DataController.setIP(value);
             // }
 
             // if (key === 'Port') {
-            //     await this.CrestProcessor.setPort(value);
+            //     await this.DataController.setPort(value);
             // }
 
             // if (key === 'TickRate') {
-            //     await this.CrestProcessor.setTickRate(value);
+            //     await this.DataController.setTickRate(value);
             // }
 
             if (key === 'ExternalCrest') {
-                await this.CrestProcessor.toggle(value);
+                await this.DataController.toggle(value);
             }
 
             if (key === 'SettingsDisplay') {
@@ -364,6 +375,8 @@ class Main {
         if (typeof data === 'object') {
             data = JSON.stringify(data);
         }
+
+
 
         const { default: slash } = await import('slash');
         const user_documents = app.getPath('documents');

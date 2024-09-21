@@ -1,13 +1,12 @@
 import { isReady, getParticipantAtIndex, getActiveParticipant } from '../../utils/CrestUtils';
 import { getViewObject } from '../../utils/DataUtils';
-import { millisecondsToTime } from '../../utils/TimeUtils';
-import { ipcMain } from 'electron';
+import { millisecondsToDelta, millisecondsToTime } from '../../utils/TimeUtils';
 
 /**
  * The asumption with this factory is that all values in data exist.
  * Either as a view ready value or null;
  */
-export default class ViewFactory {
+export default class HudViewFactory {
     constructor() {
         this.init();
     }
@@ -28,7 +27,7 @@ export default class ViewFactory {
      */
     async reset() {
         try {
-            // console.log('ViewFactory reset');
+            //
         } catch (error) {
             console.error(error);
         }
@@ -58,9 +57,6 @@ export default class ViewFactory {
             return null;
         }
 
-        //
-        // ipcMain.emit('dump', data);
-
         const view = {};
 
         // we only want to process whats being used by the view
@@ -74,11 +70,23 @@ export default class ViewFactory {
 
         view.vFuelLevel = await this.vFuelLevel(data);
         view.vFuelInCar = await this.vFuelInCar(data);
-        view.vFuelPerLap = await this.vFuelPerLap(data);
-        view.vFuelToEndSession = await this.vFuelToEndSession(data);
-        view.vFuelStopsToEndSession = await this.vFuelStopsToEndSession(data);
-        view.vFuelInStop = await this.vFuelInStop(data);
 
+        view.vFuelPerLapPit = await this.vFuelPerLapPit(data);
+        view.vFuelPerLapInCar = await this.vFuelPerLapInCar(data);
+        view.vFuelToEndSessionPit = await this.vFuelToEndSessionPit(data);
+        view.vFuelToEndSessionInCar = await this.vFuelToEndSessionInCar(data);
+        view.vFuelStopsToEndSessionPit = await this.vFuelStopsToEndSessionPit(data);
+        view.vFuelStopsToEndSessionInCar = await this.vFuelStopsToEndSessionInCar(data);
+        view.vFuelInStopPit = await this.vFuelInStopPit(data);
+        view.vFuelInStopInCar = await this.vFuelInStopInCar(data);
+
+        // view.vFuelPerLap = await this.vFuelPerLap(data);
+
+        // view.vFuelToEndSession = await this.vFuelToEndSession(data);
+        // view.vFuelStopsToEndSession = await this.vFuelStopsToEndSession(data);
+        // view.vFuelInStop = await this.vFuelInStop(data);
+
+        view.vInputSteering = await this.vInputSteering(data);
         view.vInputClutch = await this.vInputClutch(data);
         view.vInputBrake = await this.vInputBrake(data);
         view.vInputThrottle = await this.vInputThrottle(data);
@@ -121,13 +129,407 @@ export default class ViewFactory {
 
         view.vTrackPositionCarousel = await this.vTrackPositionCarousel(data);
 
-        // view.vDirectorShow = await this.vDirectorShow(data);
-        // view.vDirectorStatus = await this.vDirectorStatus(data);
-        // view.vDirectorScene = await this.vDirectorScene(data);
+        view.vSplitTime = await this.vSplitTime(data);
+        view.vSplitTimeAhead = await this.vSplitTimeAhead(data);
+        view.vSplitTimeBehind = await this.vSplitTimeBehind(data);
 
+        view.vDistanceAhead = await this.vDistanceAhead(data);
+        view.vDistanceBehind = await this.vDistanceBehind(data);
 
         return view;
     }
+
+    /**
+     *
+     * @param {*} data
+     */
+    async vDistanceAhead(data) {
+        // race hasnt started
+        if (data.gameStates.mSessionState !== 5 || data.gameStates.mRaceState !== 2) {
+            return null;
+        }
+
+        const participant = await getActiveParticipant(data);
+
+        if (participant.mDistanceAhead === null) {
+            return null;
+        }
+
+        if (participant.mRacingDistance <= 0) {
+            return null;
+        }
+
+        let value = participant.mDistanceAhead;
+        let suffix = '';
+        let seperator = '';
+        if (typeof participant.mDistanceAhead === 'number') {
+            value = participant.mDistanceAhead.toFixed(0);
+            suffix = 'm';
+            seperator = ' ';
+        }
+        if (typeof participant.mDistanceAhead === 'string') {
+            value = `+${participant.mDistanceAhead}`;
+            suffix = 'Laps';
+            seperator = ' ';
+        }
+
+        return getViewObject([
+            {
+                label: 'Ahead',
+                value: value,
+                suffix: suffix,
+                seperator: seperator,
+            }
+        ]);
+    }
+
+    /**
+     *
+     * @param {*} data
+     */
+    async vDistanceBehind(data) {
+        // race hasnt started
+        if (data.gameStates.mSessionState !== 5 || data.gameStates.mRaceState !== 2) {
+            return null;
+        }
+
+        const participant = await getActiveParticipant(data);
+
+        if (participant.mDistanceBehind === null) {
+            return null;
+        }
+
+        if (participant.mRacingDistance <= 0) {
+            return null;
+        }
+
+        let value = participant.mDistanceBehind;
+        let suffix = '';
+        let seperator = '';
+        if (typeof participant.mDistanceBehind === 'number') {
+            value = participant.mDistanceBehind.toFixed(0);
+            suffix = 'm';
+            seperator = ' ';
+        }
+        if (typeof participant.mDistanceBehind === 'string') {
+            value = `+${participant.mDistanceBehind}`;
+            suffix = 'Laps';
+            seperator = ' ';
+        }
+
+        return getViewObject([
+            {
+                label: 'Behind',
+                value: value,
+                suffix: suffix,
+                seperator: seperator,
+            }
+        ]);
+    }
+
+    /**
+     *
+     * @param {*} data
+     */
+    async vSplitTime(data) {
+
+        if (data.timings.mSplitTimeDisplay === null) {
+            return null;
+        }
+
+        if (data.timings.mSplitTimeState === null) {
+            return null;
+        }
+
+        return getViewObject([
+            {
+                value: data.timings.mSplitTimeDisplay,
+                state: data.timings.mSplitTimeState
+            }
+        ]);
+    }
+
+    /**
+     *
+     * @param {*} data
+     */
+    async vSplitTimeAhead(data) {
+        // race hasnt started
+        if (data.gameStates.mSessionState !== 5 || data.gameStates.mRaceState !== 2) {
+            return null;
+        }
+
+        const participant = await getActiveParticipant(data);
+        if (participant.mRacePosition === 1) {
+            return null;
+        }
+
+        if (data.timings.mSplitTimeAhead == null) {
+            return null;
+        }
+
+        let value = data.timings.mSplitTimeAhead;
+        let suffix = '';
+        let seperator = '';
+        let prefix = '+';
+        if (typeof data.timings.mSplitTimeAhead === 'number') {
+            value = `${prefix}${data.timings.mSplitTimeAhead.toFixed(3)}`;
+            suffix = '';
+            seperator = '';
+        }
+        if (typeof data.timings.mSplitTimeAhead === 'string') {
+            value = `${prefix}${data.timings.mSplitTimeAhead}`;
+            suffix = 'Laps';
+            seperator = ' ';
+        }
+
+        return getViewObject([
+            {
+                label: 'Ahead',
+                value: value,
+                suffix: suffix,
+                seperator: seperator,
+            }
+        ]);
+    }
+
+    /**
+     *
+     * @param {*} data
+     */
+    async vSplitTimeBehind(data) {
+        // race hasnt started
+        if (data.gameStates.mSessionState !== 5 || data.gameStates.mRaceState !== 2) {
+            return null;
+        }
+
+        const participant = await getActiveParticipant(data);
+        if (participant.mRacePosition === data.participants.mNumActiveParticipants) {
+            return null;
+        }
+
+        if (data.timings.mSplitTimeBehind == null) {
+            return null;
+        }
+
+        let value = data.timings.mSplitTimeBehind;
+        let suffix = '';
+        let seperator = '';
+        let prefix = '-';
+        if (typeof data.timings.mSplitTimeBehind === 'number') {
+            value = `${prefix}${data.timings.mSplitTimeBehind.toFixed(3)}`;
+            suffix = '';
+            seperator = '';
+        }
+        if (typeof data.timings.mSplitTimeBehind === 'string') {
+            value = `${prefix}${data.timings.mSplitTimeBehind}`;
+            suffix = 'Laps';
+            seperator = ' ';
+        }
+
+        return getViewObject([
+            {
+                label: 'Behind',
+                value: value,
+                suffix: suffix,
+                seperator: seperator,
+            }
+        ]);
+    }
+
+    /**
+     *
+     * @param {*} data
+     * @returns
+     */
+    async vFuelPerLapPit(data) {
+        let value = '&#x231A;';
+        let suffix = null;
+
+        if (data.fuel.mFuelPerLapPit !== null) {
+            value = data.fuel.mFuelPerLapPit.toFixed(2);
+            suffix = 'L'
+        }
+
+        return getViewObject([
+            {
+                label: 'Per Lap',
+                value: value,
+                suffix: suffix,
+                seperator: ' '
+            }
+        ]);
+    }
+
+    /**
+     *
+     * @param {*} data
+     * @returns
+     */
+    async vFuelPerLapInCar(data) {
+        let value = '&#x231A;';
+        let suffix = null;
+
+        if (data.fuel.mFuelPerLapInCar !== null) {
+            value = data.fuel.mFuelPerLapInCar.toFixed(2);
+            suffix = 'L'
+        }
+
+        return getViewObject([
+            {
+                label: 'Per Lap',
+                value: value,
+                suffix: suffix,
+                seperator: ' ',
+            }
+        ]);
+    }
+
+    /**
+     *
+     * @param {*} data
+     * @returns
+     */
+    async vFuelToEndSessionPit(data) {
+        let value = '&#x231A;';
+        let suffix = null;
+
+        if (data.fuel.mFuelToEndSessionPit !== null) {
+            value = data.fuel.mFuelToEndSessionPit.toFixed(2);
+            suffix = 'L'
+        }
+
+        return getViewObject([
+            {
+                label: 'To End',
+                value: value,
+                suffix: suffix,
+                seperator: ' ',
+            }
+        ]);
+    }
+
+    /**
+     *
+     * @param {*} data
+     * @returns
+     */
+    async vFuelToEndSessionInCar(data) {
+        let value = '&#x231A;';
+        let suffix = null;
+
+        if (data.fuel.mFuelToEndSessionInCar !== null) {
+            value = data.fuel.mFuelToEndSessionInCar.toFixed(2);
+            suffix = 'L'
+        }
+
+        return getViewObject([
+            {
+                label: 'To End',
+                value: value,
+                suffix: suffix,
+                seperator: ' ',
+            }
+        ]);
+    }
+
+    /**
+     *
+     * @param {*} data
+     * @returns
+     */
+    async vFuelStopsToEndSessionPit(data) {
+        let value = '&#x231A;';
+        // let suffix = null;
+
+        if (data.fuel.mFuelStopsToEndSessionPit !== null) {
+            value = data.fuel.mFuelStopsToEndSessionPit;
+            // suffix = 'L'
+        }
+
+        return getViewObject([
+            {
+                label: 'Pit Stops',
+                value: value,
+                // suffix: suffix,
+                seperator: ' ',
+            }
+        ]);
+    }
+
+    /**
+     *
+     * @param {*} data
+     * @returns
+     */
+    async vFuelStopsToEndSessionInCar(data) {
+        let value = '&#x231A;';
+        // let suffix = null;\
+
+        if (data.fuel.mFuelStopsToEndSessionInCar !== null) {
+            value = data.fuel.mFuelStopsToEndSessionInCar;
+            // suffix = 'L'
+        }
+
+        return getViewObject([
+            {
+                label: 'Pit Stops',
+                value: value,
+                // suffix: suffix,
+                seperator: ' ',
+            }
+        ]);
+    }
+
+    /**
+     *
+     * @param {*} data
+     * @returns
+     */
+    async vFuelInStopPit(data) {
+        let value = '&#x231A;';
+        let suffix = null;
+
+        if (data.fuel.mFuelInStopPit !== null) {
+            value = Math.ceil(data.fuel.mFuelInStopPit);
+            suffix = 'L'
+        }
+
+        return getViewObject([
+            {
+                label: 'Next pit',
+                value: value,
+                suffix: suffix,
+                seperator: ' ',
+            }
+        ]);
+    }
+
+    /**
+     *
+     * @param {*} data
+     * @returns
+     */
+    async vFuelInStopInCar(data) {
+        let value = '&#x231A;';
+        let suffix = null;
+
+        if (data.fuel.mFuelInStopInCar !== null) {
+            value = Math.ceil(data.fuel.mFuelInStopInCar);
+            suffix = 'L'
+        }
+
+        return getViewObject([
+            {
+                label: 'Next pit',
+                value: value,
+                suffix: suffix,
+                seperator: ' ',
+            }
+        ]);
+    }
+
+
 
     /**
      *
@@ -151,8 +553,8 @@ export default class ViewFactory {
         const time = millisecondsToTime(data.eventInformation.mEventTimeRemaining, false);
 
         let label = `Remaining`;
-        if (data.eventInformation.mSessionAdditionalLaps > 0) {
-            label += ` [+${data.eventInformation.mSessionAdditionalLaps}]`;
+        if (data.eventInformation.mAdditionalLap > 0) {
+            label += ` [+${data.eventInformation.mAdditionalLap}]`;
         }
 
         return getViewObject([
@@ -213,11 +615,23 @@ export default class ViewFactory {
      * @returns
      */
     async vClassPosition(data) {
+        if (!('mClasses' in data.participants)) {
+            return null;
+        }
+
+        if (!('mActiveParticipantClassNum' in data.participants)) {
+            return null;
+        }
+
         if (Object.keys(data.participants.mClasses).length <= 1) {
             return null;
         }
 
         const participant = await getActiveParticipant(data);
+
+        if (!('mCarClassPosition' in participant)) {
+            return null;
+        }
 
         return getViewObject([
             {
@@ -258,6 +672,14 @@ export default class ViewFactory {
      * @returns
      */
     async vFuelInCar(data) {
+        if (!('mFuelInCar' in data.fuel)) {
+            return null;
+        }
+
+        if (!('mFuelInCarState' in data.fuel)) {
+            return null;
+        }
+
         let value = '&#x231A;';
         let suffix = null;
 
@@ -272,98 +694,41 @@ export default class ViewFactory {
                 value: value,
                 suffix: suffix,
                 seperator: ' ',
+                state: data.fuel.mFuelInCarState
             }
         ]);
     }
+
+
 
     /**
      *
      * @param {*} data
      * @returns
      */
-    async vFuelPerLap(data) {
-        let value = '&#x231A;';
-        let suffix = null;
+    async vInputSteering(data) {
+        const participant = await getActiveParticipant(data);
+        if (!participant.mIsDriver) {
+            return null;
+        }
 
-        if (data.fuel.mFuelPerLap !== null) {
-            value = data.fuel.mFuelPerLap.toFixed(2);
-            suffix = 'L'
+        if (data.unfilteredInput.mUnfilteredSteering === null) {
+            return null;
+        }
+
+        if (data.unfilteredInput.mUnfilteredSteeringState === null) {
+            return null;
+        }
+
+        if (data.unfilteredInput.mUnfilteredSteeringeMax === null) {
+            return null;
         }
 
         return getViewObject([
             {
-                label: 'Per Lap',
-                value: value,
-                suffix: suffix,
-                seperator: ' ',
-            }
-        ]);
-    }
-
-    /**
-     *
-     * @param {*} data
-     * @returns
-     */
-    async vFuelToEndSession(data) {
-        let value = '&#x231A;';
-        let suffix = null;
-
-        if (data.fuel.mFuelToEndSession !== null) {
-            value = (Math.ceil(data.fuel.mFuelToEndSession * 100) / 100).toFixed(2);
-            suffix = 'L'
-        }
-
-        return getViewObject([
-            {
-                label: 'To End',
-                value: value,
-                suffix: suffix,
-                seperator: ' ',
-            }
-        ]);
-    }
-
-    /**
-     *
-     * @param {*} data
-     * @returns
-     */
-    async vFuelStopsToEndSession(data) {
-        let value = '&#x231A;';
-
-        if (data.fuel.mFuelStopsToEndSession !== null) {
-            value = data.fuel.mFuelStopsToEndSession;
-        }
-
-        return getViewObject([
-            {
-                label: 'Pit Stops',
-                value: value
-            }
-        ]);
-    }
-
-    /**
-     *
-     * @param {*} data
-     * @returns
-     */
-    async vFuelInStop(data) {
-        let value = '&#x231A;';
-        let suffix = null;
-
-        if (data.fuel.mFuelInStop !== null) {
-            value = Math.ceil(data.fuel.mFuelInStop);
-            suffix = 'L'
-        }
-
-        return getViewObject([
-            {
-                label: 'Next Pit',
-                value: value,
-                suffix: suffix,
-                seperator: ' ',
+                value: data.unfilteredInput.mUnfilteredSteering,
+                state: data.unfilteredInput.mUnfilteredSteeringState,
+                additional: data.unfilteredInput.mUnfilteredSteeringeMax
             }
         ]);
     }
@@ -383,9 +748,19 @@ export default class ViewFactory {
             return null;
         }
 
+        if (data.unfilteredInput.mUnfilteredClutchState === null) {
+            return null;
+        }
+
+        if (data.unfilteredInput.mUnfilteredClutchMax === null) {
+            return null;
+        }
+
         return getViewObject([
             {
-                value: data.unfilteredInput.mUnfilteredClutch
+                value: data.unfilteredInput.mUnfilteredClutch,
+                state: data.unfilteredInput.mUnfilteredClutchState,
+                additional: data.unfilteredInput.mUnfilteredClutchMax,
             }
         ]);
     }
@@ -405,9 +780,19 @@ export default class ViewFactory {
             return null;
         }
 
+        if (data.unfilteredInput.mUnfilteredBrakeState === null) {
+            return null;
+        }
+
+        if (data.unfilteredInput.mUnfilteredBrakeMax === null) {
+            return null;
+        }
+
         return getViewObject([
             {
-                value: data.unfilteredInput.mUnfilteredBrake
+                value: data.unfilteredInput.mUnfilteredBrake,
+                state: data.unfilteredInput.mUnfilteredBrakeState,
+                additional: data.unfilteredInput.mUnfilteredBrakeMax
             }
         ]);
     }
@@ -427,9 +812,19 @@ export default class ViewFactory {
             return null;
         }
 
+        if (data.unfilteredInput.mUnfilteredThrottleState === null) {
+            return null;
+        }
+
+        if (data.unfilteredInput.mUnfilteredThrottleMax === null) {
+            return null;
+        }
+
         return getViewObject([
             {
-                value: data.unfilteredInput.mUnfilteredThrottle
+                value: data.unfilteredInput.mUnfilteredThrottle,
+                state: data.unfilteredInput.mUnfilteredThrottleState,
+                additional: data.unfilteredInput.mUnfilteredThrottleMax
             }
         ]);
     }
@@ -513,10 +908,14 @@ export default class ViewFactory {
             return null;
         }
 
+        if (data.carState.mAntiLockState === null) {
+            return null;
+        }
+
         return getViewObject([
             {
                 value: data.carState.mAntiLockSetting,
-                state: data.carState.mAntiLockActive
+                state: data.carState.mAntiLockState
             }
         ]);
     }
@@ -536,10 +935,14 @@ export default class ViewFactory {
             return null;
         }
 
+        if (data.carState.mTractionControlState === null) {
+            return null;
+        }
+
         return getViewObject([
             {
                 value: data.carState.mTractionControlSetting,
-                state: data.carState.mTractionControlActive
+                state: data.carState.mTractionControlState
             }
         ]);
     }
@@ -898,13 +1301,13 @@ export default class ViewFactory {
                 value: data.wheelsAndTyres.mTyreCompoundShort[index]
             },
             {
-                value: data.wheelsAndTyres.mTyreTemp[index].toFixed(0),
+                value: data.wheelsAndTyres.mTyreTemp[index],
                 seperator: ' ',
                 suffix: '°',
                 state: data.wheelsAndTyres.mTyreTempState[index]
             },
             {
-                value: data.wheelsAndTyres.mAirPressure[index].toFixed(2),
+                value: data.wheelsAndTyres.mAirPressure[index],
                 seperator: ' ',
                 suffix: 'B',
                 state: data.wheelsAndTyres.mAirPressureState[index]
@@ -922,11 +1325,22 @@ export default class ViewFactory {
             return null;
         }
 
+        const activeParticipant = await getActiveParticipant(data);
+
         const viewObjects = [];
 
         for (let index = 0; index < data.trackPositionCarousel.length; index++) {
             const item = data.trackPositionCarousel[index];
             const participant = await getParticipantAtIndex(data, item.mParticipantIndex);
+
+            let additional = Math.abs(Math.round(item.mDistanceToActiveUser));
+            let additional_seperator = ' ';
+            let additional_suffix = 'm';
+            if (participant.mParticipantIndex === activeParticipant.mParticipantIndex) {
+                additional = '';
+                additional_seperator = '';
+                additional_suffix = '';
+            }
 
             viewObjects.push(
                 getViewObject([
@@ -934,9 +1348,9 @@ export default class ViewFactory {
                         label: participant.mNameShort,
                         value: participant.mCarClassPosition,
                         suffix: participant.mCarClassNamesShort,
-                        additional: Math.abs(Math.round(item.mDistanceToActiveUser)),
-                        additional_seperator: ' ',
-                        additional_suffix: 'm',
+                        additional: additional,
+                        additional_seperator: additional_seperator,
+                        additional_suffix: additional_suffix,
                         index: `{${index}}${participant.mParticipantIndex}`,
                         state: participant.mCarClassColor,
                     },

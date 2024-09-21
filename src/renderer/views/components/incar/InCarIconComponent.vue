@@ -91,6 +91,21 @@
         animation-fill-mode: forwards;
         animation-iteration-count: infinite;
     }
+
+    &[state="7"] {
+        @include color('background-color', 'blue', 1);
+    }
+
+    &[state="8"] {
+        @include color('background-color', 'blue', 1);
+
+        animation-name: flash;
+        animation-duration: 150ms;
+        animation-timing-function: linear;
+        animation-direction: alternate;
+        animation-fill-mode: forwards;
+        animation-iteration-count: infinite;
+    }
 }
 
 .c-in-car-icon__svg {

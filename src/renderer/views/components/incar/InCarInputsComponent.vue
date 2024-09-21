@@ -5,6 +5,13 @@
                 <div class="c-in-car-inputs__rows">
                     <div class="c-in-car-inputs__row">
                         <div class="c-in-car-inputs__items">
+                            <div class="c-in-car-inputs__item" v-for="item in vInputSteering">
+                                <InCarDataSteeringComponent :data="item" />
+                            </div>
+                        </div>
+                    </div>
+                    <div class="c-in-car-inputs__row">
+                        <div class="c-in-car-inputs__items">
                             <div class="c-in-car-inputs__item" v-for="item in vInputClutch">
                                 <InCarDataLevelComponent :data="item" />
                             </div>
@@ -47,15 +54,21 @@
     }
 }
 
-.c-in-car-inputs__rows {}
+.c-in-car-inputs__rows {
+    margin: em(-8);
+}
 
-.c-in-car-inputs__row {}
+.c-in-car-inputs__row {
+    padding: em(8);
+}
 
 .c-in-car-inputs__items {
     display: flex;
 }
 
 .c-in-car-inputs__item {
+    width: 100%;
+
     + .c-in-car-inputs__item {
         margin: 0 0 0 em(14);
     }
@@ -73,22 +86,26 @@
 
 <script>
 import { inject } from 'vue';
+import InCarDataSteeringComponent from './InCarDataSteeringComponent.vue';
 import InCarDataLevelComponent from './InCarDataLevelComponent.vue';
 import InCarIconComponent from './InCarIconComponent.vue';
 
 export default {
     setup() {
+        const vInputSteering = inject('vInputSteering');
         const vInputClutch = inject('vInputClutch');
         const vInputBrake = inject('vInputBrake');
         const vInputThrottle = inject('vInputThrottle');
 
         return {
+            vInputSteering,
             vInputClutch,
             vInputBrake,
             vInputThrottle,
         };
     },
     components: {
+        InCarDataSteeringComponent,
         InCarDataLevelComponent,
         InCarIconComponent
     }

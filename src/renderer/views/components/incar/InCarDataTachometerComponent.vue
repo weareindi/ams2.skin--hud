@@ -10,7 +10,7 @@
     position: relative;
     width: em(330);
     height: em(30);
-    mask: url('@public/masks/tachometer-mask.svg');
+    mask-image: url('@renderer/assets/masks/tachometer-mask.svg?svg');
     mask-size: 100% 100%;
 }
 
@@ -67,12 +67,14 @@
 
 <script>
 import { inject } from 'vue';
+// import TachometerMask from '';
 
 export default {
     setup() {
         const vTachometer = inject('vTachometer');
 
         return {
+            // TachometerMask,
             vTachometer,
         };
     },

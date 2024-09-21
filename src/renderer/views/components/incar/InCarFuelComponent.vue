@@ -21,30 +21,30 @@
                             </div>
                         </div>
                     </div>
-                    <div class="c-in-car-fuel__row" v-if="vFuelPerLap">
+                    <div class="c-in-car-fuel__row" v-if="vFuelPerLapInCar">
                         <div class="c-in-car-fuel__items">
-                            <div class="c-in-car-fuel__item" v-for="item in vFuelPerLap">
+                            <div class="c-in-car-fuel__item" v-for="item in vFuelPerLapInCar">
                                 <InCarDataTextComponent :data="item" />
                             </div>
                         </div>
                     </div>
-                    <div class="c-in-car-fuel__row" v-if="vFuelToEndSession">
+                    <div class="c-in-car-fuel__row" v-if="vFuelToEndSessionInCar">
                         <div class="c-in-car-fuel__items">
-                            <div class="c-in-car-fuel__item" v-for="item in vFuelToEndSession">
+                            <div class="c-in-car-fuel__item" v-for="item in vFuelToEndSessionInCar">
                                 <InCarDataTextComponent :data="item" />
                             </div>
                         </div>
                     </div>
-                    <div class="c-in-car-fuel__row" v-if="vFuelStopsToEndSession">
+                    <div class="c-in-car-fuel__row" v-if="vFuelStopsToEndSessionInCar">
                         <div class="c-in-car-fuel__items">
-                            <div class="c-in-car-fuel__item" v-for="item in vFuelStopsToEndSession">
+                            <div class="c-in-car-fuel__item" v-for="item in vFuelStopsToEndSessionInCar">
                                 <InCarDataTextComponent :data="item" />
                             </div>
                         </div>
                     </div>
-                    <div class="c-in-car-fuel__row" v-if="vFuelInStop">
+                    <div class="c-in-car-fuel__row" v-if="vFuelInStopInCar">
                         <div class="c-in-car-fuel__items">
-                            <div class="c-in-car-fuel__item" v-for="item in vFuelInStop">
+                            <div class="c-in-car-fuel__item" v-for="item in vFuelInStopInCar">
                                 <InCarDataTextComponent :data="item" />
                             </div>
                         </div>
@@ -121,18 +121,19 @@ export default {
     setup() {
         const vFuelLevel = inject('vFuelLevel');
         const vFuelInCar = inject('vFuelInCar');
-        const vFuelPerLap = inject('vFuelPerLap');
-        const vFuelToEndSession = inject('vFuelToEndSession');
-        const vFuelStopsToEndSession = inject('vFuelStopsToEndSession');
-        const vFuelInStop = inject('vFuelInStop');
+
+        const vFuelPerLapInCar = inject('vFuelPerLapInCar');
+        const vFuelToEndSessionInCar = inject('vFuelToEndSessionInCar');
+        const vFuelStopsToEndSessionInCar = inject('vFuelStopsToEndSessionInCar');
+        const vFuelInStopInCar = inject('vFuelInStopInCar');
 
         return {
             vFuelLevel,
             vFuelInCar,
-            vFuelPerLap,
-            vFuelToEndSession,
-            vFuelStopsToEndSession,
-            vFuelInStop,
+            vFuelPerLapInCar,
+            vFuelToEndSessionInCar,
+            vFuelStopsToEndSessionInCar,
+            vFuelInStopInCar,
         };
     },
     components: {

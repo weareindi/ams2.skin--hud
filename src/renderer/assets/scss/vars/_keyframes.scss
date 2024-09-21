@@ -8,6 +8,17 @@
     }
 }
 
+@keyframes pulse {
+    0% {
+        opacity: 80%;
+    }
+
+    100%{
+        opacity: 100%;
+    }
+}
+
+
 @keyframes activate {
     0% {
         transform: scaleX(0);

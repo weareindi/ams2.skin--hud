@@ -21,7 +21,11 @@ export default class CarStateFactory {
      */
     async reset() {
         try {
+            this.ersStateTimer = performance.now();
             this.ersAvailable = false;
+            this.mBoostAmountStored = null;
+            this.mBoostStateStored = null;
+
             this.ersAmountIteration1 = null;
             this.ersAmountIteration2 = null;
         } catch (error) {
@@ -61,9 +65,11 @@ export default class CarStateFactory {
 
         data.carState.mAntiLockSetting = await this.mAntiLockSetting(data);
         data.carState.mAntiLockActive = await this.mAntiLockActive(data);
+        data.carState.mAntiLockState = await this.mAntiLockState(data);
 
         data.carState.mTractionControlSetting = await this.mTractionControlSetting(data);
         data.carState.mTractionControlActive = await this.mTractionControlActive(data);
+        data.carState.mTractionControlState = await this.mTractionControlState(data);
 
         data.carState.mDrsState = await this.mDrsState(data);
 
@@ -151,6 +157,19 @@ export default class CarStateFactory {
      * @param {*} data
      * @returns
      */
+    async mAntiLockState(data) {
+        if (data.carState.mAntiLockActive === true) {
+            return 1;
+        }
+
+        return 0;
+    }
+
+    /**
+     *
+     * @param {*} data
+     * @returns
+     */
     async mTractionControlSetting(data) {
         if (data.carState.mTractionControlSetting < 0) {
             return null;
@@ -185,6 +204,19 @@ export default class CarStateFactory {
         }
 
         return true;
+    }
+
+    /**
+     *
+     * @param {*} data
+     * @returns
+     */
+    async mTractionControlState(data) {
+        if (data.carState.mTractionControlActive === true) {
+            return 7;
+        }
+
+        return 0;
     }
 
     /**
@@ -273,67 +305,106 @@ export default class CarStateFactory {
             return null;
         }
 
-        if (!this.ersAmountIteration1) {
-            this.ersAmountIteration1 = data.carState.mBoostAmount;
+        // update mBoostAmountStored if null
+        if (this.mBoostAmountStored === null) {
+            this.mBoostAmountStored = data.carState.mBoostAmount;
         }
 
-        if (!this.ersAmountIteration2) {
-            this.ersAmountIteration2 = data.carState.mBoostAmount;
-        }
+        //
+        // if (this.mBoostStateStored === null) {
+        //     this.mBoostStateStored = null;
+        // }
 
         let state = null;
-
-        // ... charging?
-        if (this.ersAmountIteration2 <= data.carState.mBoostAmount) {
-            state = 2; // charging
+        if (this.mBoostAmountStored < data.carState.mBoostAmount) {
+            state = 3; // charging
+        }
+        if (this.mBoostAmountStored > data.carState.mBoostAmount) {
+            state = 2; // depleating
         }
 
-        // is is going down?
-        if (this.ersAmountIteration1 > data.carState.mBoostAmount) {
-            state = 1; // depleating
-        }
+        // this ones tricky as the iteration is often too quick causing ui flicking issues
+        // here we store the previous iteration and use that until we're sure the values are staying the same
+        if (this.mBoostAmountStored === data.carState.mBoostAmount) {
+            // same values? use previous iteration
+            state = this.mBoostStateStored;
 
-        // is it full?
+            // ... start ers timer
+            if (this.ersStateTimer === null) {
+                this.ersStateTimer = performance.now();
+            }
+        }
         if (data.carState.mBoostAmount === 100) {
             state = 0; // full
         }
 
-        // update scoped vars for future reference
-        this.ersAmountIteration2 = this.ersAmountIteration1;
-        this.ersAmountIteration1 = data.carState.mBoostAmount;
+        // if over x threshold, retest to make sure they are still the same
+        if (this.ersStateTimer + 150 < performance.now()) {
+            // reset timer
+            this.ersStateTimer = null;
+
+            // retest boost amount
+            if (this.mBoostAmountStored === data.carState.mBoostAmount) {
+                state = 1;
+            }
+        }
+
+        // store state
+        this.mBoostStateStored = state;
+
+        // prep response
+        let response = null;
 
         // work out highlight state
-        if (data.carState.mBoostActive === false && state === 2) {
-            return 1;
+        if (data.carState.mBoostActive === false && state === 3) {
+            response = 1;
             // return 'disabled-charging';
         }
 
-        if (data.carState.mBoostActive === false && state === 1) {
-            return 2;
+        if (data.carState.mBoostActive === false && state === 2) {
+            // console.log('here b');
+            response = 2;
             // return 'disabled-depleating';
         }
 
+        if (data.carState.mBoostActive === false && state === 1) {
+            // console.log('here c');
+            response = 3;
+            // return 'disabled-stalemate';
+        }
+
         if (data.carState.mBoostActive === false && state === 0) {
-            return 3;
+            // console.log('here c');
+            response = 3;
             // return 'disabled-full';
         }
 
-        if (data.carState.mBoostActive === true && state === 2) {
-            return 4;
+        if (data.carState.mBoostActive === true && state === 3) {
+            response = 4;
             // return 'enabled-charging';
         }
 
-        if (data.carState.mBoostActive === true && state === 1) {
-            return 5;
+        if (data.carState.mBoostActive === true && state === 2) {
+            // console.log('here e');
+            response = 5;
             // return 'enabled-depleating';
         }
 
+        if (data.carState.mBoostActive === true && state === 1) {
+            response = 6;
+            // return 'enabled-stalemate';
+        }
+
         if (data.carState.mBoostActive === true && state === 0) {
-            return 6;
+            // console.log('here g');
+            response = 6;
             // return 'enabled-full';
         }
 
-        return null;
+        // update mBoostAmountStored
+        this.mBoostAmountStored = data.carState.mBoostAmount;
+
+        return response;
     }
 
     /**
@@ -377,16 +448,16 @@ export default class CarStateFactory {
      * @returns
      */
     async mOilState(data) {
-        // if (data.carState.mOilTempCelsius >= 126.6) {
-        //     return 6;
-        // }
-
-        if (data.carState.mOilTempCelsius >= 120) {
+        if (data.carState.mOilTempCelsius >= 125) {
             return 6;
         }
 
-        if (data.carState.mOilTempCelsius >= 115) {
+        if (data.carState.mOilTempCelsius >= 120) {
             return 5;
+        }
+
+        if (data.carState.mOilTempCelsius >= 115) {
+            return 3;
         }
 
         if (data.carState.mOilTempCelsius > 0) {
