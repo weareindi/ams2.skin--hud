@@ -24,7 +24,7 @@ export default class WeatherFactory {
      */
     async reset() {
         try {
-            // console.log('WeatherFactory reset');
+            //
             this.mRainDensityLabelLevel = null;
             this.mRainDensityStateLevel = null;
         } catch (error) {

@@ -21,7 +21,7 @@ export default class CarDamageFactory {
      */
     async reset() {
         try {
-            // console.log('CarDamageFactory reset');
+            //
         } catch (error) {
             console.error(error);
         }

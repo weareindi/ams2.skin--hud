@@ -10,20 +10,20 @@
                         <PitDataValueComponent :data="vFuelInCar" />
                     </div>
                     <div class="c-pit-fuel-calc__item">
-                        <PitDataValueComponent :data="vFuelPerLap" />
+                        <PitDataValueComponent :data="vFuelPerLapPit" />
                     </div>
                     <div class="c-pit-fuel-calc__item">
-                        <PitDataValueComponent :data="vFuelToEndSession" />
+                        <PitDataValueComponent :data="vFuelToEndSessionPit" />
                     </div>
                 </div>
             </div>
             <div class="c-pit-fuel-calc__row">
                 <div class="c-pit-fuel-calc__items">
                     <div class="c-pit-fuel-calc__item">
-                        <PitDataValueComponent :data="vFuelStopsToEndSession" />
+                        <PitDataValueComponent :data="vFuelStopsToEndSessionPit" />
                     </div>
                     <div class="c-pit-fuel-calc__item">
-                        <PitDataValueComponent :data="vFuelInStop" />
+                        <PitDataValueComponent :data="vFuelInStopPit" />
                     </div>
                 </div>
             </div>
@@ -76,17 +76,18 @@ import PitDataValueComponent from './PitDataValueComponent.vue';
 export default {
     setup() {
         const vFuelInCar = inject('vFuelInCar');
-        const vFuelPerLap = inject('vFuelPerLap');
-        const vFuelToEndSession = inject('vFuelToEndSession');
-        const vFuelStopsToEndSession = inject('vFuelStopsToEndSession');
-        const vFuelInStop = inject('vFuelInStop');
+
+        const vFuelPerLapPit = inject('vFuelPerLapPit');
+        const vFuelToEndSessionPit = inject('vFuelToEndSessionPit');
+        const vFuelStopsToEndSessionPit = inject('vFuelStopsToEndSessionPit');
+        const vFuelInStopPit = inject('vFuelInStopPit');
 
         return {
             vFuelInCar,
-            vFuelPerLap,
-            vFuelToEndSession,
-            vFuelStopsToEndSession,
-            vFuelInStop,
+            vFuelPerLapPit,
+            vFuelToEndSessionPit,
+            vFuelStopsToEndSessionPit,
+            vFuelInStopPit,
         };
     },
     components: {

@@ -23,7 +23,7 @@
                         <div class="s-settings__group">
                             <div class="s-settings__items s-settings__items--prefs">
                                 <div class="s-settings__item">
-                                    <SettingInputComponent icon="display" label="Tick Rate" v-model="TickRate" type="number" min="1" max="30" />
+                                    <SettingInputComponent icon="display" label="Tick Rate" v-model="TickRate" type="number" min="4" max="60" />
                                 </div>
                             </div>
                         </div>
@@ -48,7 +48,7 @@
                         </div>
                     </div>
                 </div>
-                <hr class="s-settings__hr" v-if="Developer">
+                <!-- <hr class="s-settings__hr" v-if="Developer">
                 <div class="s-settings__row" v-if="Developer">
                     <div class="s-settings__header">
                         <h1 class="s-settings__heading">Developer</h1>
@@ -72,7 +72,7 @@
                             </div>
                         </div>
                     </div>
-                </div>
+                </div> -->
                 <hr class="s-settings__hr">
                 <div class="s-settings__row">
                     <div class="s-settings__header">
@@ -308,15 +308,15 @@ export default {
         const SettingsOnStartupOptions = inject('SettingsOnStartupOptions');
 
         // debug
-        const Debug = inject('Debug');
-        const DebugOptions = inject('DebugOptions');
+        // const Debug = inject('Debug');
+        // const DebugOptions = inject('DebugOptions');
 
         // mock
-        const Developer = inject('Developer');
-        const MockFetch = inject('MockFetch');
-        const MockFetchOptions = inject('MockFetchOptions');
-        const MockState = inject('MockState');
-        const MockStateOptions = inject('MockStateOptions');
+        // const Developer = inject('Developer');
+        // const MockFetch = inject('MockFetch');
+        // const MockFetchOptions = inject('MockFetchOptions');
+        // const MockState = inject('MockState');
+        // const MockStateOptions = inject('MockStateOptions');
 
         // crest
         const ExternalCrest = inject('ExternalCrest');
@@ -359,14 +359,15 @@ export default {
         return {
             SettingsOnStartup,
             SettingsOnStartupOptions,
-            Debug,
-            DebugOptions,
 
-            Developer,
-            MockFetch,
-            MockFetchOptions,
-            MockState,
-            MockStateOptions,
+            // Debug,
+            // DebugOptions,
+
+            // Developer,
+            // MockFetch,
+            // MockFetchOptions,
+            // MockState,
+            // MockStateOptions,
 
             ExternalCrest,
             ExternalCrestOptions,

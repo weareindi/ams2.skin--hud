@@ -21,7 +21,7 @@ export default class HudFactory {
      */
     async reset() {
         try {
-            // console.log('HudFactory reset');
+            //
         } catch (error) {
             console.error(error);
         }
@@ -66,12 +66,12 @@ export default class HudFactory {
     async mHudStatus(data) {
         // in pit box
         if (data.gameStates.mGameState === 4
-            && (
-                data.unfilteredInput.mUnfilteredThrottle === 0
-                && data.unfilteredInput.mUnfilteredBrake === 1
-                && data.unfilteredInput.mUnfilteredSteering === 0
-                && data.unfilteredInput.mUnfilteredClutch === 0
-            )
+            // && (
+            //     data.unfilteredInput.mUnfilteredThrottle === 0
+            //     && data.unfilteredInput.mUnfilteredBrake === 1
+            //     && data.unfilteredInput.mUnfilteredSteering === 0
+            //     && data.unfilteredInput.mUnfilteredClutch === 0
+            // )
         ) {
             return 1;
         }
@@ -79,12 +79,12 @@ export default class HudFactory {
         // in car
         if (
             data.gameStates.mGameState === 2
-            && (
-                data.unfilteredInput.mUnfilteredThrottle !== 0
-                || data.unfilteredInput.mUnfilteredBrake !== 1
-                || data.unfilteredInput.mUnfilteredSteering !== 0
-                || data.unfilteredInput.mUnfilteredClutch !== 0
-            )
+            // && (
+            //     data.unfilteredInput.mUnfilteredThrottle !== 0
+            //     || data.unfilteredInput.mUnfilteredBrake !== 1
+            //     || data.unfilteredInput.mUnfilteredSteering !== 0
+            //     || data.unfilteredInput.mUnfilteredClutch !== 0
+            // )
         ) {
             return 2;
         }

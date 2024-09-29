@@ -3,7 +3,6 @@ import { join } from 'path';
 import { is } from '@electron-toolkit/utils';
 import SettingsController from '../Controllers/SettingsController.js';
 import DisplayController from '../Controllers/DisplayController.js';
-import CrestProcessor from '../Controllers/CrestController.js';
 
 export default class SettingsWindow {
     constructor() {
@@ -17,7 +16,6 @@ export default class SettingsWindow {
         try {
             await this.registerSettingsController();
             await this.registerDisplayController();
-            await this.registerCrestProcessor();
             await this.processInitialState();
         } catch (error) {
             console.log(error);
@@ -36,13 +34,6 @@ export default class SettingsWindow {
      */
     async registerDisplayController() {
         this.DisplayController = new DisplayController();
-    }
-
-    /**
-     *
-     */
-    async registerCrestProcessor() {
-        this.CrestProcessor = new CrestProcessor();
     }
 
     /**
@@ -93,7 +84,7 @@ export default class SettingsWindow {
         }
 
         // open dev tools
-        // this.window.webContents.openDevTools();
+        this.window.webContents.openDevTools({ mode: 'detach' });
     }
 
     /**
@@ -216,7 +207,7 @@ export default class SettingsWindow {
             }
 
             if (!data) {
-                return this.window.webContents.send(name);
+                return this.window.webContents.send(name, null);
             }
 
             return this.window.webContents.send(name, data);

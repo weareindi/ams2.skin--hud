@@ -21,7 +21,7 @@ export default class EventInformationFactory {
      */
     async reset() {
         try {
-            // console.log('EventInformationFactory reset');
+            //
         } catch (error) {
             console.error(error);
         }
@@ -76,6 +76,10 @@ export default class EventInformationFactory {
             return data.eventInformation.mSessionDuration;
         }
 
+        if (data.timings.mEventTimeRemaining < 0) {
+            return 0;
+        }
+
         return data.timings.mEventTimeRemaining;
     }
 
@@ -98,6 +102,10 @@ export default class EventInformationFactory {
      * @returns
      */
     async mAdditionalLap(data) {
-        return null;
+        if (data.eventInformation.mLapsInEvent === null) {
+            return null
+        }
+
+        return data.eventInformation.mSessionAdditionalLaps;
     }
 }

@@ -1,10 +1,18 @@
-import { getActiveParticipant, getParticipantInPostion, getParticipantsSortedByPosition, isReady } from '../../utils/CrestUtils';
+import { getActiveParticipant, getParticipantInPostion, getParticipantsSortedByPosition, getParticipantsSortedIntoClass, isReady, hasEventStarted } from '../../utils/CrestUtils';
 import { random, weightedArray } from '../../utils/DataUtils';
-import { globalShortcut } from 'electron/main';
-import SettingsController from '../Controllers/SettingsController';
+import stc from "string-to-color";
 
 export default class DirectorFactory {
     constructor() {
+
+        this.baseTimes = {
+            blank: 1000,
+            solo: 8000,
+            leaderboard: 1000,
+            standings: 1000 * 6, // 6 participants per page
+            battle: 8000,
+        };
+
         this.minTimes = {
             blank: null,
             solo: null,
@@ -13,20 +21,16 @@ export default class DirectorFactory {
             battle: null,
         };
 
-        this.timeNow = null;
-        this.timeStart = null;
         this.currentView = null;
-        // this.nextView = null;
-        // this.mode = null;
-
         this.view = null;
-        this.defaultView = null;
-        this.commandAuto = null;
-        this.commandBlank = null;
-        this.commandSolo = null;
-        this.commandLeaderboard = null;
-        this.commandStandings = null;
-        this.commandBattle = null;
+
+        this.defaultView = 'auto';
+        // this.commandAuto = null;
+        // this.commandBlank = null;
+        // this.commandSolo = null;
+        // this.commandLeaderboard = null;
+        // this.commandStandings = null;
+        // this.commandBattle = null;
 
         this.init();
     }
@@ -36,7 +40,6 @@ export default class DirectorFactory {
      */
     async init() {
         try {
-            await this.registerSettingsController();
             await this.reset();
         } catch (error) {
             console.error(error);
@@ -46,29 +49,18 @@ export default class DirectorFactory {
     /**
      *
      */
-    async registerSettingsController() {
-        this.SettingsController = new SettingsController();
-    }
-
-    /**
-     *
-     */
-    async getVariables() {
-        this.defaultView = await this.SettingsController.get('DirectorDefaultView');
-        this.commandAuto = await this.SettingsController.get('DirectorCommandAuto');
-        this.commandBlank = await this.SettingsController.get('DirectorCommandBlank');
-        this.commandSolo = await this.SettingsController.get('DirectorCommandSolo');
-        this.commandLeaderboard = await this.SettingsController.get('DirectorCommandLeaderboard');
-        this.commandStandings = await this.SettingsController.get('DirectorCommandStandings');
-        this.commandBattle = await this.SettingsController.get('DirectorCommandBattle');
-    }
-
-    /**
-     *
-     */
     async reset() {
         try {
-            // console.log('DirectorFactory reset');
+            this.timeStart = null;
+            this.timeStandings = null;
+
+            this.minTimes = {
+                blank: null,
+                solo: null,
+                leaderboard: null,
+                standings: null,
+                battle: null,
+            };
         } catch (error) {
             console.error(error);
         }
@@ -78,47 +70,46 @@ export default class DirectorFactory {
      *
      */
     async updateBinds() {
-        if (
-            !globalShortcut.isRegistered(this.commandAuto)
-            || !globalShortcut.isRegistered(this.commandBlank)
-            || !globalShortcut.isRegistered(this.commandSolo)
-            || !globalShortcut.isRegistered(this.commandLeaderboard)
-            || !globalShortcut.isRegistered(this.commandStandings)
-            || !globalShortcut.isRegistered(this.commandBattle)
-        ) {
-            globalShortcut.unregisterAll();
-        }
+        // if (
+        //     !globalShortcut.isRegistered(this.commandAuto)
+        //     || !globalShortcut.isRegistered(this.commandBlank)
+        //     || !globalShortcut.isRegistered(this.commandSolo)
+        //     || !globalShortcut.isRegistered(this.commandLeaderboard)
+        //     || !globalShortcut.isRegistered(this.commandStandings)
+        //     || !globalShortcut.isRegistered(this.commandBattle)
+        // ) {
+        //     globalShortcut.unregisterAll();
+        // }
 
-        globalShortcut.register(this.commandAuto, () => {
-            console.log('auto mode selected');
-            this.view = 'auto';
-        });
+        // globalShortcut.register(this.commandAuto, () => {
+        //     console.log('auto mode selected');
+        //     this.view = 'auto';
+        // });
 
-        globalShortcut.register(this.commandBlank, () => {
-            console.log('blank view selected');
-            this.view = 'blank';
-        });
+        // globalShortcut.register(this.commandBlank, () => {
+        //     console.log('blank view selected');
+        //     this.view = 'blank';
+        // });
 
-        globalShortcut.register(this.commandSolo, () => {
-            console.log('solo view selected');
-            this.view = 'solo';
-        });
+        // globalShortcut.register(this.commandSolo, () => {
+        //     console.log('solo view selected');
+        //     this.view = 'solo';
+        // });
 
-        globalShortcut.register(this.commandLeaderboard, () => {
-            console.log('leaderboard view selected');
-            this.view = 'leaderboard';
-        });
+        // globalShortcut.register(this.commandLeaderboard, () => {
+        //     console.log('leaderboard view selected');
+        //     this.view = 'leaderboard';
+        // });
 
-        globalShortcut.register(this.commandStandings, () => {
-            console.log('standings view selected');
-            this.view = 'standings';
-        });
+        // globalShortcut.register(this.commandStandings, () => {
+        //     console.log('standings view selected');
+        //     this.view = 'standings';
+        // });
 
-        globalShortcut.register(this.commandBattle, () => {
-            console.log('battle view selected');
-            this.view = 'battle';
-        });
-
+        // globalShortcut.register(this.commandBattle, () => {
+        //     console.log('battle view selected');
+        //     this.view = 'battle';
+        // });
     }
 
     /**
@@ -128,7 +119,6 @@ export default class DirectorFactory {
      */
     async getData(data) {
         try {
-            // console.log(this.db);
             return await this.prepareData(data);
         } catch (error) {
             console.error(error);
@@ -147,15 +137,18 @@ export default class DirectorFactory {
         }
 
         // update vars
-        await this.getVariables();
-        await this.updateBinds();
+        // await this.getVariables();
+        // await this.updateBinds();
 
-        let view = await this.getCurrentView(data);
+        // let view = await this.getCurrentView(data);
+        let view = 'battle';
 
         // if auto, then get
         if (view === 'auto') {
-            // set min times
-            await this.setMinTimes(data);
+            const eventStarted = await hasEventStarted(data);
+            if (!eventStarted) {
+                return 'solo';
+            }
 
             // available views
             let views = await this.getWeightedViews(data);
@@ -165,14 +158,44 @@ export default class DirectorFactory {
             view = await this.selectAutoView(data, views);
         }
 
-        let viewData =  await this.getViewData(data, view);
+        const vData = await this.getViewData(data, view);
+        if (vData === null) {
+            return null;
+        }
 
         data.director = {
             view: view,
-            data: viewData
+            data: vData
         };
 
         return data;
+    }
+
+    /**
+     *
+     * @param {*} data
+     * @param {*} view
+     */
+    async updateMinTimes(data, view, multiplier = 1) {
+        if (view === 'blank') {
+            return this.minTimes.blank = this.baseTimes.blank * multiplier;
+        }
+
+        if (view === 'solo') {
+            return this.minTimes.solo = this.baseTimes.solo * multiplier;
+        }
+
+        if (view === 'leaderboard') {
+            return this.minTimes.leaderboard = this.baseTimes.leaderboard * multiplier;
+        }
+
+        if (view === 'standings') {
+            return this.minTimes.standings = this.baseTimes.standings * multiplier;
+        }
+
+        if (view === 'battle') {
+            return this.minTimes.battle = this.baseTimes.battle * multiplier;
+        }
     }
 
     /**
@@ -200,141 +223,73 @@ export default class DirectorFactory {
         const participant = await getActiveParticipant(data);
 
         if (view === 'blank') {
+            await this.updateMinTimes(data, view);
+
             return null;
         }
 
         if (view === 'solo') {
+            await this.updateMinTimes(data, view);
+
             return {
                 mParticipantIndex: participant.mParticipantIndex
             };
         }
 
         if (view === 'leaderboard') {
+            const eventStarted = await hasEventStarted(data);
+            if (!eventStarted) {
+                return null;
+            }
+
+            await this.updateMinTimes(data, view, data.participants.mNumParticipants);
+
             return {
                 mParticipantIndex: participant.mParticipantIndex,
-                participants: await this.getLeaderboard(data),
+                classes: await this.getLeaderboard(data),
             };
         }
 
         if (view === 'standings') {
+            const eventStarted = await hasEventStarted(data);
+            if (!eventStarted) {
+                return null;
+            }
+
             const standings = await this.getStandings(data);
+            const multiplier = await this.getStandingsMultiplier(standings);
+            await this.updateMinTimes(data, view, multiplier);
+            const { classIndex, classPageIndex } = await this.getStandingsActivePageIndices(standings, multiplier)
+
             return {
                 mParticipantIndex: participant.mParticipantIndex,
-                page: standings.page,
-                participants: standings.participants,
+                standings: standings,
+                classIndex: classIndex,
+                classPageIndex: classPageIndex,
             }
         }
 
         if (view === 'battle') {
+            const eventStarted = await hasEventStarted(data);
+            if (!eventStarted) {
+                return null;
+            }
+
+            await this.updateMinTimes(data, view);
+
             const battle = await this.getBattle(data);
             return battle;
         }
 
-
         return null;
     }
 
-    /**
-     *
-     * @param {*} data
-     */
-    async getBattle(data) {
-        const participant = await getActiveParticipant(data);
-
-        const battle = {
-            driver: participant.mParticipantIndex
-        };
-
-        if (participant.mBattlingParticipantAhead) {
-            battle.ahead = (await getParticipantInPostion(data, participant.mRacePosition - 1)).mParticipantIndex;
+    async getStandingsMultiplier(standings) {
+        let multiplier = 0;
+        for (const mCarClassName in standings) {
+            multiplier += standings[mCarClassName].pages.length;
         }
-
-        if (participant.mBattlingParticipantBehind) {
-            battle.behind = (await getParticipantInPostion(data, participant.mRacePosition + 1)).mParticipantIndex;
-        }
-
-        return battle;
-    }
-
-    /**
-     *
-     * @param {*} data
-     * @returns
-     */
-    async getLeaderboard(data) {
-        // sorted by position
-        const participants = await getParticipantsSortedByPosition(data);
-
-        // return mParticipantIndex only
-        return [].concat(participants).map((participant) => {
-            return participant.mParticipantIndex;
-        })
-    }
-
-    /**
-     *
-     * @param {*} data
-     * @returns
-     */
-    async getStandings(data) {
-        // sorted by position
-        let participants = await getParticipantsSortedByPosition(data);
-
-        // reduce to mParticipantIndex
-        participants = participants.map((participant) => {
-            return participant.mParticipantIndex;
-        });
-
-        // split into pages
-        const pages = [];
-        for (let pi = 0; pi < participants.length; pi += 6) {
-            pages.push( participants.slice(pi, pi + 6) );
-        }
-
-        let duration = Date.now() - this.timeStart;
-        let pageDuration = this.minTimes.standings / pages.length;
-
-        let currentPage = 0;
-        for (let pi = 0; pi < pages.length; pi++) {
-            if (duration >= (pageDuration * pi)) {
-                currentPage = pi;
-            }
-        }
-
-        return {
-            page: currentPage,
-            participants: pages[currentPage]
-        };
-    }
-
-    /**
-     *
-     * @param {*} data
-     */
-    async setMinTimes(data) {
-        // blank / show nothing
-        const blankMinTIme = 10000;
-
-        // solo
-        const soloMinTIme = 120000;
-
-        // 5000ms + 1000ms per participant
-        const leaderboardMinTIme = 10000 + (1000 * data.participants.mNumParticipants);
-
-        // standings show 6 participants per page.
-        // 1000ms per participant * 6 participants * amount of pages
-        const standingsMinTime = (1000 * 6) * Math.ceil(data.participants.mNumParticipants / 6);
-
-        // battle
-        const battleMinTIme = 120000;
-
-        this.minTimes = {
-            blank: blankMinTIme,
-            solo: soloMinTIme,
-            leaderboard: leaderboardMinTIme,
-            standings: standingsMinTime,
-            battle: battleMinTIme,
-        };
+        return multiplier;
     }
 
     /**
@@ -351,15 +306,15 @@ export default class DirectorFactory {
 
         // first iteration
         if (this.currentView === null) {
-            this.timeStart = Date.now();
+            this.timeStart = performance.now();
             this.currentView = nextView;
             return this.currentView.label;
         }
 
-        let duration = Date.now() - this.timeStart;
+        let duration = performance.now() - this.timeStart;
 
         if (duration > this.minTimes[this.currentView.label]) {
-            this.timeStart = Date.now();
+            this.timeStart = performance.now();
             this.currentView = nextView;
             return this.currentView.label;
         }
@@ -429,5 +384,144 @@ export default class DirectorFactory {
         }
 
         return views;
+    }
+
+    /**
+     *
+     * @param {*} data
+     */
+    async getBattle(data) {
+        const participant = await getActiveParticipant(data);
+
+        const battle = {
+            driver: participant.mParticipantIndex
+        };
+
+        if (participant.mBattlingParticipantAhead) {
+            battle.ahead = (await getParticipantInPostion(data, participant.mRacePosition - 1)).mParticipantIndex;
+        }
+
+        if (participant.mBattlingParticipantBehind) {
+            battle.behind = (await getParticipantInPostion(data, participant.mRacePosition + 1)).mParticipantIndex;
+        }
+
+        return battle;
+    }
+
+    /**
+     *
+     * @param {*} data
+     * @returns
+     */
+    async getLeaderboard(data) {
+        // sorted by position
+        const classes = await getParticipantsSortedIntoClass(data);
+
+        // remove safety car
+        delete classes['SafetyCar'];
+
+        // return indexes only
+        for (const mCarClassName in classes) {
+            classes[mCarClassName] = {
+                mCarClassName: mCarClassName,
+                mCarClassColor: stc(mCarClassName),
+                participants: classes[mCarClassName]
+                    .map((participant) => {
+                        return participant.mParticipantIndex;
+                    })
+            }
+        }
+
+        return classes;
+    }
+
+    /**
+     *
+     * @param {*} data
+     * @returns
+     */
+    async getStandings(data) {
+        // sorted by position
+        const classes = await getParticipantsSortedIntoClass(data);
+
+        // remove safety car
+        delete classes['SafetyCar'];
+
+        // return indexes only
+        for (const mCarClassName in classes) {
+
+            const pages = [];
+            for (let pi = 0; pi < classes[mCarClassName].length; pi += 6) {
+                pages.push( classes[mCarClassName].slice(pi, pi + 6) );
+            }
+
+            classes[mCarClassName] = {
+                mCarClassName: mCarClassName,
+                mCarClassColor: stc(mCarClassName),
+                pages: pages.map((page) => {
+                    return page.map((participant) => {
+                        return participant.mParticipantIndex;
+                    });
+                }),
+            }
+        }
+
+        return classes;
+    }
+
+    /**
+     *
+     * @param {*} standings
+     * @param {*} multiplier
+     * @returns
+     */
+    async getStandingsActivePageIndices(standings, multiplier) {
+        // no time started? start now
+        if (this.timeStandings === null) {
+            this.timeStandings = performance.now();
+        }
+
+        // reset timer if time passed
+        if (this.timeStandings + this.minTimes.standings < performance.now()) {
+            this.timeStandings = performance.now();
+        }
+
+        // get current overall page
+        let page = 0;
+        for (let index = 0; index < multiplier; index++) {
+            if (performance.now() - this.timeStandings > (this.baseTimes.standings * index)) {
+                page = index;
+            }
+        }
+
+        // loop until page match
+        let classPageCounter = -1;
+        let classIndex = 0;
+        let classPageIndex = 0;
+        for (const mCarClassName in standings) {
+            // loop through pages of current class
+            for (classPageIndex = 0; classPageIndex < standings[mCarClassName].pages.length; classPageIndex++) {
+                // increment page counter
+                classPageCounter++;
+
+                // ... until it matches page
+                if (classPageCounter === page) {
+                    break;
+                }
+            }
+
+            // also stop here if page number matches
+            if (classPageCounter === page) {
+                break;
+            }
+
+            // increment class
+            classIndex++;
+        }
+
+        return {
+            classIndex,
+            classPageIndex
+        };
     }
 }

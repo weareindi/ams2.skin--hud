@@ -29,11 +29,8 @@ export default {
         document.head.appendChild(styleElement);
 
         // scale
-
         // ... after mount, request scale
         electron.ipcRenderer.invoke('setScale', 'DirectorWindow', 'DirectorDisplay');
-
-        // ... register listener from main
         electron.ipcRenderer.on('setScale', async (event, scale) => {
             await this.setScale(scale);
         });

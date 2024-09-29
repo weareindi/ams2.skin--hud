@@ -6,7 +6,7 @@ export default class BattleFactory {
         this.potentialAhead = {};
         this.potentialBehind = {};
 
-        this.threshold = 10000; // milliseconds
+        this.threshold = 1000; // milliseconds
         this.distance = 100; // meters
 
         this.init();
@@ -28,7 +28,7 @@ export default class BattleFactory {
      */
     async reset() {
         try {
-            // console.log('BattleFactory reset');
+            //
         } catch (error) {
             console.error(error);
         }
@@ -82,7 +82,32 @@ export default class BattleFactory {
         }
 
         const participants = await this.processParticipants(data);
-        return await this.battles(data, participants);
+        const battlesGroups = await this.battlesGroups(data, participants);
+        const battles = await this.battles(data, battlesGroups);
+
+        return battles;
+    }
+
+    /**
+     *
+     */
+    async battles(data, battlesGroups) {
+        // console.log(battlesGroups);
+
+        for (const battlesID in battlesGroups) {
+            // if (!battlesID in battlesGroups ) {
+            //     continue;
+            // }
+
+            // console.log(battlesGroups[battlesID]);
+
+        }
+
+        // for (let bgi = 0; bgi < battlesGroups.length; bgi++) {
+        //     console.log(battlesGroups[bgi]);
+
+
+        // }
     }
 
     /**
@@ -94,7 +119,6 @@ export default class BattleFactory {
         for (let ppi = 0; ppi < data.participants.mParticipantInfo.length; ppi++) {
             // apply vars
             data.participants.mParticipantInfo[ppi].mBattlingParticipantAhead = null;
-            data.participants.mParticipantInfo[ppi].mBattlingParticipantBehind = null;
         }
 
         return data;
@@ -106,12 +130,14 @@ export default class BattleFactory {
      * @param {*} participants
      * @returns
      */
-    async battles(data, participants) {
+    async battlesGroups(data, participants) {
         // group battles for easy digestion
-        const battles = [];
+        const battles = {};
 
+        let battleID = -1;
+
+        // for (let pi = participants.length-1; pi >= 0; pi--) {
         for (let pi = 0; pi < participants.length; pi++) {
-            // is the leader?
             if (participants[pi].mRacePosition === 1) {
                 // ... skip
                 continue;
@@ -119,34 +145,31 @@ export default class BattleFactory {
 
             // not in a battle?
             if (!participants[pi].mBattlingParticipantAhead) {
+                battleID++;
+
                 // ... skip
                 continue;
             }
 
-            // get participant ahead
             const participantAhead = await getParticipantInPostion(data, participants[pi].mRacePosition - 1);
 
-            // get current timestamp
-            const now = Date.now();
+            // increment battleID if participantAhead is not in it already
+            if (
+                !(battleID in battles)
+                || !battles[battleID].includes(participantAhead.mParticipantIndex)
+            ) {
+                battleID++;
+            }
 
-            // populate battles
-            // battles.push([participantAhead.mRacePosition, participants[pi].mRacePosition, participants[pi].mRacingDistance]);
-            battles.push({
-                // ahead: {
-                //     mParticipantIndex: participantAhead.mParticipantIndex,
-                //     mRacePosition: participantAhead.mRacePosition,
-                //     // mName: participantAhead.mName,
-                // },
-                // behind: {
-                //     mParticipantIndex: participants[pi].mParticipantIndex,
-                //     // mRacePosition: participants[pi].mRacePosition,
-                //     // mName: participants[pi].mName,
-                // },
-                aheadParticipantIndex: participantAhead.mParticipantIndex,
-                behindParticipantIndex: participants[pi].mParticipantIndex,
-                distance: participants[pi].mRacingDistance,
-                duration: Date.now() - this.potentialAhead[ participants[pi].mName ]
-            });
+            if (!(battleID in battles)) {
+                // ... create array with ID
+                battles[battleID] = [];
+
+                // ... add participant ahead to it immediately
+                battles[battleID].push(participantAhead.mParticipantIndex);
+            }
+
+            battles[battleID].push(participants[pi].mParticipantIndex);
         }
 
         return battles;
@@ -161,7 +184,6 @@ export default class BattleFactory {
         let participants = await getParticipantsSortedByPosition(data);
         participants = await this.filterParticipants(participants);
         participants = await this.withinThresholdAhead(participants);
-        participants = await this.withinThresholdBehind(data, participants);
         return participants;
     }
 
@@ -171,7 +193,7 @@ export default class BattleFactory {
      */
     async withinThresholdAhead(participants) {
         // get current timestamp
-        const now = Date.now();
+        const now = performance.now();
 
         // work out if battling participant ahead
         for (let pi = 0; pi < participants.length; pi++) {
@@ -192,7 +214,7 @@ export default class BattleFactory {
             }
 
             // over the distance threshold?
-            if (participants[pi].mRacingDistance > this.distance) {
+            if (participants[pi].mRacingDistanceParticipantAhead > this.distance) {
                 // ... delete from potential
                 delete this.potentialAhead[ participants[pi].mName ];
 
@@ -223,55 +245,51 @@ export default class BattleFactory {
      *
      * @param {*} participants
      */
-    async withinThresholdBehind(data, participants) {
+    async withinThresholdBehind(participants) {
         // get current timestamp
-        const now = Date.now();
+        const now = performance.now();
 
         // work out if battling participant ahead
         for (let pi = 0; pi < participants.length; pi++) {
-            // set default state
-            participants[pi].mBattlingParticipantBehind = false;
+            participants[pi].mBattlingParticipantAhead = false;
 
             // skip if no race position defined
             if (participants[pi].mRacePosition <= 0) {
                 continue;
             }
 
-            // is last?
-            if (participants[pi].mRacePosition === participants.length) {
+            // is the leader?
+            if (participants[pi].mRacePosition === 1) {
                 // ... delete from potential
-                delete this.potentialBehind[ participants[pi].mName ];
+                delete this.potentialAhead[ participants[pi].mName ];
 
                 // ... continue to next iteration
                 continue;
             }
 
-            const participantBehind = await getParticipantInPostion(data, (participants[pi].mRacePosition + 1));
+            // // over the distance threshold?
+            // if (participants[pi].mRacingDistanceParticipantAhead > this.distance) {
+            //     // ... delete from potential
+            //     delete this.potentialAhead[ participants[pi].mName ];
 
-            // over the distance threshold?
-            if (participantBehind.mRacingDistance > this.distance) {
+            //     // ... continue to next iteration
+            //     continue;
+            // }
 
-                // ... delete from potential
-                delete this.potentialBehind[ participants[pi].mName ];
+            // // in potential?
+            // if (participants[pi].mName in this.potentialAhead) {
+            //     // ... and the stored timestamp is older than the threshold?
+            //     if (this.potentialAhead[ participants[pi].mName ] < (now - this.threshold)) {
+            //         // ... battle!
+            //         participants[pi].mBattlingParticipantAhead = true;
+            //     }
 
-                // ... continue to next iteration
-                continue;
-            }
+            //     // ... continue to next iteration
+            //     continue;
+            // }
 
-            // in potential?
-            if (participants[pi].mName in this.potentialBehind) {
-                // ... and the stored timestamp is older than the threshold?
-                if (this.potentialBehind[ participants[pi].mName ] < (now - this.threshold)) {
-                    // ... battle!
-                    participants[pi].mBattlingParticipantBehind = true;
-                }
-
-                // ... continue to next iteration
-                continue;
-            }
-
-            // must be within distance threshold, add user to potential battle list
-            this.potentialBehind[ participants[pi].mName ] = now;
+            // // must be within distance threshold, add user to potential battle list
+            // this.potentialAhead[ participants[pi].mName ] = now;
         }
 
         return participants;

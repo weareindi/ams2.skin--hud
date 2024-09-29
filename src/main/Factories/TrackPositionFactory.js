@@ -1,4 +1,4 @@
-import { isReady, getParticipantAtIndex, getActiveParticipant } from '../../utils/CrestUtils';
+import { isReady, getParticipantAtIndex, getActiveParticipant, getParticipantsSortedByRaceDistance } from '../../utils/CrestUtils';
 
 export default class TrackPositionFactory {
     constructor() {
@@ -21,7 +21,7 @@ export default class TrackPositionFactory {
      */
     async reset() {
         try {
-            // console.log('TrackPositionFactory reset');
+            //
         } catch (error) {
             console.error(error);
         }
@@ -34,7 +34,6 @@ export default class TrackPositionFactory {
      */
     async getData(data) {
         try {
-            // console.log(this.db);
             return await this.prepareData(data);
         } catch (error) {
             console.error(error);
@@ -63,50 +62,25 @@ export default class TrackPositionFactory {
      * @param {*} participants
      * @returns
      */
-    async filterParticipants(data, participants) {
-        for (let participantIndex = 0; participantIndex < participants.length; participantIndex++) {
-            const participant = await getParticipantAtIndex(data, participantIndex);
+    // async filterParticipants(data, participants) {
+    //     for (let participantIndex = 0; participantIndex < participants.length; participantIndex++) {
+    //         const participant = await getParticipantAtIndex(data, participantIndex);
 
-            // remove those in pit
-            if (participant.mPitModes === 4 || participant.mPitModes === 5) {
-                participants.splice(participantIndex, 1);
-                continue;
-            }
+    //         // remove those in pit
+    //         if (participant.mPitModes === 4 || participant.mPitModes === 5) {
+    //             participants.splice(participantIndex, 1);
+    //             continue;
+    //         }
 
-            // remove safety car
-            if (participant.mCarClassNames === 'SafetyCar') {
-                participants.splice(participantIndex, 1);
-                continue;
-            }
-        }
+    //         // remove safety car
+    //         if (participant.mCarClassNames === 'SafetyCar') {
+    //             participants.splice(participantIndex, 1);
+    //             continue;
+    //         }
+    //     }
 
-        return participants;
-    }
-
-    /**
-     * Sort participants by lap distance
-     * @param {*} data
-     * @returns array
-     */
-    async trackPosition(data) {
-        let participants = data.participants.mParticipantInfo;
-
-        // sort by race distance (falling back to race postion)
-        participants = [].concat(participants).sort((a, b) => {
-            if (a.mCurrentLapDistance === 0 && a.mCurrentLapDistance === 0) {
-                return a.mRacePosition - b.mRacePosition;
-            }
-
-            return b.mCurrentLapDistance - a.mCurrentLapDistance;
-        });
-
-        // apply placement index
-        for (let pi = 0; pi < participants.length; pi++) {
-            participants[pi].mPlacementIndex = pi;
-        }
-
-        return participants;
-    }
+    //     return participants;
+    // }
 
     /**
      * Get track position data in a carousel prepared array with the current user in the center
@@ -114,7 +88,7 @@ export default class TrackPositionFactory {
      * @returns array
      */
     async trackPositionCarousel(data) {
-        const trackPosition = await this.trackPosition(data);
+        const participants = await getParticipantsSortedByRaceDistance(data);
         const activeParticipant = await getActiveParticipant(data);
 
         let aheadA = [];
@@ -122,8 +96,8 @@ export default class TrackPositionFactory {
         let behindA = [];
         let behindB = [];
 
-        for (let pi = 0; pi < trackPosition.length; pi++) {
-            const participant = trackPosition[pi];
+        for (let pi = 0; pi < participants.length; pi++) {
+            const participant = participants[pi];
 
             if (participant.mParticipantIndex === activeParticipant.mParticipantIndex) {
                 continue;
@@ -134,13 +108,13 @@ export default class TrackPositionFactory {
             }
 
             if (participant.mPlacementIndex < activeParticipant.mPlacementIndex) {
-                aheadA.push( {...trackPosition[pi]} );
-                aheadB.push( {...trackPosition[pi]} );
+                aheadA.push( {...participant} );
+                aheadB.push( {...participant} );
             }
 
             if (participant.mPlacementIndex > activeParticipant.mPlacementIndex) {
-                behindA.push( {...trackPosition[pi]} );
-                behindB.push( {...trackPosition[pi]} );
+                behindA.push( {...participant} );
+                behindB.push( {...participant} );
             }
         }
 

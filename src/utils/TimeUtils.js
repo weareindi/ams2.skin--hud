@@ -1,3 +1,34 @@
+export function millisecondsToDelta(n) {
+    // convert to total milliseconds
+    const totalmilliseconds = Math.abs(n) * 1000;
+
+    let prefix = '+'
+
+    let milliseconds = Math.round((totalmilliseconds % 1000));
+    let millisecondsZeroFill = ``;
+    if (milliseconds < 100) {
+        millisecondsZeroFill = `0`;
+    }
+    if (milliseconds < 10) {
+        millisecondsZeroFill = `00`;
+    }
+
+    // seconds
+    let seconds = Math.floor((totalmilliseconds / 1000) % 60);
+    let secondsZeroFill = (seconds < 10) ? `0` : ``;
+
+    // minutes
+    let minutes = Math.floor((totalmilliseconds / (1000 * 60)) % 60);
+    let minutesZeroFill = (minutes < 10) ? `0` : ``;
+
+    if (minutes > 0) {
+        return `${prefix}${minutesZeroFill}${minutes}:${secondsZeroFill}${seconds}.${millisecondsZeroFill}${milliseconds}`;
+    }
+
+    return `${prefix}${secondsZeroFill}${seconds}.${millisecondsZeroFill}${milliseconds}`;
+
+}
+
 /**
  * Covert milliseconds to readable time
  * @param {*} n The number in milliseconds
@@ -51,4 +82,3 @@ export function millisecondsToTime(n, r = false) {
 
     return `${hoursZeroFill}${hours}:${minutesZeroFill}${minutes}:${secondsZeroFill}${seconds}.${millisecondsZeroFill}${milliseconds}`;
 }
-

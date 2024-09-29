@@ -21,9 +21,7 @@ export default class WeatherFactory {
      */
     async reset() {
         try {
-            // console.log('WeatherFactory reset');
 
-            this.mRainDensity = null;
         } catch (error) {
             console.error(error);
         }
@@ -57,21 +55,17 @@ export default class WeatherFactory {
 
         data.wheelsAndTyres.mSuspensionDamage = await this.mSuspensionDamage(data);
         data.wheelsAndTyres.mSuspensionDamageState = await this.mSuspensionDamageState(data);
-
         data.wheelsAndTyres.mBrakeDamage = await this.mBrakeDamage(data);
         data.wheelsAndTyres.mBrakeDamageState = await this.mBrakeDamageState(data);
         data.wheelsAndTyres.mBrakeTemp = await this.mBrakeTemp(data);
         data.wheelsAndTyres.mBrakeTempState = await this.mBrakeTempState(data);
-
         data.wheelsAndTyres.mTyreWear = await this.mTyreWear(data);
         data.wheelsAndTyres.mTyreWearState = await this.mTyreWearState(data);
         data.wheelsAndTyres.mTyreTemp = await this.mTyreTemp(data);
         data.wheelsAndTyres.mTyreTempState = await this.mTyreTempState(data);
         data.wheelsAndTyres.mTyreCompoundShort = await this.mTyreCompoundShort(data);
-
         data.wheelsAndTyres.mAirPressure = await this.mAirPressure(data);
         data.wheelsAndTyres.mAirPressureState = await this.mAirPressureState(data);
-
 
         return data;
     }
@@ -83,10 +77,10 @@ export default class WeatherFactory {
      */
     async mSuspensionDamage(data) {
         return [
-            Math.round(data.wheelsAndTyres.mSuspensionDamage[0] * 100) / 100,
-            Math.round(data.wheelsAndTyres.mSuspensionDamage[1] * 100) / 100,
-            Math.round(data.wheelsAndTyres.mSuspensionDamage[2] * 100) / 100,
-            Math.round(data.wheelsAndTyres.mSuspensionDamage[3] * 100) / 100,
+            data.wheelsAndTyres.mSuspensionDamage[0],
+            data.wheelsAndTyres.mSuspensionDamage[1],
+            data.wheelsAndTyres.mSuspensionDamage[2],
+            data.wheelsAndTyres.mSuspensionDamage[3],
         ];
     }
 
@@ -135,10 +129,10 @@ export default class WeatherFactory {
      */
     async mBrakeDamage(data) {
         return [
-            Math.round(data.wheelsAndTyres.mBrakeDamage[0] * 100) / 100,
-            Math.round(data.wheelsAndTyres.mBrakeDamage[1] * 100) / 100,
-            Math.round(data.wheelsAndTyres.mBrakeDamage[2] * 100) / 100,
-            Math.round(data.wheelsAndTyres.mBrakeDamage[3] * 100) / 100,
+            data.wheelsAndTyres.mBrakeDamage[0],
+            data.wheelsAndTyres.mBrakeDamage[1],
+            data.wheelsAndTyres.mBrakeDamage[2],
+            data.wheelsAndTyres.mBrakeDamage[3],
         ];
     }
 
@@ -187,10 +181,10 @@ export default class WeatherFactory {
      */
     async mBrakeTemp(data) {
         return [
-            Math.round(data.wheelsAndTyres.mBrakeTempCelsius[0] * 100) / 100,
-            Math.round(data.wheelsAndTyres.mBrakeTempCelsius[1] * 100) / 100,
-            Math.round(data.wheelsAndTyres.mBrakeTempCelsius[2] * 100) / 100,
-            Math.round(data.wheelsAndTyres.mBrakeTempCelsius[3] * 100) / 100,
+            data.wheelsAndTyres.mBrakeTempCelsius[0],
+            data.wheelsAndTyres.mBrakeTempCelsius[1],
+            data.wheelsAndTyres.mBrakeTempCelsius[2],
+            data.wheelsAndTyres.mBrakeTempCelsius[3],
         ];
     }
 
@@ -231,10 +225,10 @@ export default class WeatherFactory {
      */
     async mTyreWear(data) {
         return [
-            Math.round(data.wheelsAndTyres.mTyreWear[0] * 100) / 100,
-            Math.round(data.wheelsAndTyres.mTyreWear[1] * 100) / 100,
-            Math.round(data.wheelsAndTyres.mTyreWear[2] * 100) / 100,
-            Math.round(data.wheelsAndTyres.mTyreWear[3] * 100) / 100,
+            data.wheelsAndTyres.mTyreWear[0],
+            data.wheelsAndTyres.mTyreWear[1],
+            data.wheelsAndTyres.mTyreWear[2],
+            data.wheelsAndTyres.mTyreWear[3],
         ];
     }
 
@@ -245,7 +239,7 @@ export default class WeatherFactory {
      */
     async mTyreWearState(data) {
         const state = (value) => {
-            if (value >= 1) {
+            if (value >= 0.75) {
                 return 6;
             }
 
@@ -275,10 +269,10 @@ export default class WeatherFactory {
      */
     async mTyreTemp(data) {
         return [
-            Math.round(data.wheelsAndTyres.mTyreTemp[0] * 100) / 100,
-            Math.round(data.wheelsAndTyres.mTyreTemp[1] * 100) / 100,
-            Math.round(data.wheelsAndTyres.mTyreTemp[2] * 100) / 100,
-            Math.round(data.wheelsAndTyres.mTyreTemp[3] * 100) / 100,
+            Number(data.wheelsAndTyres.mTyreTemp[0].toFixed(0)),
+            Number(data.wheelsAndTyres.mTyreTemp[1].toFixed(0)),
+            Number(data.wheelsAndTyres.mTyreTemp[2].toFixed(0)),
+            Number(data.wheelsAndTyres.mTyreTemp[3].toFixed(0)),
         ];
     }
 
@@ -339,10 +333,10 @@ export default class WeatherFactory {
      */
     async mAirPressure(data) {
         return [
-            Math.round(data.wheelsAndTyres.mAirPressure[0]) / 100,
-            Math.round(data.wheelsAndTyres.mAirPressure[1]) / 100,
-            Math.round(data.wheelsAndTyres.mAirPressure[2]) / 100,
-            Math.round(data.wheelsAndTyres.mAirPressure[3]) / 100,
+            Number((data.wheelsAndTyres.mAirPressure[0] / 100)).toFixed(2),
+            Number((data.wheelsAndTyres.mAirPressure[1] / 100)).toFixed(2),
+            Number((data.wheelsAndTyres.mAirPressure[2] / 100)).toFixed(2),
+            Number((data.wheelsAndTyres.mAirPressure[3] / 100)).toFixed(2),
         ];
     }
 

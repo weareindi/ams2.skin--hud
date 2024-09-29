@@ -86,9 +86,7 @@ export default class ParticipantsFactory {
      */
     async mNameExists(data, mName) {
         for (let pii = 0; pii < data.participants.mParticipantInfo.length; pii++) {
-            const participant = data.participants.mParticipantInfo[pii];
-
-            if (participant.mName === mName) {
+            if (data.participants.mParticipantInfo[pii].mName === mName) {
                 return true;
             }
         }
@@ -101,18 +99,15 @@ export default class ParticipantsFactory {
      * @param {*} data
      */
     async registerParticipantFactories(data) {
-        for (let participantIndex = 0; participantIndex < data.participants.mNumParticipants; participantIndex++) {
-            const participant = await getParticipantAtIndex(data, participantIndex);
-            const mName = participant.mName;
-
+        for (let pi = 0; pi < data.participants.mNumParticipants; pi++) {
             // already exists?
-            if (mName in this.participantFactories) {
+            if (data.participants.mParticipantInfo[pi].mName in this.participantFactories) {
                 // ... skip
                 continue;
             }
 
             // start new lap factory for participant
-            this.participantFactories[mName] = new ParticipantFactory();
+            this.participantFactories[data.participants.mParticipantInfo[pi].mName] = new ParticipantFactory();
         }
     }
 
@@ -127,14 +122,16 @@ export default class ParticipantsFactory {
             return null;
         }
 
-        for (let participantIndex = 0; participantIndex < data.participants.mNumParticipants; participantIndex++) {
-            let participantFactory = await this.getParticipantFactory(data, participantIndex);
-            let participant = await participantFactory.getData(data, participantIndex);
-            data.participants.mParticipantInfo[participantIndex] = participant;
+        for (let pi = 0; pi < data.participants.mNumParticipants; pi++) {
+            let participantFactory = await this.getParticipantFactory(data, pi);
+            data.participants.mParticipantInfo[pi] = await participantFactory.getData(data, pi);
         }
 
         // append non-pariticpant count (ie. safety car)
         data.participants.mNumNonParticipants = await this.mNumNonParticipants(data);
+
+        // append non-pariticpant count (ie. safety car)
+        data.participants.mNumActiveParticipants = await this.mNumActiveParticipants(data);
 
         // append classes
         data.participants.mClasses = await this.mClasses(data);
@@ -143,10 +140,207 @@ export default class ParticipantsFactory {
         data.participants.mActiveParticipantClassNum = await this.mActiveParticipantClassNum(data);
 
         // apply mRacingDistance
-        data = await this.applyParticipantDistances(data);
+        data = await this.applyParticipantAdditionals(data);
 
         return data;
     }
+
+    /**
+     *
+     */
+    async applyParticipantAdditionals(data) {
+        for (let pi = 0; pi < data.participants.mNumActiveParticipants; pi++) {
+            data.participants.mParticipantInfo[pi].mDistanceAhead = await this.mDistanceAhead(data, data.participants.mParticipantInfo[pi]);
+            data.participants.mParticipantInfo[pi].mDistanceBehind = await this.mDistanceBehind(data, data.participants.mParticipantInfo[pi]);
+        }
+
+        return data;
+    }
+
+    /**
+     *
+     * @param {*} data
+     * @param {*} participant
+     */
+    async mDistanceAhead(data, participant) {
+        if (participant === null) {
+            return null;
+        }
+
+        if (!('mRacePosition' in participant)) {
+            return null;
+        }
+
+        if (participant.mRacePosition === 1) {
+            return null;
+        }
+
+        if (!('mRacingDistance' in participant)) {
+            return null;
+        }
+
+        if (participant.mRacingDistance === null) {
+            return null;
+        }
+
+        const aheadParticipant = await getParticipantInPostion(data, participant.mRacePosition - 1);
+
+        if (aheadParticipant === null) {
+            return null;
+        }
+
+        if (!('mRacingDistance' in aheadParticipant)) {
+            return null;
+        }
+
+        if (aheadParticipant.mRacingDistance === null) {
+            return null;
+        }
+
+        let difference = aheadParticipant.mRacingDistance - participant.mRacingDistance;
+        if (difference < 0) {
+            difference = 0;
+        }
+
+
+        const laps = Math.floor(difference / data.eventInformation.mTrackLength);
+        if (laps > 0) {
+            return `${laps}` // return as string so we know string == lap counter
+        }
+
+        return difference;
+    }
+
+    /**
+     *
+     * @param {*} data
+     * @param {*} participant
+     */
+    async mDistanceBehind(data, participant) {
+        if (participant === null) {
+            return null;
+        }
+
+        if (!('mRacePosition' in participant)) {
+            return null;
+        }
+
+        if (participant.mRacePosition === 1) {
+            return null;
+        }
+
+        if (participant.mRacePosition === data.participants.mNumActiveParticipants) {
+            return null;
+        }
+
+        if (!('mRacingDistance' in participant)) {
+            return null;
+        }
+
+        if (participant.mRacingDistance === null) {
+            return null;
+        }
+
+        const behindParticipant = await getParticipantInPostion(data, participant.mRacePosition + 1);
+
+        if (behindParticipant === null) {
+            return null;
+        }
+
+        if (!('mRacingDistance' in behindParticipant)) {
+            return null;
+        }
+
+        if (behindParticipant.mRacingDistance === null) {
+            return null;
+        }
+
+        let difference = participant.mRacingDistance - behindParticipant.mRacingDistance;
+        if (difference < 0) {
+            difference = 0;
+        }
+
+        const laps = Math.floor(difference / data.eventInformation.mTrackLength);
+        if (laps > 0) {
+            return `${laps}` // return as string so we know string == lap counter
+        }
+
+        return difference;
+    }
+
+    // /**
+    //  *
+    //  */
+    // async mTimeAhead(data, participant) {
+    //     if (participant.mRacePosition === 1) {
+    //         return null;
+    //     }
+
+    //     if (participant.mCurrentLapTimes === null) {
+    //         return null;
+    //     }
+
+    //     if (participant.mCurrentLapTimes <= 0) {
+    //         return null;
+    //     }
+
+    //     const aheadParticipant = await getParticipantInPostion(data, participant.mRacePosition - 1);
+
+    //     if (aheadParticipant.mCurrentLapTimes === null) {
+    //         return null;
+    //     }
+
+    //     if (aheadParticipant.mCurrentLapTimes <= 0) {
+    //         return null;
+    //     }
+
+    //     let difference = Math.abs(aheadParticipant.mCurrentLapTimes - participant.mCurrentLapTimes);
+    //     if (aheadParticipant.mCurrentLap - participant.mCurrentLap === 1 ) {
+    //         difference = Math.abs((aheadParticipant.mCurrentLapTimes + aheadParticipant.mLastLapTimes) - participant.mCurrentLapTimes);
+    //     }
+
+    //     const laps = Math.floor((aheadParticipant.mRacingDistance - participant.mRacingDistance) / data.eventInformation.mTrackLength);
+    //     if (laps > 0) {
+    //         return `${laps}` // return as string so we know string == lap counter
+    //     }
+
+    //     return difference;
+    // }
+
+    // /**
+    //  *
+    //  */
+    // async mTimeBehind(data, participant) {
+    //     if (participant.mRacePosition === data.participants.mNumActiveParticipants) {
+    //         return null;
+    //     }
+
+    //     if (participant.mCurrentLapTimes === null) {
+    //         return null;
+    //     }
+
+    //     if (participant.mCurrentLapTimes <= 0) {
+    //         return null;
+    //     }
+
+    //     const behindParticipant = await getParticipantInPostion(data, participant.mRacePosition + 1);
+
+    //     if (behindParticipant.mCurrentLapTimes === null) {
+    //         return null;
+    //     }
+
+    //     if (behindParticipant.mCurrentLapTimes <= 0) {
+    //         return null;
+    //     }
+
+    //     const difference = Math.abs(participant.mCurrentLapTimes - behindParticipant.mCurrentLapTimes);
+    //     const laps = Math.floor((participant.mRacingDistance - behindParticipant.mRacingDistance) / data.eventInformation.mTrackLength);
+    //     if (laps > 0) {
+    //         return `${laps}` // return as string so we know string == lap counter
+    //     }
+
+    //     return difference;
+    // }
 
     /**
      *
@@ -156,15 +350,32 @@ export default class ParticipantsFactory {
     async mNumNonParticipants(data) {
         let nonParticipants = 0;
 
-        for (let participantIndex = 0; participantIndex < data.participants.mNumParticipants; participantIndex++) {
-            const participant = await getParticipantAtIndex(data, participantIndex);
-
-            if (participant.mCarClassNames === 'SafetyCar') {
+        for (let pi = 0; pi < data.participants.mNumParticipants; pi++) {
+            if (data.participants.mParticipantInfo[pi].mCarClassNames === 'SafetyCar') {
                 nonParticipants++;
             }
         }
 
         return nonParticipants;
+    }
+
+    /**
+     *
+     * @param {*} data
+     * @returns
+     */
+    async mNumActiveParticipants(data) {
+        let numParticipants = 0;
+
+        for (let pi = 0; pi < data.participants.mNumParticipants; pi++) {
+            if (data.participants.mParticipantInfo[pi].mCarClassNames === 'SafetyCar') {
+                continue;
+            }
+
+            numParticipants++;
+        }
+
+        return numParticipants;
     }
 
     /**
@@ -175,18 +386,16 @@ export default class ParticipantsFactory {
     async mClasses(data) {
         const classes = {};
 
-        for (let participantIndex = 0; participantIndex < data.participants.mNumParticipants; participantIndex++) {
-            let participant = await getParticipantAtIndex(data, participantIndex);
-
-            if (participant.mCarClassNames === 'SafetyCar') {
+        for (let pi = 0; pi < data.participants.mNumParticipants; pi++) {
+            if (data.participants.mParticipantInfo[pi].mCarClassNames === 'SafetyCar') {
                 continue;
             }
 
-            if (!(participant.mCarClassNames in classes)) {
-                classes[participant.mCarClassNames] = 0;
+            if (!(data.participants.mParticipantInfo[pi].mCarClassNames in classes)) {
+                classes[data.participants.mParticipantInfo[pi].mCarClassNames] = 0;
             }
 
-            classes[participant.mCarClassNames]++;
+            classes[data.participants.mParticipantInfo[pi].mCarClassNames]++;
         }
 
         return classes;
@@ -204,46 +413,12 @@ export default class ParticipantsFactory {
 
         // get classes
         const classes = await this.mClasses(data);
+        if (!(participant.mCarClassNames in classes)) {
+            return 0;
+        }
 
         // return amount for participant class
         return classes[participant.mCarClassNames];
-    }
-
-    /**
-     *
-     * @param {*} data
-     * @returns
-     */
-    async applyParticipantDistances(data) {
-
-        for (let pii = 0; pii < data.participants.mParticipantInfo.length; pii++) {
-            // if not race
-            if (data.gameStates.mSessionState !== 5) {
-                data.participants.mParticipantInfo[pii].mRacingDistance = null;
-                continue;
-            }
-
-            // if leader
-            if (data.participants.mParticipantInfo[pii].mRacePosition === 1) {
-                data.participants.mParticipantInfo[pii].mRacingDistance = null;
-                continue;
-            }
-
-            const participant = data.participants.mParticipantInfo[ pii ];
-
-            if (participant.mRacePosition <= 0) {
-                data.participants.mParticipantInfo[pii].mRacingDistance = null;
-                continue;
-            }
-
-            const participantTotalLapDistance = participant.mCurrentLapDistance + ((participant.mCurrentLap - 1) * data.eventInformation.mTrackLength);
-            const participantAhead = await getParticipantInPostion(data, participant.mRacePosition - 1);
-            const participantAheadTotalLapDistance = participantAhead.mCurrentLapDistance + ((participantAhead.mCurrentLap - 1) * data.eventInformation.mTrackLength);
-            const participantDistanceAhead = participantAheadTotalLapDistance - participantTotalLapDistance;
-            data.participants.mParticipantInfo[pii].mRacingDistance = participantDistanceAhead;
-        }
-
-        return data;
     }
 
     /**

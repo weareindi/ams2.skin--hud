@@ -1,7 +1,7 @@
 import { screen } from 'electron';
 import { is } from '@electron-toolkit/utils';
-import storage from 'electron-json-storage';
 import DisplayProcessor from './DisplayController.js';
+import * as storage from 'rocket-store';
 
 export default class SettingsController {
     constructor() {
@@ -11,12 +11,15 @@ export default class SettingsController {
         }
         global.SettingsController = this;
 
+        this.data = null;
+
         this.init();
     }
 
     async init() {
         try {
-            // await this.clear();
+            this.storage = await storage.Rocketstore();
+
             await this.registerDisplayProcessor();
         } catch (error) {
             console.error(error);
@@ -28,14 +31,24 @@ export default class SettingsController {
      * @returns
      */
     async updateStoredSettings() {
-        return this.storedSettings = storage.getSync('settings');
+        this.storedSettings = await new Promise(async (resolve, reject) => {
+            const stored = await this.storage.get('settings', 'settings');
+            if (stored.count === 0) {
+                return resolve({});
+            }
+
+            resolve(stored.result[0]);
+        });
+
+
+        return this.storedSettings;
     }
 
     /**
      *
      */
     async registerDisplayProcessor() {
-        this.DisplayProcessor = new DisplayProcessor();
+        return this.DisplayProcessor = new DisplayProcessor();
     }
 
     /**
@@ -44,7 +57,7 @@ export default class SettingsController {
      * @returns
      */
     async clear() {
-        storage.remove('settings');
+        return await this.storage.delete('settings');
     }
 
     /**
@@ -59,8 +72,11 @@ export default class SettingsController {
         // update/add required key value pair in object
         settings[key] = value;
 
+        // reset this.data so it refetches updated dataset
+        this.data = null;
+
         // store object
-        storage.set('settings', settings);
+        return await this.storage.post('settings', 'settings', settings);
     }
 
     /**
@@ -83,6 +99,10 @@ export default class SettingsController {
      * @returns
      */
     async getAll() {
+        if (this.data !== null) {
+            return this.data;
+        }
+
         // get defaults
         const defaultData = await this.getDefaultData();
 
@@ -90,7 +110,7 @@ export default class SettingsController {
         const storedData = await this.getStoredData();
 
         // defaults first, they get replaced if they exist by stored set
-        return {...defaultData, ...storedData};
+        return this.data = {...defaultData, ...storedData};
     }
 
     /**
@@ -124,9 +144,9 @@ export default class SettingsController {
         data.DirectorCommandStandings = 'ctrl+Num4';
         data.DirectorCommandBattle = 'ctrl+Num5';
 
-        data.Developer = false;
-        data.MockFetch = false;
-        data.MockState = (await this.getMockStateOptions())[0].value;
+        // data.Developer = false;
+        // data.MockFetch = false;
+        // data.MockState = (await this.getMockStateOptions())[0].value;
 
         return data;
     }
@@ -136,15 +156,31 @@ export default class SettingsController {
      * @returns
      */
     async getStoredData() {
-        let storedSettings = await new Promise((resolve, reject) => {
-            storage.get('settings', function(error, data) {
-                if (error) {
-                    reject(error);
-                }
+        let storedSettings = await new Promise(async (resolve, reject) => {
+            const stored = await this.storage.get('settings', 'settings');
 
-                resolve(data);
-            });
+            if (typeof stored !== 'object') {
+                return resolve({});
+            }
+
+            if (stored.count === 0) {
+                return resolve({});
+            }
+
+            if (!('result' in stored)) {
+                return resolve({});
+            }
+
+            if (stored.result[0] === 'string') {
+                return resolve({});
+            }
+
+            return resolve(stored.result[0]);
         });
+
+        if (typeof storedSettings === 'string') {
+            storedSettings = {};
+        }
 
         // check displays exist
         storedSettings = await this.checkStoredDeveloper(storedSettings);
@@ -157,6 +193,11 @@ export default class SettingsController {
      *
      */
     async checkStoredDeveloper(storedSettings) {
+        if (typeof storedSettings === 'string') {
+            storedSettings = {};
+        }
+
+        storedSettings['Developer'] = false;
         if (is.dev) {
             storedSettings['Developer'] = true;
         }
@@ -168,6 +209,11 @@ export default class SettingsController {
      *
      */
     async checkStoredDisplays(storedSettings) {
+        if (typeof storedSettings === 'string') {
+            storedSettings = {};
+        }
+
+
         if ('SettingsDisplay' in storedSettings) {
             storedSettings['SettingsDisplay'] = await this.DisplayProcessor.getDisplayID(storedSettings['SettingsDisplay']);
         }
@@ -193,7 +239,7 @@ export default class SettingsController {
     async getAllOptions() {
         const options = {};
         options.SettingsOnStartupOptions = await this.getDefaultYesNo();
-        options.DebugOptions = await this.getDefaultYesNo();
+        // options.DebugOptions = await this.getDefaultYesNo();
         options.ExternalCrestOptions = await this.getDefaultYesNo();
 
         options.SettingsDisplayOptions = await this.getDefaultDisplays();
@@ -208,8 +254,8 @@ export default class SettingsController {
         options.DirectorDisplayOptions = await this.getDefaultDisplays();
         options.DirectorDefaultViewOptions = await this.getDirectorDefaultViewOptions();
 
-        options.MockFetchOptions = await this.getDefaultYesNo();
-        options.MockStateOptions = await this.getMockStateOptions();
+        // options.MockFetchOptions = await this.getDefaultYesNo();
+        // options.MockStateOptions = await this.getMockStateOptions();
 
         return options;
     }
@@ -254,30 +300,30 @@ export default class SettingsController {
         ];
     }
 
-    /**
-     *
-     */
-    async getMockStateOptions() {
-        return [
-            { label: 'Menu', value: 'menu.json' },
-            { label: 'Practice: Pit', value: 'practice-pit.json' },
-            { label: 'Practice: Driving', value: 'practice-driving.json' },
-            { label: 'Qualifying: Pit', value: 'qualifying-pit.json' },
-            { label: 'Qualifying: Driving', value: 'qualifying-driving.json' },
-            { label: 'Qualifying: Standings', value: 'qualifying-standings.json' },
-            { label: 'Race: Lobby', value: 'race-lobby.json' },
-            { label: 'Race: Start', value: 'race-start.json' },
-            { label: 'Race: Leaders Over Start Line', value: 'race-leaders-over-start-line.json' },
-            { label: 'Race: Driving: Lap 1', value: 'race-driving-lap-1.json' },
-            { label: 'Race: Driving: Lap 4', value: 'race-driving-lap-4.json' },
-            { label: 'Race: Chequered Flag', value: 'race-chequered-flag.json' },
-            { label: 'Race: Standings', value: 'race-standings.json' },
-            { label: 'Replay: Start', value: 'replay-start.json' },
-            { label: 'Replay: Leaders Over Start Line', value: 'replay-leaders-over-start-line.json' },
-            { label: 'Replay: Driving: Lap 1', value: 'replay-driving-lap-1.json' },
-            { label: 'Replay: Driving: Lap 4', value: 'replay-driving-lap-4.json' },
-            { label: 'Replay: Chequered Flag', value: 'replay-chequered-flag.json' },
-            { label: 'Disconnected', value: 'disconnected.json' },
-        ];
-    }
+    // /**
+    //  *
+    //  */
+    // async getMockStateOptions() {
+    //     return [
+    //         { label: 'Menu', value: 'menu.json' },
+    //         { label: 'Practice: Pit', value: 'practice-pit.json' },
+    //         { label: 'Practice: Driving', value: 'practice-driving.json' },
+    //         { label: 'Qualifying: Pit', value: 'qualifying-pit.json' },
+    //         { label: 'Qualifying: Driving', value: 'qualifying-driving.json' },
+    //         { label: 'Qualifying: Standings', value: 'qualifying-standings.json' },
+    //         { label: 'Race: Lobby', value: 'race-lobby.json' },
+    //         { label: 'Race: Start', value: 'race-start.json' },
+    //         { label: 'Race: Leaders Over Start Line', value: 'race-leaders-over-start-line.json' },
+    //         { label: 'Race: Driving: Lap 1', value: 'race-driving-lap-1.json' },
+    //         { label: 'Race: Driving: Lap 4', value: 'race-driving-lap-4.json' },
+    //         { label: 'Race: Chequered Flag', value: 'race-chequered-flag.json' },
+    //         { label: 'Race: Standings', value: 'race-standings.json' },
+    //         { label: 'Replay: Start', value: 'replay-start.json' },
+    //         { label: 'Replay: Leaders Over Start Line', value: 'replay-leaders-over-start-line.json' },
+    //         { label: 'Replay: Driving: Lap 1', value: 'replay-driving-lap-1.json' },
+    //         { label: 'Replay: Driving: Lap 4', value: 'replay-driving-lap-4.json' },
+    //         { label: 'Replay: Chequered Flag', value: 'replay-chequered-flag.json' },
+    //         { label: 'Disconnected', value: 'disconnected.json' },
+    //     ];
+    // }
 }
