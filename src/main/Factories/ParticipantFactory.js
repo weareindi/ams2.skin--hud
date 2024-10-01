@@ -36,8 +36,6 @@ export default class ParticipantFactory {
             this.newlapTimer = null;
             this.newlapDistance = 0;
 
-            this.mIntervalTriggered = false;
-
             this.mRacePositionStartStored = null;
             this.mCarClassPositionStartStored = null;
 
