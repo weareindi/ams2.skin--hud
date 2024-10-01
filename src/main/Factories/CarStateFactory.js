@@ -101,7 +101,7 @@ export default class CarStateFactory {
      * @returns
      */
     async mTachometerState(data) {
-        if (data.carState.mTachometer >= 0.97) {
+        if (data.carState.mTachometer >= 0.95) {
             return 4;
         }
 
