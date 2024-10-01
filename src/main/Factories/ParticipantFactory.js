@@ -38,6 +38,12 @@ export default class ParticipantFactory {
 
             this.mRacePositionStartStored = null;
             this.mCarClassPositionStartStored = null;
+            this.mCarClassColorStored = null;
+
+            this.mNamePartsStored = null;
+            this.mNameMainStored = null;
+            this.mNameShortStored = null;
+            this.mNameTagStored = null;
 
             this.runID = null;
             this.lap = {
@@ -473,7 +479,11 @@ export default class ParticipantFactory {
      * @param {*} participant
      */
     async mCarClassColor(participant) {
-        return stc(participant.mCarClassNames);
+        if (this.mCarClassColorStored !== null) {
+            return this.mCarClassColorStored;
+        }
+
+        return this.mCarClassColorStored = stc(participant.mCarClassNames);
     }
 
     /**
@@ -511,6 +521,10 @@ export default class ParticipantFactory {
      * @returns
      */
     async mNameParts(participant) {
+        if (this.mNamePartsStored !== null) {
+            return this.mNamePartsStored;
+        }
+
         // extract tag
         const regex = /([\[|\(|\{].*?[\]|\)|\}])/g;
 
@@ -535,7 +549,7 @@ export default class ParticipantFactory {
         // trim surrounding white space
         name = name.trim();
 
-        return {
+        return this.mNamePartsStored = {
             name,
             tag
         }
@@ -547,9 +561,13 @@ export default class ParticipantFactory {
      * @returns
      */
     async mNameMain(participant) {
+        if (this.mNameMainStored !== null) {
+            return this.mNameMainStored;
+        }
+
         const mNameParts = await this.mNameParts(participant);
 
-        return mNameParts.name;
+        return this.mNameMainStored = mNameParts.name;
     }
 
     /**
@@ -559,6 +577,10 @@ export default class ParticipantFactory {
      * @returns
      */
     async mNameShort(data, mParticipantIndex) {
+        if (this.mNameShortStored !== null) {
+            return this.mNameShortStored;
+        }
+
         const mNameParts = await this.mNameParts(data, mParticipantIndex);
         const nameSplit = mNameParts.name.split(' ');
 
@@ -570,7 +592,7 @@ export default class ParticipantFactory {
 
         nameShort += nameSplit[nameSplit.length-1];
 
-        return nameShort;
+        return this.mNameShortStored = nameShort;
     }
 
     /**
@@ -580,6 +602,10 @@ export default class ParticipantFactory {
      * @returns
      */
     async mNameTag(data, mParticipantIndex) {
+        if (this.mNameTagStored !== null) {
+            return this.mNameTagStored;
+        }
+
         const mNameParts = await this.mNameParts(data, mParticipantIndex);
 
         const mNameTag = mNameParts.tag.slice(1, -1);
@@ -588,7 +614,7 @@ export default class ParticipantFactory {
             return null;
         }
 
-        return mNameTag.slice(0, 4);
+        return this.mNameTagStored = mNameTag.slice(0, 4);
     }
 
     /**
@@ -599,6 +625,10 @@ export default class ParticipantFactory {
     async mIsDriver(data, mParticipantIndex) {
         if (data.participants.mViewedParticipantIndex !== mParticipantIndex) {
             return this.isDriver = false;
+        }
+
+        if (this.isDriver === true) {
+            return this.isDriver;
         }
 
         // update driver index when ever we are in the car
