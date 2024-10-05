@@ -989,7 +989,7 @@
     {
       "uid": "21d6d76777c0d94066b00241378b67ed",
       "css": "degree",
-      "code": 176,
+      "code": 59435,
       "src": "custom_icons",
       "selected": true,
       "svg": {
@@ -1101,7 +1101,7 @@
     {
       "uid": "53c977df16b09e3f7700a27ec90c43dc",
       "css": "stopwatch",
-      "code": 9201,
+      "code": 59392,
       "src": "mfglabs"
     }
   ]
