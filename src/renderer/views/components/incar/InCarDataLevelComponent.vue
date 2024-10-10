@@ -11,7 +11,7 @@
 .c-in-car-level {
     position: relative;
     width: em(6);
-    height: em(107);
+    height: em(114);
     overflow: hidden;
     filter: drop-shadow(0px 0px 0px white);
     transition: 150ms filter 0ms linear;

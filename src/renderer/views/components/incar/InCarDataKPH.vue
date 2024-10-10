@@ -22,21 +22,17 @@
 
 .c-in-car-data-kph__value {
     display: block;
-    font-family: "uifont", sans-serif;
-    font-size: em(30);
+    font-size: em(52);
     line-height: 1em;
     text-transform: uppercase;
-    letter-spacing: 0;
 }
 
 .c-in-car-data-kph__label {
     display: block;
-    font-family: "uifont", sans-serif;
-    font-size: em(10);
+    font-size: em(14);
     line-height: 1em;
     text-transform: uppercase;
-    letter-spacing: 0;
-    margin: em(10, 10) em(4, 10) 0 0;
+    margin: em(10, 14) em(4, 14) 0 0;
 }
 </style>
 

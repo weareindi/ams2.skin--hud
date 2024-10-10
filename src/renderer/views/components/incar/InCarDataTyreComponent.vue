@@ -71,9 +71,7 @@
     text-align: center;
     vertical-align: middle;
 
-    font-family: "uifont-mono", monospace;
-    font-size: em(9);
-    font-weight: bold;
+    font-size: em(12);
     line-height: 1em;
     text-transform: uppercase;
 }

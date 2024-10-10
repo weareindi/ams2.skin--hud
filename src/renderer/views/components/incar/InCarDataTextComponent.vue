@@ -60,12 +60,10 @@
 .c-in-car-data-text__suffix {
     position: relative;
     z-index: 2;
-    font-family: "uifont-mono", monospace;
 }
 
 .c-in-car-data-text__label,
 .c-in-car-data-text__additional {
-    font-family: "uifont", sans-serif;
 }
 
 .c-in-car-data-text__zerofill,
@@ -76,11 +74,9 @@
 .c-in-car-data-text__additional {
     display: inline-block;
     vertical-align: middle;
-    font-weight: regular;
-    font-size: em(10);
+    font-size: em(14);
     line-height: 1em;
     text-transform: uppercase;
-    letter-spacing: 0;
 }
 
 

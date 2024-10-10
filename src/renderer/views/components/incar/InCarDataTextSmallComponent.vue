@@ -66,12 +66,9 @@
 .c-in-car-data-text-small__suffix {
     position: relative;
     z-index: 2;
-    font-family: "uifont", sans-serif;
-    font-size: em(10);
-    // font-weight: bold;
+    font-size: em(14);
     line-height: 1em;
     text-transform: uppercase;
-    letter-spacing: 0;
 }
 
 .c-in-car-data-text-small__seperator,
@@ -80,7 +77,7 @@
 }
 
 .c-in-car-data-text-small__seperator {
-    min-width: 0.4ch;
+    min-width: 0.2ch;
 }
 
 </style>

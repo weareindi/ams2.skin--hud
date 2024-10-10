@@ -26,7 +26,7 @@
     @include removehighlight();
     @include color('color', 'white', 0.6);
 
-    font-size: em(17);
+    font-size: em(16);
     pointer-events: none;
     text-transform: uppercase;
 }

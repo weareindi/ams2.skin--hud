@@ -106,11 +106,9 @@
     @include color('color', 'white');
 
     position: relative;
-    font-family: "uifont", sans-serif;
-    font-size: em(12);
+    font-size: em(20);
     line-height: 1em;
     text-transform: uppercase;
-    letter-spacing: 0;
 }
 
 .c-in-car-data-ers__mode {
@@ -121,17 +119,14 @@
 }
 
 .c-in-car-data-ers__icon {
-    width: em(8);
+    width: em(12);
     margin: 0 em(4) 0 0;
 }
 
 .c-in-car-data-ers__text {
-    font-family: "uifont", sans-serif;
-    font-size: em(8);
+    font-size: em(12);
     line-height: 1em;
     text-transform: uppercase;
-    letter-spacing: 0;
-    letter-spacing: 0;
 }
 
 .c-in-car-data-ers__level {
