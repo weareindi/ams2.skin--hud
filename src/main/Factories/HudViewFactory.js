@@ -343,7 +343,7 @@ export default class HudViewFactory {
      * @returns
      */
     async vFuelPerLapPit(data) {
-        let value = '&#x231A;';
+        let value = '&#x231A;&#xfe0e;';
         let suffix = null;
 
         if (data.fuel.mFuelPerLapPit !== null) {
@@ -367,7 +367,7 @@ export default class HudViewFactory {
      * @returns
      */
     async vFuelPerLapInCar(data) {
-        let value = '&#x231A;';
+        let value = '&#x231A;&#xfe0e;';
         let suffix = null;
 
         if (data.fuel.mFuelPerLapInCar !== null) {
@@ -391,7 +391,7 @@ export default class HudViewFactory {
      * @returns
      */
     async vFuelToEndSessionPit(data) {
-        let value = '&#x231A;';
+        let value = '&#x231A;&#xfe0e;';
         let suffix = null;
 
         if (data.fuel.mFuelToEndSessionPit !== null) {
@@ -415,7 +415,7 @@ export default class HudViewFactory {
      * @returns
      */
     async vFuelToEndSessionInCar(data) {
-        let value = '&#x231A;';
+        let value = '&#x231A;&#xfe0e;';
         let suffix = null;
 
         if (data.fuel.mFuelToEndSessionInCar !== null) {
@@ -439,7 +439,7 @@ export default class HudViewFactory {
      * @returns
      */
     async vFuelStopsToEndSessionPit(data) {
-        let value = '&#x231A;';
+        let value = '&#x231A;&#xfe0e;';
         // let suffix = null;
 
         if (data.fuel.mFuelStopsToEndSessionPit !== null) {
@@ -463,7 +463,7 @@ export default class HudViewFactory {
      * @returns
      */
     async vFuelStopsToEndSessionInCar(data) {
-        let value = '&#x231A;';
+        let value = '&#x231A;&#xfe0e;';
         // let suffix = null;\
 
         if (data.fuel.mFuelStopsToEndSessionInCar !== null) {
@@ -487,7 +487,7 @@ export default class HudViewFactory {
      * @returns
      */
     async vFuelInStopPit(data) {
-        let value = '&#x231A;';
+        let value = '&#x231A;&#xfe0e;';
         let suffix = null;
 
         if (data.fuel.mFuelInStopPit !== null) {
@@ -511,7 +511,7 @@ export default class HudViewFactory {
      * @returns
      */
     async vFuelInStopInCar(data) {
-        let value = '&#x231A;';
+        let value = '&#x231A;&#xfe0e;';
         let suffix = null;
 
         if (data.fuel.mFuelInStopInCar !== null) {
@@ -680,7 +680,7 @@ export default class HudViewFactory {
             return null;
         }
 
-        let value = '&#x231A;';
+        let value = '&#x231A;&#xfe0e;';
         let suffix = null;
 
         if (data.fuel.mFuelInCar !== null) {
