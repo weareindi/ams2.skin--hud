@@ -1,4 +1,4 @@
-import { isReady, getParticipantAtIndex, getActiveParticipant, getParticipantsSortedByRaceDistance } from '../../utils/CrestUtils';
+import { isReady, getActiveParticipant, getParticipantsSortedByRaceDistance } from '../../utils/CrestUtils';
 
 export default class TrackPositionFactory {
     constructor() {
@@ -105,6 +105,34 @@ export default class TrackPositionFactory {
 
             if (participant.mCarClassNames === 'SafetyCar') {
                 continue;
+            }
+
+            // in garage
+            if (participant.mPitModes === 4) {
+                continue;
+            }
+
+            // leaving garage
+            if (participant.mPitModes === 5) {
+                continue;
+            }
+
+            // practice or qualifying
+            if (data.gameStates.mSessionState === 1 || data.gameStates.mSessionState === 3) {
+                // // driving into pits
+                // if (participant.mPitModes === 1) {
+                //     continue;
+                // }
+
+                // pit box
+                if (participant.mPitModes === 2) {
+                    continue;
+                }
+
+                // // driving out of pits
+                // if (participant.mPitModes === 3) {
+                //     continue;
+                // }
             }
 
             if (participant.mPlacementIndex < activeParticipant.mPlacementIndex) {
