@@ -73,6 +73,11 @@ export default class HudFactory {
             //     && data.unfilteredInput.mUnfilteredClutch === 0
             // )
         ) {
+            // if finished/disqualified/retired/dnf
+            if (data.gameStates.mRaceState === 3 || data.gameStates.mRaceState === 4 || data.gameStates.mRaceState === 5 || data.gameStates.mRaceState === 6) {
+                return 0;
+            }
+
             return 1;
         }
 
