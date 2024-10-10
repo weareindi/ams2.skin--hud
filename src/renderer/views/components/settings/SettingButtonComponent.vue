@@ -1,6 +1,6 @@
 <template>
     <button class="c-button" :class="`${'c-button--' + color}`" :disabled="disabled">
-        <span class="c-button__label">{{ label }}</span>
+        <span class="c-button__label" v-html="label"></span>
     </button>
 </template>
 
@@ -11,6 +11,7 @@
 
     padding: em(12);
     border-radius: em(4);
+    display: flex;
     cursor: pointer;
     transition: 150ms background-color 0ms ease;
 
@@ -70,9 +71,9 @@
     @include removehighlight();
 
     font-size: em(14);
-    line-height: 1em;
-    text-transform: uppercase;
+    line-height: 1.2em;
     white-space: nowrap;
+
 }
 </style>
 

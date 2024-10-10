@@ -45,6 +45,7 @@
     flex-shrink: 0;
     flex-basis: auto;
 
+    position: relative;
     display: flex;
     align-items: center;
     justify-content: flex-end;
@@ -52,12 +53,19 @@
     width: 50%;
 
     + .c-in-car-speedometer__item {
-        @include color('border-left-color', 'white', 0.4);
-
         justify-content: flex-start;
 
-        border-left-style: solid;
-        border-left-width: 2px;
+        &:before {
+            @include color('background-color', 'white', 0.4);
+
+            content: '';
+
+            position: absolute;
+            top: em(16);
+            left: -1px;
+            bottom: em(8);
+            width: 2px;
+        }
     }
 }
 </style>

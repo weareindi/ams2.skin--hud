@@ -222,7 +222,9 @@
 .s-settings__heading {
     @include color('color', 'white', 1);
 
-    font-size: em(18);
+    font-size: em(16);
+    line-height: 1.2em;
+    text-transform: uppercase;
 }
 
 .s-settings__rows {}
@@ -236,7 +238,7 @@
         border-radius: 4px;
 
         .s-settings__heading {
-            font-size: em(16);
+            // font-size: em(16);
         }
     }
 }

@@ -44,9 +44,9 @@
 
 .c-in-car-data-weather__label {
     display: block;
-    font-family: "uifont", sans-serif;
-    font-size: em(10);
+    font-size: em(14);
     line-height: 1.2em;
+    text-transform: uppercase;
 }
 
 .c-in-car-data-weather__segments {

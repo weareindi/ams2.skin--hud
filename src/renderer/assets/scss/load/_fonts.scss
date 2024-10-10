@@ -7,67 +7,20 @@
 }
 
 @font-face {
-    font-family: "firacode";
+    font-family: "indi";
     font-style: normal;
     font-weight: normal;
     font-display: swap;
-    src: url('@public/fonts/firacode/firacode-regular.ttf') format('truetype');
+    src: url('@public/fonts/indi/original/indi-bold.ttf') format('truetype');
 }
-
-@font-face {
-    font-family: "firacode";
-    font-style: normal;
-    font-weight: bold;
-    font-display: swap;
-    src: url('@public/fonts/firacode/firacode-bold.ttf') format('truetype');
-}
-
-@font-face {
-    font-family: "uifont";
-    font-style: normal;
-    font-weight: normal;
-    font-display: swap;
-    src: url('@public/fonts/uifont/uifont.ttf') format('truetype');
-}
-
-@font-face {
-    font-family: "uifont-mono";
-    font-style: normal;
-    font-weight: normal;
-    font-display: swap;
-    src: url('@public/fonts/uifont/uifont-mono.ttf') format('truetype');
-}
-
-// @font-face {
-//     font-family: "integralcf";
-//     font-style: normal;
-//     font-weight: normal;
-//     font-display: swap;
-//     src: url('@public/fonts/integralcf/integral-cf-regular.ttf') format('truetype');
-// }
-
-// @font-face {
-//     font-family: "integralcf";
-//     font-style: normal;
-//     font-weight: bold;
-//     font-display: swap;
-//     src: url('@public/fonts/integralcf/integral-cf-bold.ttf') format('truetype');
-// }
-
-// @font-face {
-//     font-family: "qanelassoft";
-//     font-style: normal;
-//     font-weight: bold;
-//     font-display: swap;
-//     src: url('@public/fonts/qanelassoft/QanelasSoft-Bold.ttf') format('truetype');
-// }
 
 body {
     *,
     *:before,
     *:after {
         font-family: inherit;
+        letter-spacing: inherit;
     }
 
-    font-family: "secularone", sans-serif;
+    font-family: "indi", sans-serif;
 }

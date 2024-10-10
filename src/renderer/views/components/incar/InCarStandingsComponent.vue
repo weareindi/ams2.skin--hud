@@ -4,7 +4,7 @@
             <div class="c-in-car-standings__item" v-for="data in vTrackPositionCarousel">
                 <div class="c-in-car-standings__participant" v-if="data[0]">
                     <span class="c-in-car-standings__position">{{ data[0].value }}</span>
-                    <span class="c-in-car-standings__class" :style="`background-color: ${data[0].state}`">{{ data[0].suffix }}</span>
+                    <span class="c-in-car-standings__class">{{ data[0].suffix }}</span>
                     <span class="c-in-car-standings__name">{{ data[0].label }}</span>
                     <span class="c-in-car-standings__distance">{{ data[0].additional }}</span>
                     <span class="c-in-car-standings__distance-suffix">{{ data[0].additional_seperator }} {{ data[0].additional_suffix }}</span>
@@ -82,23 +82,20 @@
 }
 
 .c-in-car-standings__position {
-    font-family: "uifont", sans-serif;
-    font-size: em(10);
+    font-size: em(16);
     line-height: 1em;
 }
 
 .c-in-car-standings__class {
-    @include color('background-color', 'white', 1);
-    @include color('color', 'black', 1);
+    @include color('background-color', 'primary', 1);
+    @include color('color', 'secondary', 1);
 
-    font-family: "uifont", sans-serif;
-    font-size: em(10);
+    font-size: em(14);
     line-height: 1em;
-    font-weight: bold;
 
-    margin: 0 0 0 em(12, 10);
-    padding: em(6, 10) em(10, 10);
-    border-radius: em(4, 10);
+    margin: 0 0 0 em(12, 14);
+    padding: em(6, 14) em(10, 14);
+    border-radius: em(4, 14);
 }
 
 .c-in-car-standings__name {
@@ -106,21 +103,23 @@
     flex-shrink: 0;
     flex-basis: auto;
 
-    font-family: "uifont", sans-serif;
-    font-size: em(10);
+    font-size: em(16);
     line-height: 1em;
-    font-weight: bold;
+    text-transform: uppercase;
 
-    margin: 0 0 0 em(12, 10);
+    margin: 0 0 0 em(12, 16);
 }
 
 .c-in-car-standings__distance {
-    font-family: "uifont-mono", monospace;
-    font-size: em(10);
+    font-size: em(16);
     line-height: 1em;
-    font-weight: bold;
 
-    margin: 0 0 0 em(12, 10);
+    margin: 0 0 0 em(12, 16);
+}
+
+.c-in-car-standings__distance-suffix {
+    font-size: em(16);
+    line-height: 1em;
 }
 
 .c-in-car-standings__state {
@@ -180,17 +179,14 @@
 
 .c-in-car-standings__label,
 .c-in-car-standings__time {
-    font-size: em(9);
+    font-size: em(14);
     line-height: 1em;
+    text-transform: uppercase;
 }
 
-.c-in-car-standings__label {
-    font-family: "uifont", sans-serif;
-}
+.c-in-car-standings__label {}
 
-.c-in-car-standings__time {
-    font-family: "uifont-mono", monospace;
-}
+.c-in-car-standings__time {}
 </style>
 
 <script>

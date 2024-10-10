@@ -76,11 +76,9 @@
     @include color('color', 'white');
 
     position: relative;
-    font-family: "uifont", sans-serif;
-    font-size: em(12);
+    font-size: em(20);
     line-height: 1em;
     text-transform: uppercase;
-    letter-spacing: 0;
 }
 </style>
 

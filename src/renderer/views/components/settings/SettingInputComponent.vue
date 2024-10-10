@@ -48,13 +48,14 @@
     width: 100%;
     text-transform: uppercase;
     white-space: nowrap;
+    line-height: 1.2em;
 }
 
 .c-settings-input__label {
     @include removehighlight();
     @include color('color', 'white', 0.6);
 
-    font-size: em(12);
+    font-size: em(14);
     pointer-events: none;
 }
 
@@ -63,7 +64,7 @@
     @include hideAppearance();
 
     height: 1em;
-    font-size: em(18);
+    font-size: em(16);
     line-height: 1em;
     border: 0;
     margin: 0;

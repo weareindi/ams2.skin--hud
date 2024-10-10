@@ -12,6 +12,7 @@
     position: relative;
     width: 100%;
     height: em(6);
+    filter: drop-shadow(0px 0px 0px white);
 
     &[state="6"] {
         .c-in-car-steering__total,

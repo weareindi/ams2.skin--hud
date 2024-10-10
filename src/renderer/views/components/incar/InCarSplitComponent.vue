@@ -109,15 +109,13 @@
 .c-in-car-split__value,
 .c-in-car-split__suffix,
 .c-in-car-split__seperator {
-    font-family: 'uifont-mono', monospace;
-    font-size: em(10);
+    font-size: em(14);
     line-height: 1em;
     white-space: pre;
 }
 
 .c-in-car-split__label {
-    font-family: 'uifont', sans-serif;
-    font-size: em(10);
+    font-size: em(14);
     line-height: 1em;
 }
 </style>

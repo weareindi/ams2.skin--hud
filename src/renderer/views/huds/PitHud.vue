@@ -5,7 +5,9 @@
 </template>
 
 <style lang="scss">
-.c-hud-pit {}
+.c-hud-pit {
+    font-family: "secularone";
+}
 
 .c-hud-pit__fuel-calc {
     position: fixed;

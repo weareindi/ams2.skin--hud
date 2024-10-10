@@ -20,9 +20,7 @@
     @include removehighlight();
     @include color('color', 'white', 0.6);
 
-    font-family: 'uifont', sans-serif;
-    font-size: em(10);
-    letter-spacing: 0;
+    font-size: em(16);
     line-height: 1em;
     pointer-events: none;
 }
@@ -31,10 +29,9 @@
     @include removehighlight();
     @include hideAppearance();
 
-    margin: em(6, 10) 0 0;
-    font-family: 'uifont', sans-serif;
-    font-size: em(10);
-    letter-spacing: 0;
+    margin: em(2, 16) 0 0;
+    font-size: em(16);
+    font-weight: normal;
     line-height: 1em;
 }
 

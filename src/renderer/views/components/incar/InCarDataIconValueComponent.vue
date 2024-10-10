@@ -30,9 +30,7 @@
 .c-in-car-data-icon-value__value,
 .c-in-car-data-icon-value__seperator,
 .c-in-car-data-icon-value__suffix {
-    font-family: "uifont-mono", monospace;
-    font-size: em(10);
-    font-weight: bold;
+    font-size: em(14);
     line-height: 1em;
 }
 

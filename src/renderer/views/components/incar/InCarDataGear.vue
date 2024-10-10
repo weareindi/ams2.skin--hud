@@ -8,11 +8,9 @@
 .c-in-car-data-gear {}
 
 .c-in-car-data-gear__label {
-    font-family: "uifont", sans-serif;
-    font-size: em(58);
+    font-size: em(90);
     line-height: 1em;
     text-transform: uppercase;
-    letter-spacing: 0;
 }
 </style>
 
