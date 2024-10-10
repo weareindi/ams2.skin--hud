@@ -134,7 +134,6 @@ class DataWorker {
         // -- mNameTag (mName extracted from community tag)
         // -- mCarNamesMain
         // -- mCarClassNamesShort
-        // -- mCarClassColor
         // -- mIsDriver
         // -- mOutLap
         // -- mLapsInfo

@@ -4,14 +4,14 @@
             <div class="c-standings-page__col">
                 <div class="c-standings-page__items">
                     <div class="c-standings-page__item" v-for="(n, index) in 3">
-                        <StandingsItemComponent v-if="participants[index]" :data="participants[index]" :mCarClassColor="mCarClassColor" />
+                        <StandingsItemComponent v-if="participants[index]" :data="participants[index]" />
                     </div>
                 </div>
             </div>
             <div class="c-standings-page__col">
                 <div class="c-standings-page__items">
                     <div class="c-standings-page__item" v-for="(n, index) in 3">
-                        <StandingsItemComponent v-if="participants[index+3]" :data="participants[index+3]" :mCarClassColor="mCarClassColor" />
+                        <StandingsItemComponent v-if="participants[index+3]" :data="participants[index+3]" />
                     </div>
                 </div>
             </div>
@@ -20,29 +20,31 @@
 </template>
 
 <style lang="scss">
-.c-standings-page {
-    width: em(1280 + 64);
-    margin: 0 auto;
-    padding: em(32);
-}
+.c-standings-page {}
 
 .c-standings-page__cols {
     display: flex;
     flex-direction: rows;
+    margin: 0 em(-32);
     width: 100%;
 }
 
 .c-standings-page__col {
+    flex-grow: 0;
+    flex-shrink: 0;
+    flex-basis: auto;
+
+    padding: 0 em(32);
     width: 50%;
+    overflow: hidden;
 }
 
-.c-standings-page__items {
-    margin: em(-8);
-}
+.c-standings-page__items {}
 
 .c-standings-page__item {
-    padding: em(8);
-    min-height: em(64 + (8 * 2));
+    ~ .c-standings-page__item {
+        margin: em(20) 0 0;
+    }
 }
 </style>
 

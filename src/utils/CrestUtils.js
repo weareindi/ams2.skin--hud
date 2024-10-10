@@ -45,6 +45,62 @@ export async function isReady(data) {
 
 /**
  *
+ */
+// export async function isInPit(data) {
+//     if (typeof data === 'undefined') {
+//         return false;
+//     }
+
+//     if (data === null) {
+//         return false;
+//     }
+
+//     if (!('gameStates' in data)) {
+//         return false;
+//     }
+
+//     console.log(data.gameStates);
+//     if (data.gameStates.mGameState !== 4) {
+//         return false;
+//     }
+
+//     const participant = await getActiveParticipant(data);
+
+//     console.log(participant.mPitModes);
+
+
+//     return true;
+// }
+
+/**
+ *
+ */
+export async function isOnCircuit(data) {
+    if (typeof data === 'undefined') {
+        return false;
+    }
+
+    if (data === null) {
+        return false;
+    }
+
+    if (!('gameStates' in data)) {
+        return false;
+    }
+
+    if (data.gameStates.mGameState !== 2) {
+        return false;
+    }
+
+    // if (data.gameStates.mRaceState !== 2) {
+    //     return false;
+    // }
+
+    return true;
+}
+
+/**
+ *
  * @param {*} data
  * @returns
  */
@@ -90,6 +146,71 @@ export async function hasEventStarted(data) {
  * @param {*} data
  * @returns
  */
+export async function hasEventEnded(data) {
+    if (!('eventInformation' in data)) {
+        return false;
+    }
+
+    if (!('mLapsInEvent' in data.eventInformation)) {
+        return false;
+    }
+
+    if (!('mSessionDuration' in data.eventInformation)) {
+        return false;
+    }
+
+    if (!('mEventTimeRemaining' in data.eventInformation)) {
+        return false;
+    }
+
+
+    // // has lapped event not started?
+    // if (data.eventInformation.mLapsInEvent !== null) {
+    //     const leader = await getParticipantInPostion(data, 1);
+    //     if (leader === null) {
+    //         return false;
+    //     }
+
+    //     if (leader.mRacingDistance <= 0) {
+    //         return false;
+    //     }
+    // }
+
+    // has timed event not started
+    if (data.eventInformation.mLapsInEvent === null && data.eventInformation.mEventTimeRemaining === 0) {
+        return true;
+    }
+
+    return false;
+}
+
+/**
+ *
+ * @param {*} data
+ */
+export async function isInPitBox(data) {
+    const participant = await getActiveParticipant(data);
+
+    if (participant == null) {
+        return false;
+    }
+
+    if (!('mPitModes' in participant)) {
+        return false;
+    }
+
+    if (participant.mPitModes !== 4) {
+        return false;
+    }
+
+    return true;
+}
+
+/**
+ *
+ * @param {*} data
+ * @returns
+ */
 export async function isInMenu(data) {
     if (typeof data === 'undefined') {
         return false;
@@ -108,6 +229,35 @@ export async function isInMenu(data) {
     }
 
     if (data.gameStates.mGameState !== 1) {
+        return false;
+    }
+
+    return true;
+}
+
+/**
+ *
+ * @param {*} data
+ * @returns
+ */
+export async function isPaused(data) {
+    if (typeof data === 'undefined') {
+        return false;
+    }
+
+    if (data === null) {
+        return false;
+    }
+
+    if (!('gameStates' in data)) {
+        return false;
+    }
+
+    if (!('mGameState' in data.gameStates)) {
+        return false;
+    }
+
+    if (data.gameStates.mGameState !== 3 && data.gameStates.mGameState !== 4) {
         return false;
     }
 

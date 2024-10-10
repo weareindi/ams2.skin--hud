@@ -1352,7 +1352,7 @@ export default class HudViewFactory {
                         additional_seperator: additional_seperator,
                         additional_suffix: additional_suffix,
                         index: `{${index}}${participant.mParticipantIndex}`,
-                        state: participant.mCarClassColor,
+                        // state: participant.mCarClassColor,
                     },
                     {
                         state: item.mStatusToUser

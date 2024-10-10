@@ -139,14 +139,64 @@ export default class ParticipantsFactory {
         // append class info
         data.participants.mActiveParticipantClassNum = await this.mActiveParticipantClassNum(data);
 
+        // append class info
+        data.participants.mNumClasses = await this.mNumClasses(data);
+
         // apply mRacingDistance
         data = await this.applyParticipantAdditionals(data);
+
+        // append fastest lap index
+        data.participants.mFastestLapParticipantIndex = await this.mFastestLapParticipantIndex(data);
 
         return data;
     }
 
     /**
      *
+     * @param {*} data
+     */
+    async mNumClasses(data) {
+        if (!('participants' in data)) {
+            return null;
+        }
+
+        if (!('mClasses' in data.participants)) {
+            return null;
+        }
+
+        return Object.keys(data.participants.mClasses).length;
+    }
+
+    /**
+     *
+     * @param {*} data
+     * @returns
+     */
+    async mFastestLapParticipantIndex(data) {
+        let mFastestLapParticipantIndex = null;
+        let mFastestLapTimes = 999999999999;
+        for (let pi = 0; pi < data.participants.mNumActiveParticipants; pi++) {
+            // time not at quick as previous iteration
+            if (data.participants.mParticipantInfo[pi].mFastestLapTimes > mFastestLapTimes) {
+                continue;
+            }
+
+            // no time set, skip
+            if (data.participants.mParticipantInfo[pi].mFastestLapTimes <= 0) {
+                continue;
+            }
+
+            mFastestLapTimes = data.participants.mParticipantInfo[pi].mFastestLapTimes;
+            mFastestLapParticipantIndex = data.participants.mParticipantInfo[pi].mParticipantIndex;
+        }
+
+        return mFastestLapParticipantIndex;
+    }
+
+    /**
+     *
+     * @param {*} data
+     * @returns
      */
     async applyParticipantAdditionals(data) {
         for (let pi = 0; pi < data.participants.mNumActiveParticipants; pi++) {

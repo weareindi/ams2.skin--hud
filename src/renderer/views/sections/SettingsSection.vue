@@ -145,6 +145,9 @@
                                 <div class="s-settings__item">
                                     <SettingToggleComponent icon="auto" label="Default View" v-model="DirectorDefaultView" :options="DirectorDefaultViewOptions" />
                                 </div>
+                                <div class="s-settings__item">
+                                    <SettingToggleComponent label="Starting View" v-model="DirectorStartingView" :options="DirectorDefaultViewOptions" />
+                                </div>
                             </div>
                         </div>
                     </div>
@@ -350,6 +353,7 @@ export default {
         const DirectorDisplay = inject('DirectorDisplay');
         const DirectorDisplayOptions = inject('DirectorDisplayOptions');
         const DirectorDefaultView = inject('DirectorDefaultView');
+        const DirectorStartingView = inject('DirectorStartingView');
         const DirectorDefaultViewOptions = inject('DirectorDefaultViewOptions');
         const DirectorCommandAuto = inject('DirectorCommandAuto');
         const DirectorCommandBlank = inject('DirectorCommandBlank');
@@ -396,6 +400,7 @@ export default {
             DirectorDisplay,
             DirectorDisplayOptions,
             DirectorDefaultView,
+            DirectorStartingView,
             DirectorDefaultViewOptions,
             DirectorCommandAuto,
             DirectorCommandBlank,

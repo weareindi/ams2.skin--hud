@@ -117,7 +117,7 @@ class Main {
 
         // all windows closed?
         app.on('window-all-closed', () => {
-            console.log('window-all-closed');
+            // console.log('window-all-closed');
             // do nothing, keeping this event keeps the app active even when no windows are open
         });
     }
@@ -336,6 +336,11 @@ class Main {
             }
 
             if (key === 'DirectorDefaultView') {
+                await this.DirectorWindow.updateSetting(key, value);
+            }
+
+            if (key === 'DirectorStartingView') {
+                await this.DirectorWindow.updateSetting(key, value);
 
             }
         });

@@ -1,7 +1,6 @@
 <template>
     <div class="c-standings-header">
-        <div class="c-standings-header__name" v-if="mCarClassName[0]" v-html="mCarClassName[0].label"></div>
-        <div class="c-standings-header__color" v-if="mCarClassColor[0]"></div>
+        <div class="c-standings-header__name" v-if="vCarClassName[0]" v-html="vCarClassName[0].label"></div>
     </div>
 </template>
 
@@ -11,29 +10,10 @@
 }
 
 .c-standings-header__name {
-    @include color('color', 'black');
+    @include color('color', 'primary');
 
-    position: relative;
-    z-index: 2;
-    width: em((1280 + 32), 24);
-    margin: 0 auto;
-    padding: em(16, 24);
-
-    font-family: 'uifont', sans-serif;
-    font-size: em(24);
-    font-weight: bold
-}
-
-.c-standings-header__color {
-    @include color('background-color', 'yellow');
-
-    position: absolute;
-    z-index: 1;
-    top: 0;
-    right: 0;
-    bottom: 0;
-    left: 0;
-    mask-image: linear-gradient(300deg, transparent, #000000);
+    font-size: em(32);
+    text-transform: uppercase;
 }
 </style>
 
@@ -41,8 +21,7 @@
 
 export default {
     props: {
-        mCarClassName: null,
-        mCarClassColor: null,
+        vCarClassName: null,
     }
 }
 </script>

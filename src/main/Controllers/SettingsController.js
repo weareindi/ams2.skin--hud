@@ -137,6 +137,7 @@ export default class SettingsController {
         data.DirectorEnabled = false;
         data.DirectorDisplay = primaryDisplay.id;
         data.DirectorDefaultView = 'auto';
+        data.DirectorStartingView = 'solo';
         data.DirectorCommandAuto = 'ctrl+Num0';
         data.DirectorCommandBlank = 'ctrl+Num1';
         data.DirectorCommandSolo = 'ctrl+Num2';
