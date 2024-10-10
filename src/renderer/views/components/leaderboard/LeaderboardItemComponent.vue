@@ -1,5 +1,5 @@
 <template>
-    <div class="s-leaderboard-item" :active="`${data.vParticipantIndex[0].additional ? 'true' : 'false'}`">
+    <div class="s-leaderboard-item" :active="`${data.vParticipantIndex[0].additional ? 'true' : 'false'}`" :dnf="`${data.vDNF[0].value ? 'true' : 'false'}`">
         <div class="s-leaderboard-item__body" magnetic-parent>
             <div class="s-leaderboard-item__items">
                 <div class="s-leaderboard-item__item s-leaderboard-item__item--position" v-if="data.vCarClassPosition">
@@ -81,6 +81,12 @@
                     @include color('color', 'secondary');
                 }
             }
+        }
+    }
+
+    &[dnf="true"] {
+        &.s-leaderboard-item {
+            opacity: 0.4;
         }
     }
 }

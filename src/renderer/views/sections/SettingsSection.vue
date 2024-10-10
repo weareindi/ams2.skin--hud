@@ -152,7 +152,7 @@
                         </div>
                     </div>
                 </div>
-                <div class="s-settings__row" v-if="DirectorEnabled">
+                <!-- <div class="s-settings__row" v-if="DirectorEnabled">
                     <div class="s-settings__header">
                         <h1 class="s-settings__heading">Key Binds</h1>
                     </div>
@@ -180,7 +180,7 @@
                             </div>
                         </div>
                     </div>
-                </div>
+                </div> -->
             </div>
         </div>
         <span class="s-settings__overlay"></span>

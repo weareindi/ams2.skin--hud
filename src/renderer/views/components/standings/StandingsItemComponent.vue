@@ -1,5 +1,5 @@
 <template>
-    <div class="c-standings-item" :active="`${data.vParticipantIndex[0].additional ? 'true' : 'false'}`">
+    <div class="c-standings-item" :active="`${data.vParticipantIndex[0].additional ? 'true' : 'false'}`" :dnf="`${data.vDNF[0].value ? 'true' : 'false'}`">
         <div class="c-standings-item__number" v-if="data.vCarClassPosition && data.vCarClassPosition[0].label">
             <div class="c-standings-item__value" v-html="data.vCarClassPosition[0].label"></div>
         </div>
@@ -46,6 +46,12 @@
             bottom: em(-8);
             left: em(-8);
             z-index: 1;
+        }
+    }
+
+    &[dnf="true"] {
+        &.c-standings-item {
+            opacity: 0.4;
         }
     }
 }
