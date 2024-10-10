@@ -164,7 +164,7 @@ export async function hasEventEnded(data) {
     }
 
 
-    // // has lapped event not started?
+    // has lapped event not started?
     // if (data.eventInformation.mLapsInEvent !== null) {
     //     const leader = await getParticipantInPostion(data, 1);
     //     if (leader === null) {
@@ -257,7 +257,36 @@ export async function isPaused(data) {
         return false;
     }
 
-    if (data.gameStates.mGameState !== 3 && data.gameStates.mGameState !== 4) {
+    if (data.gameStates.mGameState !== 3) {
+        return false;
+    }
+
+    return true;
+}
+
+/**
+ *
+ * @param {*} data
+ * @returns
+ */
+export async function isInMenuTimeTracking(data) {
+    if (typeof data === 'undefined') {
+        return false;
+    }
+
+    if (data === null) {
+        return false;
+    }
+
+    if (!('gameStates' in data)) {
+        return false;
+    }
+
+    if (!('mGameState' in data.gameStates)) {
+        return false;
+    }
+
+    if (data.gameStates.mGameState !== 4) {
         return false;
     }
 

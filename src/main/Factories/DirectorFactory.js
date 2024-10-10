@@ -1,4 +1,4 @@
-import { getActiveParticipant, getParticipantsSortedByPosition, getParticipantsSortedIntoClass, isReady, hasEventStarted, hasEventEnded, isInPitBox, isPaused } from '../../utils/CrestUtils';
+import { getActiveParticipant, getParticipantsSortedByPosition, getParticipantsSortedIntoClass, isReady, hasEventStarted, hasEventEnded, isInPitBox, isPaused, isInMenuTimeTracking } from '../../utils/CrestUtils';
 import { random, weightedArray } from '../../utils/DataUtils';
 // import stc from "string-to-color";
 
@@ -173,6 +173,11 @@ export default class DirectorFactory {
 
         const paused = await isPaused(data);
         if (paused) {
+            return null;
+        }
+
+        const inMenuTimeTracking = await isInMenuTimeTracking(data);
+        if (inMenuTimeTracking) {
             return null;
         }
 
