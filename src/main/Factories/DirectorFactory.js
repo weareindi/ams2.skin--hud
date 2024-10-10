@@ -1,35 +1,46 @@
-import { getActiveParticipant, getParticipantInPostion, getParticipantsSortedByPosition, getParticipantsSortedIntoClass, isReady, hasEventStarted } from '../../utils/CrestUtils';
+import { getActiveParticipant, getParticipantsSortedByPosition, getParticipantsSortedIntoClass, isReady, hasEventStarted, hasEventEnded, isInPitBox, isPaused } from '../../utils/CrestUtils';
 import { random, weightedArray } from '../../utils/DataUtils';
-import stc from "string-to-color";
+// import stc from "string-to-color";
 
 export default class DirectorFactory {
     constructor() {
 
         this.baseTimes = {
-            blank: 1000,
-            solo: 8000,
-            leaderboard: 1000,
+            blank: 15000,
+            solo: 20000,
+            leaderboard: 20000,
+            leaderboardMulticlass: 20000,
             standings: 1000 * 6, // 6 participants per page
-            battle: 8000,
+            standingsMulticlass: 1000 * 6, // 6 participants per page
+            battle: 20000,
+            intro: 60000,
         };
 
         this.minTimes = {
             blank: null,
             solo: null,
             leaderboard: null,
+            leaderboardMulticlass: null,
             standings: null,
+            standingsMulticlass: null,
             battle: null,
         };
 
         this.currentView = null;
         this.view = null;
 
-        this.defaultView = 'auto';
+        this.settings = {
+            DirectorDefaultView: 'auto',
+            DirectorStartingView: 'auto'
+        };
+
         // this.commandAuto = null;
         // this.commandBlank = null;
         // this.commandSolo = null;
         // this.commandLeaderboard = null;
+        // this.commandLeaderboardMulticlass = null;
         // this.commandStandings = null;
+        // this.commandStandingsMulticlass = null;
         // this.commandBattle = null;
 
         this.init();
@@ -40,6 +51,7 @@ export default class DirectorFactory {
      */
     async init() {
         try {
+            // await this.registerSettingsController();
             await this.reset();
         } catch (error) {
             console.error(error);
@@ -49,21 +61,39 @@ export default class DirectorFactory {
     /**
      *
      */
+    // async registerSettingsController() {
+    //     this.SettingsController = new SettingsController();
+    // }
+
+    /**
+     *
+     */
     async reset() {
         try {
             this.timeStart = null;
             this.timeStandings = null;
+            this.timeStandingsMulticlass = null;
 
             this.minTimes = {
                 blank: null,
                 solo: null,
                 leaderboard: null,
+                leaderboardMulticlass: null,
                 standings: null,
+                standingsMulticlass: null,
                 battle: null,
             };
         } catch (error) {
             console.error(error);
         }
+    }
+
+    /**
+     *
+     * @param {*} settings
+     */
+    async setSettings(settings) {
+        this.settings = {...this.settings, ...settings};
     }
 
     /**
@@ -136,20 +166,21 @@ export default class DirectorFactory {
             return null;
         }
 
-        // update vars
-        // await this.getVariables();
-        // await this.updateBinds();
+        const eventEnded = await hasEventEnded(data);
+        const inPitBox = await isInPitBox(data);
+        if (eventEnded && inPitBox) {
+            return null;
+        }
 
-        // let view = await this.getCurrentView(data);
-        let view = 'battle';
+        const paused = await isPaused(data);
+        if (paused) {
+            return null;
+        }
+
+        let view = await this.getCurrentView(data);
 
         // if auto, then get
         if (view === 'auto') {
-            const eventStarted = await hasEventStarted(data);
-            if (!eventStarted) {
-                return 'solo';
-            }
-
             // available views
             let views = await this.getWeightedViews(data);
             views = await this.filterToPointsOfInterest(data, views);
@@ -186,11 +217,19 @@ export default class DirectorFactory {
         }
 
         if (view === 'leaderboard') {
-            return this.minTimes.leaderboard = this.baseTimes.leaderboard * multiplier;
+            return this.minTimes.leaderboard = this.baseTimes.leaderboard + (1000 * multiplier);
+        }
+
+        if (view === 'leaderboardMulticlass') {
+            return this.minTimes.leaderboardMulticlass = this.baseTimes.leaderboardMulticlass + (1000 * multiplier);
         }
 
         if (view === 'standings') {
             return this.minTimes.standings = this.baseTimes.standings * multiplier;
+        }
+
+        if (view === 'standingsMulticlass') {
+            return this.minTimes.standingsMulticlass = this.baseTimes.standingsMulticlass * multiplier;
         }
 
         if (view === 'battle') {
@@ -203,8 +242,17 @@ export default class DirectorFactory {
      * @param {*} data
      */
     async getCurrentView(data) {
+        const participant = await getActiveParticipant(data);
+        if (participant === null) {
+            return this.settings.DirectorStartingView;
+        }
+
+        if (participant.mRacingDistance <= 1000) {
+            return this.settings.DirectorStartingView;
+        }
+
         if (this.view === null) {
-            return this.defaultView;
+            return this.settings.DirectorDefaultView;
         }
 
         return this.view;
@@ -237,29 +285,41 @@ export default class DirectorFactory {
         }
 
         if (view === 'leaderboard') {
-            const eventStarted = await hasEventStarted(data);
-            if (!eventStarted) {
-                return null;
-            }
-
             await this.updateMinTimes(data, view, data.participants.mNumParticipants);
 
             return {
                 mParticipantIndex: participant.mParticipantIndex,
-                classes: await this.getLeaderboard(data),
+                participants: await this.getLeaderboard(data),
+            };
+        }
+
+        if (view === 'leaderboardMulticlass') {
+            await this.updateMinTimes(data, view, data.participants.mNumParticipants);
+
+            return {
+                mParticipantIndex: participant.mParticipantIndex,
+                classes: await this.getLeaderboardMulticlass(data),
             };
         }
 
         if (view === 'standings') {
-            const eventStarted = await hasEventStarted(data);
-            if (!eventStarted) {
-                return null;
-            }
-
             const standings = await this.getStandings(data);
             const multiplier = await this.getStandingsMultiplier(standings);
             await this.updateMinTimes(data, view, multiplier);
-            const { classIndex, classPageIndex } = await this.getStandingsActivePageIndices(standings, multiplier)
+            const { pageIndex } = await this.getStandingsActivePageIndices(multiplier);
+
+            return {
+                mParticipantIndex: participant.mParticipantIndex,
+                standings: standings,
+                pageIndex: pageIndex
+            }
+        }
+
+        if (view === 'standingsMulticlass') {
+            const standings = await this.getStandingsMulticlass(data);
+            const multiplier = await this.getStandingsMulticlassMultiplier(standings);
+            await this.updateMinTimes(data, view, multiplier);
+            const { classIndex, classPageIndex } = await this.getStandingsMulticlassActivePageIndices(standings, multiplier)
 
             return {
                 mParticipantIndex: participant.mParticipantIndex,
@@ -270,26 +330,17 @@ export default class DirectorFactory {
         }
 
         if (view === 'battle') {
-            const eventStarted = await hasEventStarted(data);
-            if (!eventStarted) {
-                return null;
-            }
-
             await this.updateMinTimes(data, view);
 
-            const battle = await this.getBattle(data);
-            return battle;
+            const participantBattle = await this.getParticipantBattle(data);
+
+            return {
+                mParticipantIndex: participant.mParticipantIndex,
+                participantBattle: participantBattle
+            };
         }
 
         return null;
-    }
-
-    async getStandingsMultiplier(standings) {
-        let multiplier = 0;
-        for (const mCarClassName in standings) {
-            multiplier += standings[mCarClassName].pages.length;
-        }
-        return multiplier;
     }
 
     /**
@@ -329,19 +380,30 @@ export default class DirectorFactory {
     async getWeightedViews(data) {
         let views = [];
 
+
+
         // all
         views.push({
             label: 'blank',
             weight: 0.1
         });
+
         views.push({
             label: 'solo',
             weight: 0.4
         });
+
         views.push({
             label: 'leaderboard',
             weight: 0.4
         });
+
+        if (data.participants.mNumClasses > 1) {
+            views.push({
+                label: 'leaderboardMulticlass',
+                weight: 0.4
+            });
+        }
 
         // practice
         if (data.gameStates.mSessionState === 1) {
@@ -359,6 +421,14 @@ export default class DirectorFactory {
                 label: 'standings',
                 weight: 0.4
             });
+
+            // if (data.participants.mNumClasses > 1) {
+            //     views.push({
+            //         label: 'standingsMulticlass',
+            //         weight: 0.1
+            //     });
+            // }
+
             views.push({
                 label: 'battle',
                 weight: 0.6
@@ -390,22 +460,16 @@ export default class DirectorFactory {
      *
      * @param {*} data
      */
-    async getBattle(data) {
-        const participant = await getActiveParticipant(data);
-
-        const battle = {
-            driver: participant.mParticipantIndex
-        };
-
-        if (participant.mBattlingParticipantAhead) {
-            battle.ahead = (await getParticipantInPostion(data, participant.mRacePosition - 1)).mParticipantIndex;
+    async getParticipantBattle(data) {
+        if (!('participantBattle' in data)) {
+            return null;
         }
 
-        if (participant.mBattlingParticipantBehind) {
-            battle.behind = (await getParticipantInPostion(data, participant.mRacePosition + 1)).mParticipantIndex;
+        if (data.participantBattle === null) {
+            return null;
         }
 
-        return battle;
+        return data.participantBattle;
     }
 
     /**
@@ -414,6 +478,22 @@ export default class DirectorFactory {
      * @returns
      */
     async getLeaderboard(data) {
+        // sorted by position
+        let participants = await getParticipantsSortedByPosition(data);
+
+        return participants.filter((participant) => {
+            return participant.mCarClassName !== 'SafetyCar';
+        }).map((participant) => {
+            return participant.mParticipantIndex;
+        });
+    }
+
+    /**
+     *
+     * @param {*} data
+     * @returns
+     */
+    async getLeaderboardMulticlass(data) {
         // sorted by position
         const classes = await getParticipantsSortedIntoClass(data);
 
@@ -424,7 +504,7 @@ export default class DirectorFactory {
         for (const mCarClassName in classes) {
             classes[mCarClassName] = {
                 mCarClassName: mCarClassName,
-                mCarClassColor: stc(mCarClassName),
+                // mCarClassColor: stc(mCarClassName),
                 participants: classes[mCarClassName]
                     .map((participant) => {
                         return participant.mParticipantIndex;
@@ -441,6 +521,66 @@ export default class DirectorFactory {
      * @returns
      */
     async getStandings(data) {
+        let participants = await getParticipantsSortedByPosition(data);
+
+        participants = participants.filter((participant) => {
+            return participant.mCarClassName !== 'SafetyCar';
+        }).map((participant) => {
+            return participant.mParticipantIndex;
+        });
+
+        const pages = [];
+        for (let pi = 0; pi < participants.length; pi += 6) {
+            pages.push( participants.slice(pi, pi + 6) );
+        }
+
+        return pages;
+    }
+
+    /**
+     *
+     * @param {*} standings
+     * @returns
+     */
+    async getStandingsMultiplier(standings) {
+        return standings.length;
+    }
+
+    /**
+     *
+     * @param {*} multiplier
+     * @returns
+     */
+    async getStandingsActivePageIndices(multiplier) {
+        // no time started? start now
+        if (this.timeStandings === null) {
+            this.timeStandings = performance.now();
+        }
+
+        // reset timer if time passed
+        if (this.timeStandings + this.minTimes.standings < performance.now()) {
+            this.timeStandings = performance.now();
+        }
+
+        // get current page index
+        let pageIndex = 0;
+        for (let index = 0; index < multiplier; index++) {
+            if (performance.now() - this.timeStandings > (this.baseTimes.standings * index)) {
+                pageIndex = index;
+            }
+        }
+
+        return {
+            pageIndex
+        };
+    }
+
+    /**
+     *
+     * @param {*} data
+     * @returns
+     */
+    async getStandingsMulticlass(data) {
         // sorted by position
         const classes = await getParticipantsSortedIntoClass(data);
 
@@ -457,7 +597,7 @@ export default class DirectorFactory {
 
             classes[mCarClassName] = {
                 mCarClassName: mCarClassName,
-                mCarClassColor: stc(mCarClassName),
+                // mCarClassColor: stc(mCarClassName),
                 pages: pages.map((page) => {
                     return page.map((participant) => {
                         return participant.mParticipantIndex;
@@ -472,24 +612,37 @@ export default class DirectorFactory {
     /**
      *
      * @param {*} standings
+     * @returns
+     */
+    async getStandingsMulticlassMultiplier(standings) {
+        let multiplier = 0;
+        for (const mCarClassName in standings) {
+            multiplier += standings[mCarClassName].pages.length;
+        }
+        return multiplier;
+    }
+
+    /**
+     *
+     * @param {*} standings
      * @param {*} multiplier
      * @returns
      */
-    async getStandingsActivePageIndices(standings, multiplier) {
+    async getStandingsMulticlassActivePageIndices(standings, multiplier) {
         // no time started? start now
-        if (this.timeStandings === null) {
-            this.timeStandings = performance.now();
+        if (this.timeStandingsMulticlass === null) {
+            this.timeStandingsMulticlass = performance.now();
         }
 
         // reset timer if time passed
-        if (this.timeStandings + this.minTimes.standings < performance.now()) {
-            this.timeStandings = performance.now();
+        if (this.timeStandingsMulticlass + this.minTimes.standingsMulticlass < performance.now()) {
+            this.timeStandingsMulticlass = performance.now();
         }
 
         // get current overall page
         let page = 0;
         for (let index = 0; index < multiplier; index++) {
-            if (performance.now() - this.timeStandings > (this.baseTimes.standings * index)) {
+            if (performance.now() - this.timeStandingsMulticlass > (this.baseTimes.standingsMulticlass * index)) {
                 page = index;
             }
         }

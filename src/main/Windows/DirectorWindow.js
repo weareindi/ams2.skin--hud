@@ -86,7 +86,11 @@ export default class DirectorWindow {
     async registerWorker() {
         this.DirectorWorker = new Worker(DirectorWorkerPath);
         this.DirectorWorker.postMessage({
-            name: 'setup'
+            name: 'setup',
+            data: {
+                DirectorDefaultView: await this.SettingsController.get('DirectorDefaultView'),
+                DirectorStartingView: await this.SettingsController.get('DirectorStartingView')
+            }
         });
     }
 
@@ -120,7 +124,7 @@ export default class DirectorWindow {
             }
 
             if (event.name === 'view') {
-                console.log(event.data);
+                // console.log(event.data);
 
 
                 // console.timeEnd('test');
@@ -292,5 +296,19 @@ export default class DirectorWindow {
         } catch (error) {
             // console.error(error);
         }
+    }
+
+    /**
+     *
+     * @param {*} key
+     * @param {*} value
+     */
+    async updateSetting(key, value) {
+        this.DirectorWorker.postMessage({
+            name: 'setting',
+            data: {
+                [key]: value
+            }
+        });
     }
 }

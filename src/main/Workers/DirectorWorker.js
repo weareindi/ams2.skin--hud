@@ -8,6 +8,7 @@ class DirectorWorker {
     constructor() {
         this.worker = parentPort;
         this.defaultDataPath = null;
+        this.settings = {};
 
         this.init();
     }
@@ -59,13 +60,32 @@ class DirectorWorker {
                     data: await this.processView(event.data)
                 });
             }
+
+            if (event.name === 'setting') {
+                console.log(event.data);
+
+
+                await this.returnMessage({
+                    name: 'setting',
+                    data: await this.processSetting(event.data)
+                });
+            }
         });
     }
 
     /**
      *
      */
-    async processSetup(data) {}
+    async processSetup(data) {
+        this.DirectorFactory.setSettings(data);
+    }
+
+    /**
+     *
+     */
+    async processSetting(data) {
+        this.DirectorFactory.setSettings(data);
+    }
 
     /**
      *

@@ -1,10 +1,10 @@
 <template>
     <div class="s-standings">
-        <div class="s-standings__header">
-            <StandingsHeaderComponent :mCarClassName="vData.vStandings.mCarClassName" :mCarClassColor="vData.vStandings.mCarClassColor" />
+        <div class="s-standings__header" v-if="vData.vStandings.vCarClassName">
+            <StandingsHeaderComponent :vCarClassName="vData.vStandings.vCarClassName" />
         </div>
         <div class="s-standings__body">
-            <StandingsPageComponent :mCarClassColor="vData.vStandings.mCarClassColor" :participants="vData.vStandings.participants" />
+            <StandingsPageComponent :participants="vData.vStandings.participants" />
         </div>
     </div>
 </template>
@@ -17,6 +17,7 @@
     bottom: 0;
     right: 0;
     left: 0;
+    padding: em(32);
     display: flex;
     flex-direction: column;
     justify-content: center;
@@ -25,14 +26,17 @@
 
 .s-standings__header,
 .s-standings__body {
-    width: 100%;
+    width: em(1280);
+    margin: 0 auto;
 }
 
-.s-standings__header {}
-
-.s-standings__body {
-    margin: em(32) 0 0;
+.s-standings__header {
+    ~ .s-standings__body {
+        margin: em(32) 0 0;
+    }
 }
+
+
 </style>
 
 <script>

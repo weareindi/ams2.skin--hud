@@ -1,5 +1,5 @@
 import { isReady, getParticipantAtIndex, getParticipantInPostion, getActiveParticipant, getParticipantInClassPostion, getParticipantsSortedByRaceDistance } from '../../utils/CrestUtils';
-import stc from "string-to-color";
+// import stc from "string-to-color";
 import * as storage from 'rocket-store';
 
 export default class ParticipantFactory {
@@ -38,7 +38,7 @@ export default class ParticipantFactory {
 
             this.mRacePositionStartStored = null;
             this.mCarClassPositionStartStored = null;
-            this.mCarClassColorStored = null;
+            // this.mCarClassColorStored = null;
 
             this.mNamePartsStored = null;
             this.mNameMainStored = null;
@@ -193,8 +193,9 @@ export default class ParticipantFactory {
         data.participants.mParticipantInfo[mParticipantIndex].mNameTag = await this.mNameTag(data.participants.mParticipantInfo[mParticipantIndex]);
         data.participants.mParticipantInfo[mParticipantIndex].mCarNamesMain = await this.mCarNames(data.participants.mParticipantInfo[mParticipantIndex]);
         data.participants.mParticipantInfo[mParticipantIndex].mCarClassName = await this.mCarClassName(data.participants.mParticipantInfo[mParticipantIndex]);
+        data.participants.mParticipantInfo[mParticipantIndex].mCarClassNamesMain = await this.mCarClassNamesMain(data.participants.mParticipantInfo[mParticipantIndex]);
         data.participants.mParticipantInfo[mParticipantIndex].mCarClassNamesShort = await this.mCarClassNamesShort(data.participants.mParticipantInfo[mParticipantIndex]);
-        data.participants.mParticipantInfo[mParticipantIndex].mCarClassColor = await this.mCarClassColor(data.participants.mParticipantInfo[mParticipantIndex]);
+        // data.participants.mParticipantInfo[mParticipantIndex].mCarClassColor = await this.mCarClassColor(data.participants.mParticipantInfo[mParticipantIndex]);
         data.participants.mParticipantInfo[mParticipantIndex].mCarClassPosition = await this.mCarClassPosition(data, data.participants.mParticipantInfo[mParticipantIndex]);
         data.participants.mParticipantInfo[mParticipantIndex].mKPH = await this.mKPH(data.participants.mParticipantInfo[mParticipantIndex]);
         data.participants.mParticipantInfo[mParticipantIndex].mOutLap = await this.mOutLap(data.participants.mParticipantInfo[mParticipantIndex]);
@@ -427,6 +428,24 @@ export default class ParticipantFactory {
      *
      * @param {*} participant
      */
+    async mCarClassNamesMain(participant) {
+        // split name underscore
+        const parts = participant.mCarClassNames.split('_');
+
+        let name = participant.mCarClassNames;
+        if (parts) {
+            // use first part of name
+            name = parts[0];
+        }
+
+        // make it uppercase
+        return name;
+    }
+
+    /**
+     *
+     * @param {*} participant
+     */
     async mCarClassNamesShort(participant) {
         // split name underscore
         const parts = participant.mCarClassNames.split('_');
@@ -478,13 +497,13 @@ export default class ParticipantFactory {
      *
      * @param {*} participant
      */
-    async mCarClassColor(participant) {
-        if (this.mCarClassColorStored !== null) {
-            return this.mCarClassColorStored;
-        }
+    // async mCarClassColor(participant) {
+    //     if (this.mCarClassColorStored !== null) {
+    //         return this.mCarClassColorStored;
+    //     }
 
-        return this.mCarClassColorStored = stc(participant.mCarClassNames);
-    }
+    //     return this.mCarClassColorStored = stc(participant.mCarClassNames);
+    // }
 
     /**
      *

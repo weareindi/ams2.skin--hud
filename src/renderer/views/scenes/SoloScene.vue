@@ -2,19 +2,26 @@
     <div class="s-solo">
         <div class="s-solo__items">
             <div class="s-solo__item" v-if="vData">
+                <span class="s-solo__position" v-for="data in vData.vRacePosition">
+                    <span v-html="data.value"></span>
+                </span>
                 <span class="s-solo__info">
                     <span class="s-solo__name" v-for="data in vData.vNameShort">
                         <span v-html="data.value"></span>
                     </span>
                     <span class="s-solo__tag" v-for="data in vData.vNameTag">
-                        <span v-html="data.value"></span>
+                        <span v-html="data.label"></span>
                     </span>
-                    <span class="s-solo__car" v-for="data in vData.vCarNames">
-                        <span v-html="data.value"></span>
+                    <span class="s-solo__aside">
+                        <span class="s-solo__car" v-for="data in vData.vCarNamesMain">
+                            <span v-html="data.value"></span>
+
+                            <span class="s-solo__class">
+                                <span v-html="data.seperator"></span>
+                                <span v-html="data.suffix"></span>
+                            </span>
+                        </span>
                     </span>
-                </span>
-                <span class="s-solo__position" v-for="data in vData.vRacePosition">
-                    <span v-html="data.value"></span>
                 </span>
             </div>
         </div>
@@ -32,15 +39,14 @@
     display: flex;
     align-items: center;
     justify-content: center;
-    padding: em(8) em(8) em(32);
+    padding: em(32);
 }
 
 .s-solo__items {
     display: flex;
     flex-direction: column;
-    flex-wrap: wrap;
+    flex-wrap: nowrap;
     align-items: flex-start;
-    height: em(210);
     width: 100%;
     max-width: em(1280);
 }
@@ -51,102 +57,8 @@
     flex-basis: auto;
 
     display: flex;
-    align-items: flex-start;
+    // align-items: center;
     justify-content: flex-start;
-}
-
-.s-solo__info {
-    display: flex;
-    flex-direction: column;
-    margin: em(8);
-    padding: 0 em(128, 48) 0 0;
-}
-
-.s-solo__name {
-    @include color('color', 'white');
-
-    flex-grow: 1;
-    flex-shrink: 1;
-    flex-basis: auto;
-
-    padding: 0 em(16, 48) 0 0;
-    width: 100%;
-    font-family: "qanelassoft";
-    font-weight: bold;
-    font-size: em(48);
-    line-height: 1em;
-    // letter-spacing: 0.04em;
-    text-transform: uppercase;
-    text-overflow: ellipsis;
-    white-space: nowrap;
-    overflow: hidden;
-}
-
-.s-solo__tag {
-    @include color('color', 'yellow', 0.8);
-    @include color('border-color', 'white', 0.4);
-
-    flex-grow: 1;
-    flex-shrink: 1;
-    flex-basis: auto;
-
-    margin: em(8, 36) 0 0;
-    padding: em(8, 36) 0 0 0;
-    width: 100%;
-    font-family: "qanelassoft";
-    font-weight: bold;
-    font-size: em(36);
-    line-height: 1em;
-    // letter-spacing: 0.04em;
-    text-transform: uppercase;
-    text-overflow: ellipsis;
-    white-space: nowrap;
-    overflow: hidden;
-
-    border-top-width: em(2, 36);
-    border-top-style:dotted;
-}
-
-.s-solo__car {
-    @include color('color', 'white', 0.8);
-
-    flex-grow: 1;
-    flex-shrink: 1;
-    flex-basis: auto;
-
-    margin: em(24, 24) 0 0;
-    // padding: em(16, 24) 0 0 0;
-    width: 100%;
-    font-family: "qanelassoft";
-    font-weight: bold;
-    font-size: em(24);
-    line-height: 1em;
-    // letter-spacing: 0.04em;
-    text-transform: uppercase;
-    text-overflow: ellipsis;
-    white-space: nowrap;
-    overflow: hidden;
-}
-
-.s-solo__class {
-    @include color('color', 'yellow', 0.8);
-
-    flex-grow: 1;
-    flex-shrink: 1;
-    flex-basis: auto;
-
-    margin: em(6, 24) 0 0;
-    // padding: em(16, 24) 0 0 0;
-    width: 100%;
-    font-family: "qanelassoft";
-    font-weight: bold;
-    font-size: em(24);
-    line-height: 1em;
-    // letter-spacing: 0.04em;
-    // text-transform: uppercase;
-    text-overflow: ellipsis;
-    white-space: nowrap;
-    overflow: hidden;
 }
 
 .s-solo__position {
@@ -160,14 +72,88 @@
     display: flex;
     align-items: center;
     justify-content: center;
-    font-family: "qanelassoft";
-    letter-spacing: 0.04em;
-    font-weight: bold;
-    font-size: em(64);
+    font-size: em(76);
     line-height: 1em;
-    width: em(96, 64);
-    height: em(96, 64);
-    margin-top: em(16, 64);
+    width: em(140, 76);
+    height: em(140, 76);
+}
+
+.s-solo__info {
+    display: flex;
+    flex-direction: column;
+    justify-content: space-between;
+    align-items: flex-start;
+
+    margin: 0 0 0 em(32);
+    // padding: 0 em(128, 48) 0 0;
+    padding: em(16) 0
+}
+
+.s-solo__name {
+    @include color('color', 'primary');
+
+    flex-grow: 0;
+    flex-shrink: 0;
+    flex-basis: auto;
+
+    // padding: 0 em(16, 48) 0 0;
+    width: 100%;
+    font-size: em(32);
+    line-height: 1em;
+    text-transform: uppercase;
+    text-overflow: ellipsis;
+    white-space: nowrap;
+    overflow: hidden;
+}
+
+.s-solo__tag {
+    @include color('background-color', 'primary');
+    @include color('color', 'secondary');
+
+    flex-grow: 0;
+    flex-shrink: 0;
+    flex-basis: auto;
+
+    margin: em(12, 18) 0 0;
+    padding: em(4, 18) em(6, 18);
+    font-size: em(18);
+    line-height: 1em;
+    text-transform: uppercase;
+    text-overflow: ellipsis;
+    white-space: nowrap;
+    overflow: hidden;
+    border-radius: em(2, 18);
+}
+
+.s-solo__aside {
+    flex-grow: 1;
+    flex-shrink: 0;
+    flex-basis: auto;
+
+    display: flex;
+    align-items: flex-end;
+}
+
+.s-solo__car {
+    @include color('color', 'primary-alt');
+
+    flex-grow: 0;
+    flex-shrink: 0;
+    flex-basis: auto;
+
+    margin: em(12, 18) 0 0;
+    font-size: em(18);
+    line-height: 1em;
+    text-transform: uppercase;
+    text-overflow: ellipsis;
+    white-space: nowrap;
+    overflow: hidden;
+}
+
+.s-solo__class {
+    @include color('color', 'primary');
+
+    margin: 0 0 0 em(12, 18);
 }
 </style>
 

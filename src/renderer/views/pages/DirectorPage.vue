@@ -3,7 +3,7 @@
         <Suspense>
             <div class="p__main">
                 <div class="p__blank" v-if="vDirectorStatus === 0">
-                    Blank
+
                 </div>
                 <div class="p__solo" v-if="vDirectorStatus === 1">
                     <SoloScene />

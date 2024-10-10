@@ -1,4 +1,4 @@
-import { isReady, getParticipantInPostion, getParticipantsSortedByPosition } from '../../utils/CrestUtils';
+import { isReady, getParticipantInPostion, getParticipantsSortedByPosition, getActiveParticipant, getParticipantAtIndex } from '../../utils/CrestUtils';
 
 export default class BattleFactory {
     constructor() {
@@ -59,6 +59,7 @@ export default class BattleFactory {
         }
 
         data.battles = await this.processBattles(data);
+        data.participantBattle = await this.processParticipantBattle(data, data.battles);
 
         return data;
     }
@@ -82,32 +83,60 @@ export default class BattleFactory {
         }
 
         const participants = await this.processParticipants(data);
-        const battlesGroups = await this.battlesGroups(data, participants);
-        const battles = await this.battles(data, battlesGroups);
-
-        return battles;
+        return await this.battlesGroups(data, participants);
     }
 
     /**
      *
+     * @param {*} data
      */
-    async battles(data, battlesGroups) {
-        // console.log(battlesGroups);
+    async processParticipantBattle(data, battlesGroups) {
+        return await this.participantBattle(data, battlesGroups);
+    }
 
-        for (const battlesID in battlesGroups) {
-            // if (!battlesID in battlesGroups ) {
-            //     continue;
-            // }
+    /**
+     *
+     * @param {*} data
+     * @param {*} battlesGroups
+     * @returns
+     */
+    async participantBattle(data, battlesGroups) {
+        const participant = await getActiveParticipant(data);
 
-            // console.log(battlesGroups[battlesID]);
+        let participantBattleGroupId = null;
+        for (const groupID in battlesGroups) {
+            if (battlesGroups[groupID].indexOf(participant.mParticipantIndex) < 0) {
+                continue;
+            }
 
+            participantBattleGroupId = groupID;
+            break;
         }
 
-        // for (let bgi = 0; bgi < battlesGroups.length; bgi++) {
-        //     console.log(battlesGroups[bgi]);
+        if (participantBattleGroupId === null) {
+            return null;
+        }
 
+        const battleGroupParticipantIndex = battlesGroups[participantBattleGroupId].indexOf(participant.mParticipantIndex);
 
+        let start = battleGroupParticipantIndex - 1; // 1 ahead
+        if (start < 0) {
+            start = 0;
+        }
+
+        let end = battleGroupParticipantIndex + 2; // participant index + 1 rears
+        if (end >= (battlesGroups[participantBattleGroupId].length)) {
+            end = battlesGroups[participantBattleGroupId].length;
+        }
+
+        return battlesGroups[participantBattleGroupId].slice(start, end);
+
+        // let participants = [];
+        // for (let pi = 0; pi < sliced.length; pi++) {
+        //     participants.push(await getParticipantAtIndex(data, sliced[pi]));
         // }
+
+        // return participants;
     }
 
     /**
