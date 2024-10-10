@@ -294,7 +294,12 @@ export default class DirectorViewFactory {
                     {
                         label: participant.mNameShort
                     }
-                ])
+                ]),
+                vDNF: getViewObject([
+                    {
+                        value: data.gameStates.mSessionState === 5 && participant.mPitModes === 4 ? true : false
+                    }
+                ]),
             });
         }
 
@@ -345,6 +350,11 @@ export default class DirectorViewFactory {
                 vCarNamesMain: getViewObject([
                     {
                         label: participant.mCarNamesMain
+                    }
+                ]),
+                vDNF: getViewObject([
+                    {
+                        value: data.gameStates.mSessionState === 5 && participant.mPitModes === 4 ? true : false
                     }
                 ]),
             });
@@ -419,6 +429,11 @@ export default class DirectorViewFactory {
                 vIsFastestLap: getViewObject([
                     {
                         label: participant.mParticipantIndex == data.participants.mFastestLapParticipantIndex ? '&#x231A;&#xfe0e;' : null
+                    }
+                ]),
+                vDNF: getViewObject([
+                    {
+                        value: data.gameStates.mSessionState === 5 && participant.mPitModes === 4 ? true : false
                     }
                 ]),
             });
@@ -502,6 +517,11 @@ export default class DirectorViewFactory {
                             label: participant.mParticipantIndex == data.participants.mFastestLapParticipantIndex ? '&#x231A;&#xfe0e;' : null
                         }
                     ]),
+                    vDNF: getViewObject([
+                        {
+                            value: data.gameStates.mSessionState === 5 && participant.mPitModes === 4 ? true : false
+                        }
+                    ]),
                 });
             }
         }
@@ -533,6 +553,13 @@ export default class DirectorViewFactory {
      * @returns
      */
     async vTimingLead(data, participant) {
+        if (data.gameStates.mSessionState === 5 && participant.mPitModes === 4) {
+            return {
+                value: 'DNF',
+                state: 0
+            };
+        }
+
         if (participant.mLastLapTimes <= 0) {
             return {
                 value: '&#x231A;&#xfe0e;',
