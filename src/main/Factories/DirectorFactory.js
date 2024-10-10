@@ -7,13 +7,12 @@ export default class DirectorFactory {
 
         this.baseTimes = {
             blank: 15000,
-            solo: 20000,
-            leaderboard: 20000,
-            leaderboardMulticlass: 20000,
+            solo: 60000,
+            leaderboard: 60000,
+            leaderboardMulticlass: 60000,
             standings: 1000 * 6, // 6 participants per page
             standingsMulticlass: 1000 * 6, // 6 participants per page
-            battle: 20000,
-            intro: 60000,
+            battle: 60000,
         };
 
         this.minTimes = {
@@ -444,10 +443,10 @@ export default class DirectorFactory {
      * @param {*} views
      */
     async filterToPointsOfInterest(data, views) {
-        const participant = await getActiveParticipant(data);
+        const participantBattle = await this.getParticipantBattle(data);
 
-        // remove battle from view if not battling
-        if (!participant.mBattlingParticipantAhead && !participant.mBattlingParticipantBehind) {
+        // remove battle virew if no battle
+        if (participantBattle === null) {
             views = views.filter((view) => {
                 return view.label !== 'battle';
             });
