@@ -7,13 +7,12 @@ export default class DirectorFactory {
 
         this.baseTimes = {
             blank: 15000,
-            solo: 20000,
-            leaderboard: 20000,
-            leaderboardMulticlass: 20000,
+            solo: 60000,
+            leaderboard: 60000,
+            leaderboardMulticlass: 60000,
             standings: 1000 * 6, // 6 participants per page
             standingsMulticlass: 1000 * 6, // 6 participants per page
-            battle: 20000,
-            intro: 60000,
+            battle: 60000,
         };
 
         this.minTimes = {
