@@ -211,7 +211,9 @@ export default class HudWindow {
                 this.window.setFullScreen(true);
 
                 // send resize event to renderer
-                this.window.webContents.send('resize');
+                // this.window.webContents.send('resize');
+
+
             }
         });
 

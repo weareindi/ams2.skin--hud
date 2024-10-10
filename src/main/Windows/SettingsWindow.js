@@ -130,7 +130,7 @@ export default class SettingsWindow {
                 this.window.setFullScreen(true);
 
                 // send resize event to renderer
-                this.window.webContents.send('resize');
+                // this.window.webContents.send('resize');
             }
         });
 
