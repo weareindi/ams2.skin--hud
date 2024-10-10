@@ -278,9 +278,11 @@ export default class HudViewFactory {
             seperator = '';
         }
         if (typeof data.timings.mSplitTimeAhead === 'string') {
-            value = `${prefix}${data.timings.mSplitTimeAhead}`;
-            suffix = 'Laps';
-            seperator = ' ';
+            // value = `${prefix}${data.timings.mSplitTimeAhead}`;
+            // suffix = 'Laps';
+            // seperator = ' ';
+
+            return null;
         }
 
         return getViewObject([
@@ -322,9 +324,11 @@ export default class HudViewFactory {
             seperator = '';
         }
         if (typeof data.timings.mSplitTimeBehind === 'string') {
-            value = `${prefix}${data.timings.mSplitTimeBehind}`;
-            suffix = 'Laps';
-            seperator = ' ';
+            // value = `${prefix}${data.timings.mSplitTimeBehind}`;
+            // suffix = 'Laps';
+            // seperator = ' ';
+
+            return null;
         }
 
         return getViewObject([
