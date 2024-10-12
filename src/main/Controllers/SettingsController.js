@@ -284,6 +284,11 @@ export default class SettingsController {
             });
         });
 
+        defaultDisplays.push({
+            label: `Offscreen`,
+            value: 'offscreen'
+        });
+
         return defaultDisplays;
     }
 

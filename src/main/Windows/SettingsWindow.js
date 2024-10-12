@@ -117,34 +117,17 @@ export default class SettingsWindow {
 
         // show ontop of game at all times
         this.window.setAlwaysOnTop(true, 'pop-up-menu', 1);
+
+        // max fps, 30 for hud
+        this.window.webContents.setFrameRate(30);
     }
 
     /**
      *
      */
     async registerWindowListeners() {
-        // on resize
-        this.window.on('resize', () => {
-            if (process.platform === 'win32') {
-                // ... set to fullscreen
-                this.window.setFullScreen(true);
-
-                // send resize event to renderer
-                // this.window.webContents.send('resize');
-            }
-        });
-
         // ready to show
         this.window.on('ready-to-show', () => {
-            if (process.platform === 'darwin') {
-                this.window.maximize();
-            }
-
-            if (process.platform === 'win32') {
-                this.window.setFullScreen(true);
-            }
-
-
             this.window.show();
         });
 
