@@ -48,16 +48,25 @@
                     </div>
                 </div>
             </div>
-            <div class="c-hud-incar__b"><!-- Placeholder space for ingame mfd --></div>
+            <div class="c-hud-incar__b">
+                <div class="c-hud-incar__rows">
+                    <div class="c-hud-incar__row">
+                        <div class="c-hud-incar__items">
+                        </div>
+                    </div>
+                </div>
+            </div>
             <div class="c-hud-incar__c">
                 <div class="c-hud-incar__rows">
                     <div class="c-hud-incar__row">
                         <div class="c-hud-incar__items">
-                            <div class="c-hud-incar__item c-hud-incar__item--speedometer">
-                                <InCarSpeedometerComponent />
-                            </div>
-                            <div class="c-hud-incar__item c-hud-incar__item--features">
-                                <InCarFeaturesComponent />
+                            <div class="c-hud-incar__center">
+                                <div class="c-hud-incar__item c-hud-incar__item--speedometer">
+                                    <InCarSpeedometerComponent />
+                                </div>
+                                <div class="c-hud-incar__item c-hud-incar__item--features c-hud-incar__item--float-right">
+                                    <InCarFeaturesComponent />
+                                </div>
                             </div>
                             <div class="c-hud-incar__item c-hud-incar__item--wheelstyres">
                                 <InCarWheelsTyresComponent />
@@ -198,6 +207,13 @@
 
         .c-hud-incar__row {
             padding: em(16);
+
+            // wheels and tyres aligned right
+            &:nth-of-type(1) {
+                .c-hud-incar__items {
+                    justify-content: flex-end;
+                }
+            }
         }
     }
 }
@@ -231,6 +247,19 @@
 }
 
 .c-hud-incar__item {}
+
+.c-hud-incar__center {
+    position: fixed;
+    left: 50vw;
+    transform: translateX(-50%);
+}
+
+.c-hud-incar__item--float-right {
+    position: absolute;
+    left: 100%;
+    bottom: 0;
+    padding: 0 0 0 em(64);
+}
 
 </style>
 

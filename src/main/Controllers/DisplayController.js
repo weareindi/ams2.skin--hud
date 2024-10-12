@@ -85,7 +85,7 @@ export default class DisplayController {
      */
     async setScale(win, displayId) {
         const display = await this.getDisplay(displayId);
-        const scale = (display.bounds.width / this.defaultWidth) * 100;
+        const scale = (display.bounds.height / this.defaultHeight) * 100;
         await win.send('setScale', scale);
     }
 
