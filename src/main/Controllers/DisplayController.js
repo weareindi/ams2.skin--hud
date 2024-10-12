@@ -41,6 +41,22 @@ export default class DisplayController {
      */
     async getDisplay(displayID) {
         let requestedDisplay = screen.getPrimaryDisplay();
+
+        if (displayID === 'offscreen') {
+            const bounds = {...requestedDisplay.bounds};
+
+            return {
+                ...requestedDisplay,
+                id: 'offscreen',
+                bounds: {
+                    x: 1920 * 100,
+                    y: 1080 * 100,
+                    width: bounds.width,
+                    height: bounds.height,
+                }
+            };
+        }
+
         const allDisplays = screen.getAllDisplays();
         for (let adi = 0; adi < allDisplays.length; adi++) {
             const display = allDisplays[adi];
