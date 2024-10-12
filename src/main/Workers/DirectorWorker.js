@@ -62,9 +62,6 @@ class DirectorWorker {
             }
 
             if (event.name === 'setting') {
-                console.log(event.data);
-
-
                 await this.returnMessage({
                     name: 'setting',
                     data: await this.processSetting(event.data)
