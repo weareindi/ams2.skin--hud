@@ -8,8 +8,8 @@
 <style lang="scss">
 .c-in-car-data-tachometer {
     position: relative;
-    width: em(330);
-    height: em(30);
+    width: em(288);
+    height: em(36);
     mask-image: url('@renderer/assets/masks/tachometer-mask.svg?svg');
     mask-size: 100% 100%;
 }
