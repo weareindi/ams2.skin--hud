@@ -1,6 +1,12 @@
 # AMS2.SKIN HUD
 A custom HUD for AMS2.
 
+## Why?
+The in game HUD does a fine job... until it doesn't. Alignment issues especially with VR were the main problem for me. Starting off as just an alterative HUD for Automobilista 2, the project soon grew into two parts.
+I wanted a clean looking HUD just for me without it behind recorded or streamed. 
+Part 1 achieves that goal, it is a good looking HUD with all the info I need and nothing I don't, allowing me to focus on driving without distration.
+Part 2 is a view I share on my recordings, with the aim of making it feel like a genuine broadcast rather than just a recording of my gameplay.
+
 ## Quick start
 - Download the supplied binary (.exe) under releases.
 - Install it and open the AMS2HUD.
@@ -13,7 +19,7 @@ A custom HUD for AMS2.
 AMS2HUD has a system tray tool which is where you can open the settings menu when you need to.
 
 ## Settings
-IP address and port are for connecting to the Crest service. Crest is built into this app. running on port `8880` but you can also run it externally if you prefer.  
+IP address and port are for connecting to the Crest service. Crest is built into this app. running on port `8881` but you can also run it externally if you prefer.  
 You'll find the standalone package below.
 
 ### Windows System Tray Bug
