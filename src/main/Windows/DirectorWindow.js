@@ -212,7 +212,12 @@ export default class DirectorWindow {
      */
     async registerWindowListeners() {
         // ready to show
-        this.window.on('ready-to-show', () => {
+        this.window.on('ready-to-show', async () => {
+            const display = await this.SettingsController.get('DirectorDisplay');
+            if (display !== 'offscreen') {
+                this.window.setFullScreen(true);
+            }
+
             this.window.show();
         });
 
