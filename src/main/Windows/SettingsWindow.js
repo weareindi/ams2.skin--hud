@@ -118,6 +118,9 @@ export default class SettingsWindow {
         // show ontop of game at all times
         this.window.setAlwaysOnTop(true, 'pop-up-menu', 1);
 
+        // disable throttling
+        this.window.webContents.setBackgroundThrottling(false);
+
         // max fps, 30 for hud
         this.window.webContents.setFrameRate(30);
     }
