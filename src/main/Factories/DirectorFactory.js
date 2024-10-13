@@ -27,6 +27,7 @@ export default class DirectorFactory {
 
         this.currentView = null;
         this.view = null;
+        this.battleTime = null;
 
         this.settings = {
             DirectorDefaultView: 'auto',
@@ -187,7 +188,6 @@ export default class DirectorFactory {
         if (view === 'auto') {
             // available views
             let views = await this.getWeightedViews(data);
-            views = await this.filterToPointsOfInterest(data, views);
 
             // select auto view
             view = await this.selectAutoView(data, views);
@@ -357,7 +357,7 @@ export default class DirectorFactory {
             return null;
         }
 
-        let nextView = random(views);
+        const nextView = random(views);
 
         // first iteration
         if (this.currentView === null) {
@@ -366,14 +366,24 @@ export default class DirectorFactory {
             return this.currentView.label;
         }
 
+        // get duration of current view
         let duration = performance.now() - this.timeStart;
 
+        // change to battle view if duration over 30 seconds and next view is 'battle'
+        if (duration > 30000 && nextView.label === 'battle') {
+            this.timeStart = performance.now();
+            this.currentView = nextView;
+            return this.currentView.label;
+        }
+
+        // change to random view if over threshold of view minimum time
         if (duration > this.minTimes[this.currentView.label]) {
             this.timeStart = performance.now();
             this.currentView = nextView;
             return this.currentView.label;
         }
 
+        // return current view
         return this.currentView.label;
     }
 
@@ -382,9 +392,39 @@ export default class DirectorFactory {
      * @param {*} data
      */
     async getWeightedViews(data) {
+        let battleWeight = 0;
+
+        const participantBattle = await this.getParticipantBattle(data);
+
+        // no battle?
+        if (participantBattle === null) {
+            // ... reset timer
+            this.battleTime = null;
+        }
+
+        // in battle but no timer?
+        if (participantBattle !== null && this.battleTime === null) {
+            // .. start timer
+            this.battleTime = performance.now();
+        }
+
+        // in battle and timer running?
+        if (participantBattle !== null && this.battleTime !== null) {
+            // battling for longer than 30 seconds?
+            if (performance.now() >= this.battleTime + 30000) {
+                // ... increase weight to 0.6 (0 - 1)
+                battleWeight = 0.6;
+            }
+
+            // battling for longer than 60 seconds?
+            if (performance.now() >= this.battleTime + 60000) {
+                // ... increase weight to 0.8 (0 - 1)
+                battleWeight = 0.8;
+            }
+        }
+
+        // start array to hold views
         let views = [];
-
-
 
         // all
         views.push({
@@ -409,15 +449,15 @@ export default class DirectorFactory {
             });
         }
 
-        // practice
-        if (data.gameStates.mSessionState === 1) {
-            //
-        }
+        // // practice
+        // if (data.gameStates.mSessionState === 1) {
+        //     //
+        // }
 
-        // qualifying
-        if (data.gameStates.mSessionState === 3) {
-            //
-        }
+        // // qualifying
+        // if (data.gameStates.mSessionState === 3) {
+        //     //
+        // }
 
         // race
         if (data.gameStates.mSessionState === 5) {
@@ -435,29 +475,11 @@ export default class DirectorFactory {
 
             views.push({
                 label: 'battle',
-                weight: 0.6
+                weight: battleWeight
             });
         }
 
         return weightedArray(views);
-    }
-
-    /**
-     *
-     * @param {*} data
-     * @param {*} views
-     */
-    async filterToPointsOfInterest(data, views) {
-        const participantBattle = await this.getParticipantBattle(data);
-
-        // remove battle virew if no battle
-        if (participantBattle === null) {
-            views = views.filter((view) => {
-                return view.label !== 'battle';
-            });
-        }
-
-        return views;
     }
 
     /**
