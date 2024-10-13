@@ -1,4 +1,4 @@
-# AMS2.SKIN HUD
+# AMS2HUD
 A custom HUD for AMS2.
 
 ## Why?
