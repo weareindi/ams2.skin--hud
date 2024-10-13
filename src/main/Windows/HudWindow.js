@@ -199,6 +199,9 @@ export default class HudWindow {
         // disable mouse as default
         this.window.setIgnoreMouseEvents(true);
 
+        // disable throttling
+        this.window.webContents.setBackgroundThrottling(false);
+
         // max fps, 60 for hud
         this.window.webContents.setFrameRate(60);
     }

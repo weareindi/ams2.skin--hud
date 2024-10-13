@@ -200,6 +200,9 @@ export default class DirectorWindow {
         // disable mouse as default
         this.window.setIgnoreMouseEvents(true);
 
+        // disable throttling
+        this.window.webContents.setBackgroundThrottling(false);
+
         // max fps, 30 for director
         this.window.webContents.setFrameRate(30);
     }
