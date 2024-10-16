@@ -20,20 +20,10 @@ export default class DisplayController {
      */
     async init() {
         try {
-            await this.getVariables();
+            //
         } catch (error) {
             console.log(error);
         }
-    }
-
-    /**
-     *
-     */
-    async getVariables() {
-        this.SettingsDisplay = await (new SettingsController()).get('SettingsDisplay');
-        this.HudDisplay = await (new SettingsController()).get('HudDisplay');
-        this.AutoDirectorDisplay = await (new SettingsController()).get('AutoDirectorDisplay');
-        this.DirectorDisplay = await (new SettingsController()).get('DirectorDisplay');
     }
 
     /**
