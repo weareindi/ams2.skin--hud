@@ -210,6 +210,14 @@ export default class HudWindow {
      *
      */
     async registerWindowListeners() {
+        // on resize
+        this.window.on('resize', async () => {
+            const display = await this.SettingsController.get('DirectorDisplay');
+            if (display !== 'offscreen') {
+                this.window.setFullScreen(true);
+            }
+        });
+
         // ready to show
         this.window.on('ready-to-show', async () => {
             const display = await this.SettingsController.get('DirectorDisplay');
