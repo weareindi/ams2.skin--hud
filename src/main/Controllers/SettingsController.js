@@ -217,6 +217,11 @@ export default class SettingsController {
 
         if ('SettingsDisplay' in storedSettings) {
             storedSettings['SettingsDisplay'] = await this.DisplayProcessor.getDisplayID(storedSettings['SettingsDisplay']);
+
+            // settings should never appear offscreen
+            if (storedSettings['SettingsDisplay'] === 'offscreen') {
+                storedSettings['SettingsDisplay'] = null;
+            }
         }
 
         if ('HudDisplay' in storedSettings) {
@@ -243,7 +248,7 @@ export default class SettingsController {
         // options.DebugOptions = await this.getDefaultYesNo();
         options.ExternalCrestOptions = await this.getDefaultYesNo();
 
-        options.SettingsDisplayOptions = await this.getDefaultDisplays();
+        options.SettingsDisplayOptions = await this.getDefaultDisplays(false);
 
         options.HudEnabledOptions = await this.getDefaultYesNo();
         options.HudDisplayOptions = await this.getDefaultDisplays();
@@ -274,7 +279,7 @@ export default class SettingsController {
     /**
      *
      */
-    async getDefaultDisplays() {
+    async getDefaultDisplays(showOffscreen = true) {
         const defaultDisplays = [];
         const allDisplays = screen.getAllDisplays();
         allDisplays.forEach(display => {
@@ -284,10 +289,12 @@ export default class SettingsController {
             });
         });
 
-        defaultDisplays.push({
-            label: `Offscreen`,
-            value: 'offscreen'
-        });
+        if (showOffscreen) {
+            defaultDisplays.push({
+                label: `Offscreen`,
+                value: 'offscreen'
+            });
+        }
 
         return defaultDisplays;
     }
@@ -301,7 +308,9 @@ export default class SettingsController {
             { label: 'Blank', value: 'blank' },
             { label: 'Solo', value: 'solo' },
             { label: 'Leaderboard', value: 'leaderboard' },
+            { label: 'Leaderboard (Multiclass)', value: 'leaderboardMulticlass' },
             { label: 'Standings', value: 'standings' },
+            { label: 'Standings (Multiclass)', value: 'standingsMulticlass' },
             { label: 'Battle', value: 'battle' },
         ];
     }
