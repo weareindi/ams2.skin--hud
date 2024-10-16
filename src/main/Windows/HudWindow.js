@@ -169,7 +169,7 @@ export default class HudWindow {
      *
      */
     async setTitle() {
-        this.window.setTitle(`${this.window.getTitle()}: v${app.getVersion()}`);
+        this.window.setTitle(`${this.window.getTitle()}`);
     }
 
     /**

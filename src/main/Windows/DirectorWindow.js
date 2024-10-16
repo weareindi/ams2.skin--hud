@@ -170,7 +170,7 @@ export default class DirectorWindow {
      *
      */
     async setTitle() {
-        this.window.setTitle(`${this.window.getTitle()}: v${app.getVersion()}`);
+        this.window.setTitle(`${this.window.getTitle()}`);
     }
 
     /**
