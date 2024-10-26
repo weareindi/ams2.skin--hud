@@ -563,6 +563,7 @@ export default class ParticipantFactory {
             .replace(/^[-_]+/, '') // remove leading _ or - chars
             .replace(/[-_]+$/, '') // remove trailing _ or - chars
             .replace(/[-_]+/, ' ') // replace underscore in names with space
+            .replace(/\s+/g, ' ') // replace multiple spaces with single space
             ;
 
         // trim surrounding white space
