@@ -29,6 +29,8 @@ export default class DirectorFactory {
         this.view = null;
         this.battleTime = null;
 
+        this.previousView = null;
+
         this.settings = {
             DirectorDefaultView: 'auto',
             DirectorStartingView: 'auto'
@@ -191,6 +193,9 @@ export default class DirectorFactory {
 
             // select auto view
             view = await this.selectAutoView(data, views);
+
+            // set previous view
+            this.previousView = view;
         }
 
         const vData = await this.getViewData(data, view);
@@ -420,6 +425,11 @@ export default class DirectorFactory {
             if (performance.now() >= this.battleTime + 60000) {
                 // ... increase weight to 0.8 (0 - 1)
                 battleWeight = 0.8;
+            }
+
+            // if previous view was battle, dont pick it again,=
+            if (this.previousView === 'battle') {
+                battleWeight = 0;
             }
         }
 
