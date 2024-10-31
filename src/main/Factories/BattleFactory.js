@@ -6,7 +6,7 @@ export default class BattleFactory {
         this.potentialAhead = {};
         this.potentialBehind = {};
 
-        this.threshold = 1000; // milliseconds
+        this.threshold = 15000; // milliseconds
         this.distance = 100; // meters
 
         this.init();
