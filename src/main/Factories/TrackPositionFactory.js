@@ -58,31 +58,6 @@ export default class TrackPositionFactory {
     }
 
     /**
-     *
-     * @param {*} participants
-     * @returns
-     */
-    // async filterParticipants(data, participants) {
-    //     for (let participantIndex = 0; participantIndex < participants.length; participantIndex++) {
-    //         const participant = await getParticipantAtIndex(data, participantIndex);
-
-    //         // remove those in pit
-    //         if (participant.mPitModes === 4 || participant.mPitModes === 5) {
-    //             participants.splice(participantIndex, 1);
-    //             continue;
-    //         }
-
-    //         // remove safety car
-    //         if (participant.mCarClassNames === 'SafetyCar') {
-    //             participants.splice(participantIndex, 1);
-    //             continue;
-    //         }
-    //     }
-
-    //     return participants;
-    // }
-
-    /**
      * Get track position data in a carousel prepared array with the current user in the center
      * @param {*} data
      * @returns array
