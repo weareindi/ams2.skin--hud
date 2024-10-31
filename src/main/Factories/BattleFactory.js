@@ -274,60 +274,6 @@ export default class BattleFactory {
      *
      * @param {*} participants
      */
-    async withinThresholdBehind(participants) {
-        // get current timestamp
-        const now = performance.now();
-
-        // work out if battling participant ahead
-        for (let pi = 0; pi < participants.length; pi++) {
-            participants[pi].mBattlingParticipantAhead = false;
-
-            // skip if no race position defined
-            if (participants[pi].mRacePosition <= 0) {
-                continue;
-            }
-
-            // is the leader?
-            if (participants[pi].mRacePosition === 1) {
-                // ... delete from potential
-                delete this.potentialAhead[ participants[pi].mName ];
-
-                // ... continue to next iteration
-                continue;
-            }
-
-            // // over the distance threshold?
-            // if (participants[pi].mRacingDistanceParticipantAhead > this.distance) {
-            //     // ... delete from potential
-            //     delete this.potentialAhead[ participants[pi].mName ];
-
-            //     // ... continue to next iteration
-            //     continue;
-            // }
-
-            // // in potential?
-            // if (participants[pi].mName in this.potentialAhead) {
-            //     // ... and the stored timestamp is older than the threshold?
-            //     if (this.potentialAhead[ participants[pi].mName ] < (now - this.threshold)) {
-            //         // ... battle!
-            //         participants[pi].mBattlingParticipantAhead = true;
-            //     }
-
-            //     // ... continue to next iteration
-            //     continue;
-            // }
-
-            // // must be within distance threshold, add user to potential battle list
-            // this.potentialAhead[ participants[pi].mName ] = now;
-        }
-
-        return participants;
-    }
-
-    /**
-     *
-     * @param {*} participants
-     */
     async filterParticipants(participants) {
         for (let pi = 0; pi < participants.length; pi++) {
             // remove safety car
