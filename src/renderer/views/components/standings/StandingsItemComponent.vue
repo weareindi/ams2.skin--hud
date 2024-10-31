@@ -129,6 +129,9 @@
     .c-standings-item__value {
         font-size: em(42);
         text-transform: uppercase;
+        text-overflow: ellipsis;
+        white-space: nowrap;
+        overflow: hidden;
     }
 }
 
@@ -143,6 +146,9 @@
     .c-standings-item__value {
         font-size: em(18);
         text-transform: uppercase;
+        text-overflow: ellipsis;
+        white-space: nowrap;
+        overflow: hidden;
     }
 }
 </style>

@@ -42,7 +42,7 @@
     display: flex;
     align-items: center;
     justify-content: center;
-    padding: em(32);
+    padding: em(16) em(32);
 
     &[total="2"] {
         .s-battle__cells {

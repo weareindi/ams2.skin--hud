@@ -154,6 +154,11 @@
     @include color('color', 'primary');
 
     margin: 0 0 0 em(12, 18);
+
+    text-transform: uppercase;
+    text-overflow: ellipsis;
+    white-space: nowrap;
+    overflow: hidden;
 }
 </style>
 

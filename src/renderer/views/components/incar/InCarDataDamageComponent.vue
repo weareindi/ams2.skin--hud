@@ -147,7 +147,7 @@
 
     svg {
         path {
-            @include color('fill', 'white', 0.2);
+            @include color('fill', 'white', 0.4);
         }
     }
 }

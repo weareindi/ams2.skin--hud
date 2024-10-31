@@ -52,6 +52,9 @@
     padding: em(2) em(8);
     border-radius: em(2);
     overflow: hidden;
+    display: flex;
+    align-items: center;
+    justify-content: center;
 }
 
 .c-in-car-data-text__zerofill,

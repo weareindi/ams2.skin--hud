@@ -36,9 +36,9 @@
 
             content: '';
             position: absolute;
-            top: em(-32);
+            top: em(-16);
             right: em(-32);
-            bottom: em(-32);
+            bottom: em(-16);
             left: em(-32);
             z-index: 1;
         }
@@ -59,12 +59,18 @@
 
     &[large="true"] {
         .s-battle-participant__position {
-            width: em(140);
-            height: em(140);
+            width: em(110);
+            height: em(110);
         }
 
         .s-battle-participant__info {
             padding: em(16) em(32) em(16) 0;
+        }
+
+        &[invert="true"] {
+            .s-battle-participant__info {
+                padding: em(16) 0 em(16) em(32);
+            }
         }
     }
 
@@ -127,6 +133,9 @@
     .s-battle-participant__value {
         font-size: em(18);
         text-transform: uppercase;
+        text-overflow: ellipsis;
+        white-space: nowrap;
+        overflow: hidden;
     }
 }
 
@@ -144,6 +153,9 @@
     .s-battle-participant__value {
         font-size: em(16);
         text-transform: uppercase;
+        text-overflow: ellipsis;
+        white-space: nowrap;
+        overflow: hidden;
     }
 }
 
@@ -181,6 +193,7 @@
     justify-content: center;
     border-radius: 50%;
     font-size: em(14);
+    line-height: 0;
     text-align: center;
 }
 

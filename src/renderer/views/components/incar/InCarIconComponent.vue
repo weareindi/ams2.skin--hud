@@ -18,7 +18,7 @@
 }
 
 .c-in-car-icon__state {
-    @include color('background-color', 'white', 0.1);
+    @include color('background-color', 'white', 0.2);
 
     position: absolute;
     top: 0;
