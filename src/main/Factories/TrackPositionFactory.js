@@ -158,7 +158,35 @@ export default class TrackPositionFactory {
         carouselParticipants = await this.trackPositionDistances(data, carouselParticipants, activeParticipantCarouselIndex);
         carouselParticipants = await this.reduceDataset(carouselParticipants);
 
+        // reduce to 7 included driver
+        carouselParticipants = await this.reduceParticipants(carouselParticipants);
+
+
         return carouselParticipants;
+    }
+
+    /**
+     *
+     * @param {*} carouselParticipants
+     * @returns
+     */
+    async reduceParticipants(carouselParticipants) {
+        const driverIndex = ((carouselParticipants.length - 1) / 2);
+
+        let middle = [];
+        middle[0] = carouselParticipants[driverIndex-3];
+        middle[1] = carouselParticipants[driverIndex-2];
+        middle[2] = carouselParticipants[driverIndex-1];
+        middle[3] = carouselParticipants[driverIndex];
+        middle[4] = carouselParticipants[driverIndex+1];
+        middle[5] = carouselParticipants[driverIndex+2];
+        middle[6] = carouselParticipants[driverIndex+3];
+
+        middle = middle.filter((carouselParticipant) => {
+            return typeof carouselParticipant === 'undefined' ? false : true;
+        });
+
+        return middle;
     }
 
     /**
