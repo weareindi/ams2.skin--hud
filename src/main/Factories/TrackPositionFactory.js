@@ -1,7 +1,9 @@
-import { isReady, getActiveParticipant, getParticipantsSortedByRaceDistance } from '../../utils/CrestUtils';
+import { isReady, getActiveParticipant, getParticipantsSortedByLapDistance } from '../../utils/CrestUtils';
 
 export default class TrackPositionFactory {
     constructor() {
+        this.limit = 10;
+
         this.init();
     }
 
@@ -51,141 +53,96 @@ export default class TrackPositionFactory {
             return null;
         }
 
-        // data.trackPosition = await this.trackPosition(data);
-        data.trackPositionCarousel = await this.trackPositionCarousel(data);
+        data.trackPosition = await this.trackPosition(data);
+        // data.trackPositionCarousel = await this.trackPositionCarousel(data);
 
         return data;
     }
 
     /**
-     * Get track position data in a carousel prepared array with the current user in the center
+     * Get nearest 6 drivers
      * @param {*} data
-     * @returns array
      */
-    async trackPositionCarousel(data) {
-        const participants = await getParticipantsSortedByRaceDistance(data);
+    async trackPosition(data) {
+        let participants = await getParticipantsSortedByLapDistance(data);
         const activeParticipant = await getActiveParticipant(data);
 
-        let aheadA = [];
-        let aheadB = [];
-        let behindA = [];
-        let behindB = [];
-
-        for (let pi = 0; pi < participants.length; pi++) {
-            const participant = participants[pi];
-
+        // reduce to active participants
+        participants = participants.filter((participant) => {
+            // if is driver, definitely keep
             if (participant.mParticipantIndex === activeParticipant.mParticipantIndex) {
-                continue;
+                return true;
             }
 
+            // remove if safety car
             if (participant.mCarClassNames === 'SafetyCar') {
-                continue;
+                return false;
             }
 
-            // in garage
-            if (participant.mPitModes === 4) {
-                continue;
+            // remove if in garage or leaving garage
+            if (participant.mPitModes === 4 || participant.mPitModes === 5) {
+                return false;
             }
 
-            // leaving garage
-            if (participant.mPitModes === 5) {
-                continue;
-            }
-
-            // practice or qualifying
+            // if p or q
             if (data.gameStates.mSessionState === 1 || data.gameStates.mSessionState === 3) {
-                // // driving into pits
-                // if (participant.mPitModes === 1) {
-                //     continue;
-                // }
-
-                // pit box
-                if (participant.mPitModes === 2) {
-                    continue;
+                // ... and participant entering pit box
+                if (participant.mPitModes === 1) {
+                    return false;
                 }
 
-                // // driving out of pits
-                // if (participant.mPitModes === 3) {
-                //     continue;
-                // }
+                // ... and participant in pit box
+                if (participant.mPitModes === 2) {
+                    return false;
+                }
+
+                // ... and participant leaving pit box
+                if (participant.mPitModes === 3) {
+                    return false;
+                }
             }
 
-            if (participant.mPlacementIndex < activeParticipant.mPlacementIndex) {
-                aheadA.push( {...participant} );
-                aheadB.push( {...participant} );
-            }
-
-            if (participant.mPlacementIndex > activeParticipant.mPlacementIndex) {
-                behindA.push( {...participant} );
-                behindB.push( {...participant} );
-            }
-        }
-
-
-        // prepend and appends ahead,behind data to aid carousel of data
-        let carouselParticipants = [].concat(behindA, aheadA, activeParticipant, behindB, aheadB);
-
-        // get carousel position of active user
-        const activeParticipantCarouselIndex = behindA.length + aheadA.length;
-
-        // apply status to user
-        carouselParticipants = await this.trackPositionCarouselStatuses(data, carouselParticipants, activeParticipantCarouselIndex);
-        carouselParticipants = await this.trackPositionDistances(data, carouselParticipants, activeParticipantCarouselIndex);
-        carouselParticipants = await this.reduceDataset(carouselParticipants);
-
-        // reduce to 7 included driver
-        carouselParticipants = await this.reduceParticipants(carouselParticipants);
-
-
-        return carouselParticipants;
-    }
-
-    /**
-     *
-     * @param {*} carouselParticipants
-     * @returns
-     */
-    async reduceParticipants(carouselParticipants) {
-        const driverIndex = ((carouselParticipants.length - 1) / 2);
-
-        let middle = [];
-        middle[0] = carouselParticipants[driverIndex-3];
-        middle[1] = carouselParticipants[driverIndex-2];
-        middle[2] = carouselParticipants[driverIndex-1];
-        middle[3] = carouselParticipants[driverIndex];
-        middle[4] = carouselParticipants[driverIndex+1];
-        middle[5] = carouselParticipants[driverIndex+2];
-        middle[6] = carouselParticipants[driverIndex+3];
-
-        middle = middle.filter((carouselParticipant) => {
-            return typeof carouselParticipant === 'undefined' ? false : true;
+            return true;
         });
 
-        return middle;
-    }
+        const activeParticipantIndex = participants.findIndex((participant) => {
+            if (participant.mParticipantIndex !== activeParticipant.mParticipantIndex) {
+                return false;
+            }
 
-    /**
-     *
-     * @param {*} carouselParticipants
-     */
-    async reduceDataset(carouselParticipants) {
-        return carouselParticipants.map((carouselParticipant) => {
-            return {
-                mParticipantIndex: carouselParticipant.mParticipantIndex,
-                // mName: carouselParticipant.mName,
-                mStatusToUser: carouselParticipant.mStatusToUser,
-                mDistanceToActiveUser: carouselParticipant.mDistanceToActiveUser,
-            };
+            return true;
         });
+
+        // get all drivers ahead on circuit
+        const ahead = participants.slice(0, activeParticipantIndex);
+
+        // get all driver behind on circuit
+        const behind = participants.slice(activeParticipantIndex+1);
+
+        // combine them, cars behind first
+        const combined = behind.concat(ahead);
+
+        // get 3 cars ahead, then active participant, then 3 cars behind
+        participants = combined.slice(-(this.limit/2)).concat(activeParticipant).concat(combined.slice(0, (this.limit/2)));
+
+        // apply track statuses
+        participants = await this.trackPositionStatuses(data, participants, activeParticipant);
+
+        // apply track distances
+        participants = await this.trackPositionDistances(data, participants, activeParticipant);
+
+        return participants;
     }
 
     /**
      *
-     * @param {*} carouselParticipants
-     * @param {*} activeParticipantCarouselIndex
+     * @param {*} participants
+     * @param {*} activeParticipant
      */
-    async trackPositionCarouselStatuses(data, carouselParticipants, activeParticipantCarouselIndex) {
-        const activeParticipant = await getActiveParticipant(data);
+    async trackPositionStatuses(data, participants, activeParticipant) {
+        const activeParticipantIndex = participants.findIndex((participant) => {
+            return participant == activeParticipant;
+        });
 
         // 0: driver
         // 1: out
@@ -195,24 +152,24 @@ export default class TrackPositionFactory {
         // 5: leader
         // 6: backmarker
 
-        for (let cpi = 0; cpi < carouselParticipants.length; cpi++) {
+        for (let pi = 0; pi < participants.length; pi++) {
             // current driver
-            if (carouselParticipants[cpi].mPlacementIndex === activeParticipant.mPlacementIndex) {
-                carouselParticipants[cpi].mStatusToUser = 0;
+            if (participants[pi].mPlacementIndex === activeParticipant.mPlacementIndex) {
+                participants[pi].mStatusToUser = 0;
                 continue;
             }
 
             // practice (1) or qualifying (3)
             if (data.gameStates.mSessionState === 1 || data.gameStates.mSessionState === 3) {
                 // mOutLap variable applied in ParticipantFactory
-                if (carouselParticipants[cpi].mOutLap) {
-                    carouselParticipants[cpi].mStatusToUser = 1;
+                if (participants[pi].mOutLap) {
+                    participants[pi].mStatusToUser = 1;
                     continue;
                 }
 
                 // mOutLap variable applied in ParticipantFactory
-                if (!carouselParticipants[cpi].mOutLap) {
-                    carouselParticipants[cpi].mStatusToUser = 2;
+                if (!participants[pi].mOutLap) {
+                    participants[pi].mStatusToUser = 2;
                     continue;
                 }
             }
@@ -223,129 +180,131 @@ export default class TrackPositionFactory {
                 // driver is lower than the participant in the carousel.
                 // driver is behind on race postiion.
                 // on the same lap (racing)
-                if (cpi < activeParticipantCarouselIndex && carouselParticipants[cpi].mRacePosition < activeParticipant.mRacePosition && carouselParticipants[cpi].mCurrentLap === activeParticipant.mCurrentLap) {
-                    carouselParticipants[cpi].mStatusToUser = 3;
+                if (pi < activeParticipantIndex && participants[pi].mRacePosition < activeParticipant.mRacePosition && participants[pi].mCurrentLap === activeParticipant.mCurrentLap) {
+                    participants[pi].mStatusToUser = 3;
                     continue;
                 }
 
                 // driver is higher than the participant in the carousel.
                 // driver is ahead on race position.
                 // on the same lap (racing)
-                if (cpi > activeParticipantCarouselIndex && carouselParticipants[cpi].mRacePosition > activeParticipant.mRacePosition && carouselParticipants[cpi].mCurrentLap === activeParticipant.mCurrentLap) {
-                    carouselParticipants[cpi].mStatusToUser = 4;
+                if (pi > activeParticipantIndex && participants[pi].mRacePosition > activeParticipant.mRacePosition && participants[pi].mCurrentLap === activeParticipant.mCurrentLap) {
+                    participants[pi].mStatusToUser = 4;
                     continue;
                 }
 
                 // driver is lower than the participant in the carousel.
                 // driver is beind on race position.
                 // driver is a lap(s) behind.
-                if (cpi < activeParticipantCarouselIndex && carouselParticipants[cpi].mRacePosition < activeParticipant.mRacePosition && carouselParticipants[cpi].mCurrentLap > activeParticipant.mCurrentLap) {
-                    carouselParticipants[cpi].mStatusToUser = 5;
+                if (pi < activeParticipantIndex && participants[pi].mRacePosition < activeParticipant.mRacePosition && participants[pi].mCurrentLap > activeParticipant.mCurrentLap) {
+                    participants[pi].mStatusToUser = 5;
                     continue;
                 }
 
                 // driver is higher than the participant in the carousel.
                 // driver is beind on race position.
                 // on the same lap.
-                if (cpi > activeParticipantCarouselIndex && carouselParticipants[cpi].mRacePosition < activeParticipant.mRacePosition && carouselParticipants[cpi].mCurrentLap === activeParticipant.mCurrentLap) {
-                    carouselParticipants[cpi].mStatusToUser = 5;
+                if (pi > activeParticipantIndex && participants[pi].mRacePosition < activeParticipant.mRacePosition && participants[pi].mCurrentLap === activeParticipant.mCurrentLap) {
+                    participants[pi].mStatusToUser = 5;
                     continue;
                 }
 
                 // driver is higher than the participant in the carousel.
                 // driver is beind on race position.
                 // driver is a lap(s) behind.
-                if (cpi > activeParticipantCarouselIndex && carouselParticipants[cpi].mRacePosition < activeParticipant.mRacePosition && carouselParticipants[cpi].mCurrentLap > activeParticipant.mCurrentLap) {
-                    carouselParticipants[cpi].mStatusToUser = 5;
+                if (pi > activeParticipantIndex && participants[pi].mRacePosition < activeParticipant.mRacePosition && participants[pi].mCurrentLap > activeParticipant.mCurrentLap) {
+                    participants[pi].mStatusToUser = 5;
                     continue;
                 }
 
                 // driver is lower than the participant in the carousel.
                 // driver is ahead on race position.
                 // driver is a lap(s) ahead.
-                if (cpi < activeParticipantCarouselIndex && carouselParticipants[cpi].mRacePosition > activeParticipant.mRacePosition && carouselParticipants[cpi].mCurrentLap < activeParticipant.mCurrentLap) {
-                    carouselParticipants[cpi].mStatusToUser = 6;
+                if (pi < activeParticipantIndex && participants[pi].mRacePosition > activeParticipant.mRacePosition && participants[pi].mCurrentLap < activeParticipant.mCurrentLap) {
+                    participants[pi].mStatusToUser = 6;
                     continue;
                 }
 
                 // driver is higher than the participant in the carousel.
                 // driver is ahead on race position.
                 // driver is a lap(s) ahead.
-                if (cpi > activeParticipantCarouselIndex && carouselParticipants[cpi].mRacePosition > activeParticipant.mRacePosition && carouselParticipants[cpi].mCurrentLap < activeParticipant.mCurrentLap) {
-                    carouselParticipants[cpi].mStatusToUser = 6;
+                if (pi > activeParticipantIndex && participants[pi].mRacePosition > activeParticipant.mRacePosition && participants[pi].mCurrentLap < activeParticipant.mCurrentLap) {
+                    participants[pi].mStatusToUser = 6;
                     continue;
                 }
 
                 // driver is lower than the participant in the carousel.
                 // driver is ahead on race position.
                 // on the same lap.
-                if (cpi < activeParticipantCarouselIndex && carouselParticipants[cpi].mRacePosition > activeParticipant.mRacePosition && carouselParticipants[cpi].mCurrentLap === activeParticipant.mCurrentLap) {
-                    carouselParticipants[cpi].mStatusToUser = 6;
+                if (pi < activeParticipantIndex && participants[pi].mRacePosition > activeParticipant.mRacePosition && participants[pi].mCurrentLap === activeParticipant.mCurrentLap) {
+                    participants[pi].mStatusToUser = 6;
                     continue;
                 }
             }
         }
 
-        return carouselParticipants;
+        return participants;
     }
 
     /**
      * Get distance to other participants in the carousel
      * @param {*} data
-     * @param {*} carouselParticipants
-     * @param {*} activeParticipantCarouselIndex
+     * @param {*} participants
+     * @param {*} activeParticipant
      * @returns
      */
-    async trackPositionDistances(data, carouselParticipants, activeParticipantCarouselIndex) {
-        const activeParticipant = await getActiveParticipant(data);
+    async trackPositionDistances(data, participants, activeParticipant) {
+        const activeParticipantIndex = participants.findIndex((participant) => {
+            return participant == activeParticipant;
+        });
 
 
-        for (let cpi = 0; cpi < carouselParticipants.length; cpi++) {
+        for (let pi = 0; pi < participants.length; pi++) {
             // current driver
-            if (carouselParticipants[cpi].mPlacementIndex === activeParticipant.mPlacementIndex) {
-                carouselParticipants[cpi].mDistanceToActiveUser = null;
+            if (participants[pi].mPlacementIndex === activeParticipant.mPlacementIndex) {
+                participants[pi].mDistanceToActiveUser = null;
                 continue;
             }
 
             // if not on circuit/moving and current lap is 1, probably never left the pits
-            if (carouselParticipants[cpi].mCurrentLapDistance <= 0 && carouselParticipants[cpi].mCurrentLap === 1) {
-                carouselParticipants[cpi].mDistanceToActiveUser = null;
+            if (participants[pi].mCurrentLapDistance <= 0 && participants[pi].mCurrentLap === 1) {
+                participants[pi].mDistanceToActiveUser = null;
                 continue;
             }
 
             let diff = 0;
 
             // if ahead of driver in carousel
-            if (cpi < activeParticipantCarouselIndex) {
+            if (pi < activeParticipantIndex) {
                 // ... and driver is behind participant on track
-                if (activeParticipant.mCurrentLapDistance < carouselParticipants[cpi].mCurrentLapDistance) {
-                    diff = carouselParticipants[cpi].mCurrentLapDistance - activeParticipant.mCurrentLapDistance;
+                if (activeParticipant.mCurrentLapDistance < participants[pi].mCurrentLapDistance) {
+                    diff = participants[pi].mCurrentLapDistance - activeParticipant.mCurrentLapDistance;
                 }
 
                 // ... and driver is ahead of participant on track
-                if (activeParticipant.mCurrentLapDistance > carouselParticipants[cpi].mCurrentLapDistance) {
-                    diff = data.eventInformation.mTrackLength - (activeParticipant.mCurrentLapDistance - carouselParticipants[cpi].mCurrentLapDistance);
+                if (activeParticipant.mCurrentLapDistance > participants[pi].mCurrentLapDistance) {
+                    diff = data.eventInformation.mTrackLength - (activeParticipant.mCurrentLapDistance - participants[pi].mCurrentLapDistance);
                 }
 
-                carouselParticipants[cpi].mDistanceToActiveUser = diff * -1;
+                participants[pi].mDistanceToActiveUser = diff * -1;
             }
 
             // if behind driver in carousel
-            if (cpi > activeParticipantCarouselIndex) {
+            if (pi > activeParticipantIndex) {
                 // ... and driver is behind participant on track
-                if (activeParticipant.mCurrentLapDistance > carouselParticipants[cpi].mCurrentLapDistance) {
-                    diff = activeParticipant.mCurrentLapDistance - carouselParticipants[cpi].mCurrentLapDistance;
+                if (activeParticipant.mCurrentLapDistance > participants[pi].mCurrentLapDistance) {
+                    diff = activeParticipant.mCurrentLapDistance - participants[pi].mCurrentLapDistance;
                 }
 
                 // ... and driver is ahead of participant on track
-                if (activeParticipant.mCurrentLapDistance < carouselParticipants[cpi].mCurrentLapDistance) {
-                    diff = data.eventInformation.mTrackLength - (carouselParticipants[cpi].mCurrentLapDistance - activeParticipant.mCurrentLapDistance);
+                if (activeParticipant.mCurrentLapDistance < participants[pi].mCurrentLapDistance) {
+                    diff = data.eventInformation.mTrackLength - (participants[pi].mCurrentLapDistance - activeParticipant.mCurrentLapDistance);
                 }
 
-                carouselParticipants[cpi].mDistanceToActiveUser = diff;
+                participants[pi].mDistanceToActiveUser = diff;
             }
         }
 
-        return carouselParticipants;
+        return participants;
     }
 }

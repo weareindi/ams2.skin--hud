@@ -426,7 +426,7 @@ export async function getParticipantsSortedIntoClass(data) {
  *
  * @param {*} data
  */
-export async function getParticipantsSortedByRaceDistance(data) {
+export async function getParticipantsSortedByLapDistance(data) {
     return [].concat(data.participants.mParticipantInfo).sort((a, b) => {
         if (a.mCurrentLapDistance === 0 && a.mCurrentLapDistance === 0) {
             return a.mRacePosition - b.mRacePosition;

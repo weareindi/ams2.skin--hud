@@ -127,7 +127,8 @@ export default class HudViewFactory {
         view.vTyre2 = await this.vTyre(data, 2);
         view.vTyre3 = await this.vTyre(data, 3);
 
-        view.vTrackPositionCarousel = await this.vTrackPositionCarousel(data);
+        // view.vTrackPositionCarousel = await this.vTrackPositionCarousel(data);
+        view.vTrackPosition = await this.vTrackPosition(data);
 
         view.vSplitTime = await this.vSplitTime(data);
         view.vSplitTimeAhead = await this.vSplitTimeAhead(data);
@@ -1324,8 +1325,8 @@ export default class HudViewFactory {
      * @param {*} data
      * @returns
      */
-    async vTrackPositionCarousel(data) {
-        if (data.trackPositionCarousel.length <= 0) {
+    async vTrackPosition(data) {
+        if (data.trackPosition.length <= 0) {
             return null;
         }
 
@@ -1333,52 +1334,168 @@ export default class HudViewFactory {
 
         const viewObjects = [];
 
-        for (let index = 0; index < data.trackPositionCarousel.length; index++) {
-            const item = data.trackPositionCarousel[index];
+        for (let index = 0; index < data.trackPosition.length; index++) {
+            const item = data.trackPosition[index];
             const participant = await getParticipantAtIndex(data, item.mParticipantIndex);
 
-            let additional = Math.abs(Math.round(item.mDistanceToActiveUser));
-            let additional_seperator = ' ';
-            let additional_suffix = 'm';
+            // show lap time
+            let timing = '--:--.---';
+            let timing_state = 0;
+            if (participant.mLastLapTimes > 0) {
+                timing = millisecondsToTime(participant.mLastLapTimes);
+            }
+            if (participant.mIsNewLap) {
+                timing_state = 1;
+
+                if (participant.mLastLapTimes > 0 && participant.mLastLapTimes === participant.mFastestLapTimes) {
+                    timing_state = 2;
+                }
+            }
+            if (participant.mOutLap) {
+                timing = 'Out Lap';
+            }
+            if (!participant.mOutLap && participant.mLastLapTimes > 0 && participant.mParticipantIndex == data.participants.mFastestLapParticipantIndex) {
+                timing_state = 3;
+            }
+
+            // show distance
+            let distance = Math.abs(Math.round(item.mDistanceToActiveUser));
+            let distance_seperator = ' ';
+            let distance_suffix = 'm';
             if (participant.mParticipantIndex === activeParticipant.mParticipantIndex) {
-                additional = '';
-                additional_seperator = '';
-                additional_suffix = '';
+                distance = '';
+                distance_seperator = '';
+                distance_suffix = '';
+            }
+
+            // pit status
+            let pit = '';
+            if (participant.mPitModes > 0) {
+                pit = participant.mPitModesLabel;
+            }
+            if (participant.mPitSchedules !== 0 && participant.mPitModes === 0) {
+                pit = participant.mPitSchedulesLabel;
             }
 
             viewObjects.push(
                 getViewObject([
                     {
+                        state: participant.mStatusToUser,
+                    },
+                    {
+                        value: participant.mRacePosition,
+                        zerofill: 2,
+                    },
+                    {
+                        label: participant.mNameTag,
+                    },
+                    {
                         label: participant.mNameShort,
-                        value: participant.mCarClassPosition,
-                        suffix: participant.mCarClassNamesShort,
-                        additional: additional,
-                        additional_seperator: additional_seperator,
-                        additional_suffix: additional_suffix,
-                        index: `{${index}}${participant.mParticipantIndex}`,
-                        // state: participant.mCarClassColor,
                     },
                     {
-                        state: item.mStatusToUser
+                        value: timing,
+                        state: timing_state
                     },
                     {
-                        label: 'Best',
-                        value: millisecondsToTime(participant.mFastestLapTimes),
+                        value: distance,
+                        seperator: distance_seperator,
+                        suffix: distance_suffix,
                     },
                     {
-                        label: 'Last',
-                        value: millisecondsToTime(participant.mLastLapTimes),
+                        label: participant.pit,
                     },
-                    {
-                        label: 'Current',
-                        value: millisecondsToTime(participant.mCurrentLapTimes),
-                    }
+                    // {
+                    //     label: participant.mNameShort,
+                    //     value: participant.mCarClassPosition,
+                    //     suffix: participant.mCarClassNamesShort,
+                    //     additional: additional,
+                    //     additional_seperator: additional_seperator,
+                    //     additional_suffix: additional_suffix,
+                    //     index: `{${index}}${participant.mParticipantIndex}`,
+                    //     state: participant.mStatusToUser,
+                    // },
+                    // {
+                    //     state: item.mStatusToUser
+                    // },
+                    // {
+                    //     label: 'Best',
+                    //     value: millisecondsToTime(participant.mFastestLapTimes),
+                    // },
+                    // {
+                    //     label: 'Last',
+                    //     value: millisecondsToTime(participant.mLastLapTimes),
+                    // },
+                    // {
+                    //     label: 'Current',
+                    //     value: millisecondsToTime(participant.mCurrentLapTimes),
+                    // }
                 ])
             );
         }
 
         return viewObjects;
     }
+
+    // /**
+    //  *
+    //  * @param {*} data
+    //  * @returns
+    //  */
+    // async vTrackPositionCarousel(data) {
+    //     if (data.trackPositionCarousel.length <= 0) {
+    //         return null;
+    //     }
+
+    //     const activeParticipant = await getActiveParticipant(data);
+
+    //     const viewObjects = [];
+
+    //     for (let index = 0; index < data.trackPositionCarousel.length; index++) {
+    //         const item = data.trackPositionCarousel[index];
+    //         const participant = await getParticipantAtIndex(data, item.mParticipantIndex);
+
+    //         let additional = Math.abs(Math.round(item.mDistanceToActiveUser));
+    //         let additional_seperator = ' ';
+    //         let additional_suffix = 'm';
+    //         if (participant.mParticipantIndex === activeParticipant.mParticipantIndex) {
+    //             additional = '';
+    //             additional_seperator = '';
+    //             additional_suffix = '';
+    //         }
+
+    //         viewObjects.push(
+    //             getViewObject([
+    //                 {
+    //                     label: participant.mNameShort,
+    //                     value: participant.mCarClassPosition,
+    //                     suffix: participant.mCarClassNamesShort,
+    //                     additional: additional,
+    //                     additional_seperator: additional_seperator,
+    //                     additional_suffix: additional_suffix,
+    //                     index: `{${index}}${participant.mParticipantIndex}`,
+    //                     // state: participant.mCarClassColor,
+    //                 },
+    //                 {
+    //                     state: item.mStatusToUser
+    //                 },
+    //                 {
+    //                     label: 'Best',
+    //                     value: millisecondsToTime(participant.mFastestLapTimes),
+    //                 },
+    //                 {
+    //                     label: 'Last',
+    //                     value: millisecondsToTime(participant.mLastLapTimes),
+    //                 },
+    //                 {
+    //                     label: 'Current',
+    //                     value: millisecondsToTime(participant.mCurrentLapTimes),
+    //                 }
+    //             ])
+    //         );
+    //     }
+
+    //     return viewObjects;
+    // }
 
     /**
      *

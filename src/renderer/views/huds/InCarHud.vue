@@ -1,8 +1,8 @@
 <template>
     <div class="c-hud-incar">
         <div class="c-hud-incar__top">
-            <div class="c-hud-incar__a"></div>
-            <div class="c-hud-incar__b"><InCarStandingsComponent /></div>
+            <div class="c-hud-incar__a"><InCarStandingsComponent /></div>
+            <div class="c-hud-incar__b"></div>
             <div class="c-hud-incar__c"></div>
         </div>
         <div class="c-hud-incar__middle">
@@ -145,8 +145,16 @@
 }
 
 .c-hud-incar__top {
-
     align-items: flex-start;
+    padding: em(32) 0 0;
+
+    .c-hud-incar__a {
+        flex-grow: 0;
+        flex-shrink: 0;
+        flex-basis: auto;
+        padding: 0 em(32);
+    }
+
 }
 
 .c-hud-incar__middle {

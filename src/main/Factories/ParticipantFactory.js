@@ -1,4 +1,4 @@
-import { isReady, getParticipantAtIndex, getParticipantInPostion, getActiveParticipant, getParticipantInClassPostion, getParticipantsSortedByRaceDistance } from '../../utils/CrestUtils';
+import { isReady, getParticipantAtIndex, getParticipantInPostion, getActiveParticipant, getParticipantInClassPostion, getParticipantsSortedByLapDistance } from '../../utils/CrestUtils';
 // import stc from "string-to-color";
 import * as storage from 'rocket-store';
 
@@ -308,11 +308,11 @@ export default class ParticipantFactory {
         }
 
         if (participant.mPitSchedules === 3) {
-            return 'Damage';
+            // return 'Damage';
         }
 
         if (participant.mPitSchedules === 4) {
-            return 'MAND';
+            // return 'MAND';
         }
 
         if (participant.mPitSchedules === 5) {
@@ -390,7 +390,7 @@ export default class ParticipantFactory {
      * @returns
      */
     async mPlacementIndex(data, mParticipantIndex) {
-        const participants = await getParticipantsSortedByRaceDistance(data);
+        const participants = await getParticipantsSortedByLapDistance(data);
         if (participants === null) {
             return null;
         }
