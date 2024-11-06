@@ -15,7 +15,7 @@
 
 .c-hud-pit__fuel-calc {
     position: absolute;
-    top: em(792);
+    top: em(792 + 16);
     left: em(1506);
     // top: 0%;
     // right: em(161);

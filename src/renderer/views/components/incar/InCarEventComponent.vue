@@ -2,7 +2,7 @@
     <div class="c-in-car-event">
         <div class="c-in-car-event__cols">
             <div class="c-in-car-event__col">
-                <InCarIconComponent svg="icon--stopwatch" />
+                <InCarIconComponent svg="icon--chequered-flag" />
             </div>
             <div class="c-in-car-event__col">
                 <TransitionGroup tag="div" name="fade" class="c-in-car-event__rows">

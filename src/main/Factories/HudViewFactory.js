@@ -129,6 +129,8 @@ export default class HudViewFactory {
 
         // view.vTrackPositionCarousel = await this.vTrackPositionCarousel(data);
         view.vTrackPosition = await this.vTrackPosition(data);
+        view.vTimings = await this.vTimings(data);
+
 
         view.vSplitTime = await this.vSplitTime(data);
         view.vSplitTimeAhead = await this.vSplitTimeAhead(data);
@@ -1403,37 +1405,73 @@ export default class HudViewFactory {
                     },
                     {
                         label: participant.pit,
-                    },
-                    // {
-                    //     label: participant.mNameShort,
-                    //     value: participant.mCarClassPosition,
-                    //     suffix: participant.mCarClassNamesShort,
-                    //     additional: additional,
-                    //     additional_seperator: additional_seperator,
-                    //     additional_suffix: additional_suffix,
-                    //     index: `{${index}}${participant.mParticipantIndex}`,
-                    //     state: participant.mStatusToUser,
-                    // },
-                    // {
-                    //     state: item.mStatusToUser
-                    // },
-                    // {
-                    //     label: 'Best',
-                    //     value: millisecondsToTime(participant.mFastestLapTimes),
-                    // },
-                    // {
-                    //     label: 'Last',
-                    //     value: millisecondsToTime(participant.mLastLapTimes),
-                    // },
-                    // {
-                    //     label: 'Current',
-                    //     value: millisecondsToTime(participant.mCurrentLapTimes),
-                    // }
+                    }
                 ])
             );
         }
 
         return viewObjects;
+    }
+
+    /**
+     *
+     * @param {*} data
+     * @returns
+     */
+    async vTimings(data) {
+        if (data.trackPosition.length <= 0) {
+            return null;
+        }
+
+        const participant = await getActiveParticipant(data);
+
+        return [
+            getViewObject([
+                {
+                    label: 'Best',
+                    value: participant.mFastestLapTimes > 0 ? millisecondsToTime(participant.mFastestLapTimes) : '--:--.---',
+                },
+                {
+                    value: participant.mFastestSector1Times > 0 ? millisecondsToTime(participant.mFastestSector1Times) : '--:--.---',
+                },
+                {
+                    value: participant.mFastestSector2Times > 0 ? millisecondsToTime(participant.mFastestSector2Times) : '--:--.---',
+                },
+                {
+                    value: participant.mFastestSector3Times > 0 ? millisecondsToTime(participant.mFastestSector3Times) : '--:--.---',
+                }
+            ]),
+            getViewObject([
+                {
+                    label: 'Last',
+                    value: participant.mLastLapTimes > 0 ? millisecondsToTime(participant.mLastLapTimes) : '--:--.---',
+                },
+                {
+                    value: participant.mLastSector1Times > 0 ? millisecondsToTime(participant.mLastSector1Times) : '--:--.---',
+                },
+                {
+                    value: participant.mLastSector2Times > 0 ? millisecondsToTime(participant.mLastSector2Times) : '--:--.---',
+                },
+                {
+                    value: participant.mLastSector3Times > 0 ? millisecondsToTime(participant.mLastSector3Times) : '--:--.---',
+                }
+            ]),
+            getViewObject([
+                {
+                    label: 'Current',
+                    value: participant.mCurrentLapTimes > 0 ? millisecondsToTime(participant.mCurrentLapTimes) : '--:--.---',
+                },
+                {
+                    value: participant.mCurrentSector1Times > 0 ? millisecondsToTime(participant.mCurrentSector1Times) : '--:--.---',
+                },
+                {
+                    value: participant.mCurrentSector2Times > 0 ? millisecondsToTime(participant.mCurrentSector2Times) : '--:--.---',
+                },
+                {
+                    value: participant.mCurrentSector3Times > 0 ? millisecondsToTime(participant.mCurrentSector3Times) : '--:--.---',
+                }
+            ])
+        ]
     }
 
     // /**

@@ -1,12 +1,7 @@
 <template>
     <div class="c-hud-incar">
         <div class="c-hud-incar__top">
-            <div class="c-hud-incar__a"><InCarStandingsComponent /></div>
-            <div class="c-hud-incar__b"></div>
-            <div class="c-hud-incar__c"></div>
-        </div>
-        <div class="c-hud-incar__middle">
-            <div class="c-hud-incar__a"></div>
+            <div class="c-hud-incar__a"><InCarTrackPositionComponent /></div>
             <div class="c-hud-incar__b">
                 <div class="c-hud-incar__rows">
                     <div class="c-hud-incar__row">
@@ -24,7 +19,7 @@
                     </div>
                 </div>
             </div>
-            <div class="c-hud-incar__c"></div>
+            <div class="c-hud-incar__c"><InCarTimingsComponent /></div>
         </div>
         <div class="c-hud-incar__bottom">
             <div class="c-hud-incar__a">
@@ -136,7 +131,6 @@
 
 
 .c-hud-incar__top,
-.c-hud-incar__middle,
 .c-hud-incar__bottom {
     position: relative;
     display: flex;
@@ -148,24 +142,21 @@
     align-items: flex-start;
     padding: em(32) 0 0;
 
-    .c-hud-incar__a {
+    .c-hud-incar__a,
+    .c-hud-incar__b,
+    .c-hud-incar__c {
         flex-grow: 0;
         flex-shrink: 0;
         flex-basis: auto;
         padding: 0 em(32);
     }
 
-}
-
-.c-hud-incar__middle {
-    align-items: flex-start;
-    min-height: em(420);
-
     .c-hud-incar__b {
+        position: fixed;
+        left: 50%;
+        margin-left: em(-(680 * 0.5));
         width: em(680);
-
-        .c-hud-incar__items {
-        }
+        top: em(190);
 
         .c-hud-incar__item {
             display: flex;
@@ -273,7 +264,8 @@
 
 <script>
 import { inject } from 'vue';
-import InCarStandingsComponent from '../components/incar/InCarStandingsComponent.vue';
+import InCarTrackPositionComponent from '../components/incar/InCarTrackPositionComponent.vue';
+import InCarTimingsComponent from '../components/incar/InCarTimingsComponent.vue';
 import InCarEventComponent from '../components/incar/InCarEventComponent.vue';
 import InCarFuelComponent from '../components/incar/InCarFuelComponent.vue';
 import InCarInputsComponent from '../components/incar/InCarInputsComponent.vue';
@@ -322,7 +314,8 @@ export default {
         };
     },
     components: {
-        InCarStandingsComponent,
+        InCarTrackPositionComponent,
+        InCarTimingsComponent,
         InCarEventComponent,
         InCarFuelComponent,
         InCarInputsComponent,

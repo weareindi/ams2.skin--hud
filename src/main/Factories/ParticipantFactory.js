@@ -54,6 +54,14 @@ export default class ParticipantFactory {
                 mFuelLevel: null,
             };
             this.laps = [];
+
+            this.lastLap = -1;
+            this.lastSectors = [
+                -1, -1, -1
+            ];
+            this.currentSectors = [
+                -1, -1, -1
+            ];
         } catch (error) {
             console.error(error);
         }
@@ -212,33 +220,57 @@ export default class ParticipantFactory {
         data.participants.mParticipantInfo[mParticipantIndex].mRacePositionStart = await this.mRacePositionStart(data.participants.mParticipantInfo[mParticipantIndex]);
         data.participants.mParticipantInfo[mParticipantIndex].mCarClassPositionStart = await this.mCarClassPositionStart(data.participants.mParticipantInfo[mParticipantIndex]);
 
-        // data.participants.mParticipantInfo[mParticipantIndex].mLastSector1Times = await this.mLastSector1Times(data.participants.mParticipantInfo[mParticipantIndex]);
-        // data.participants.mParticipantInfo[mParticipantIndex].mLastSector2Times = await this.mLastSector2Times(data.participants.mParticipantInfo[mParticipantIndex]);
-        // data.participants.mParticipantInfo[mParticipantIndex].mLastSector3Times = await this.mLastSector3Times(data.participants.mParticipantInfo[mParticipantIndex]);
+        await this.mLastSectorTimes(data.participants.mParticipantInfo[mParticipantIndex]);
+        data.participants.mParticipantInfo[mParticipantIndex].mLastSector1Times = await this.mLastSector1Times();
+        data.participants.mParticipantInfo[mParticipantIndex].mLastSector2Times = await this.mLastSector2Times();
+        data.participants.mParticipantInfo[mParticipantIndex].mLastSector3Times = await this.mLastSector3Times();
 
         return data.participants.mParticipantInfo[mParticipantIndex];
     }
 
-    // /**
-    //  *
-    //  */
-    // async mLastSector1Times(participant) {
-    //     return -1;
-    // }
+    /**
+     *
+     */
+    async mLastSectorTimes(participant) {
+        if (this.lastLap != participant.mCurrentLap) {
+            this.lastSectors = JSON.parse(JSON.stringify(this.currentSectors));
+        }
 
-    // /**
-    //  *
-    //  */
-    // async mLastSector2Times(participant) {
-    //     return -1;
-    // }
+        if (participant.mCurrentSector === 0) {
+            this.currentSectors[2] = participant.mCurrentSector3Times;
+        }
 
-    // /**
-    //  *
-    //  */
-    // async mLastSector3Times(participant) {
-    //     return -1;
-    // }
+        if (participant.mCurrentSector === 1) {
+            this.currentSectors[0] = participant.mCurrentSector1Times;
+        }
+
+        if (participant.mCurrentSector === 2) {
+            this.currentSectors[1] = participant.mCurrentSector2Times;
+        }
+
+        this.lastLap = participant.mCurrentLap;
+    }
+
+    /**
+     *
+     */
+    async mLastSector1Times() {
+        return this.lastSectors[0];
+    }
+
+    /**
+     *
+     */
+    async mLastSector2Times() {
+        return this.lastSectors[1];
+    }
+
+    /**
+     *
+     */
+    async mLastSector3Times() {
+        return this.lastSectors[2];
+    }
 
     /**
      *
