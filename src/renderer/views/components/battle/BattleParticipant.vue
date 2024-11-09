@@ -90,6 +90,10 @@
     // padding: 0 em(32);
 }
 
+.s-battle-participant__value {
+    display: inline-block;
+}
+
 .s-battle-participant__info {
     display: flex;
     flex-direction: column;
@@ -106,7 +110,6 @@
     flex-grow: 0;
     flex-shrink: 0;
     flex-basis: auto;
-
     width: 100%;
 
     .s-battle-participant__value {
@@ -115,6 +118,7 @@
         white-space: nowrap;
         text-overflow: ellipsis;
         overflow: hidden;
+        width: 100%;
     }
 }
 
@@ -140,9 +144,10 @@
 }
 
 .s-battle-participant__aside {
-    flex-grow: 1;
+    flex-grow: 0;
     flex-shrink: 0;
     flex-basis: auto;
+    width: 100%;
 
     display: flex;
     align-items: flex-end;
@@ -150,12 +155,15 @@
 }
 
 .s-battle-participant__car {
+    width: 100%;
+
     .s-battle-participant__value {
         font-size: em(16);
         text-transform: uppercase;
         text-overflow: ellipsis;
         white-space: nowrap;
         overflow: hidden;
+        width: 100%;
     }
 }
 
