@@ -1353,9 +1353,19 @@ export default class HudViewFactory {
                     timing_state = 2;
                 }
             }
+
             if (participant.mOutLap) {
                 timing = 'Out Lap';
             }
+
+            if (participant.mPitModesLabel !== null) {
+                timing = participant.mPitModesLabel;
+            }
+
+            if (participant.mPitSchedules === 1 || participant.mPitSchedules === 2) {
+                timing = 'Pitting';
+            }
+
             if (!participant.mOutLap && participant.mLastLapTimes > 0 && participant.mParticipantIndex == data.participants.mFastestLapParticipantIndex) {
                 timing_state = 3;
             }
@@ -1371,13 +1381,13 @@ export default class HudViewFactory {
             }
 
             // pit status
-            let pit = '';
-            if (participant.mPitModes > 0) {
-                pit = participant.mPitModesLabel;
-            }
-            if (participant.mPitSchedules !== 0 && participant.mPitModes === 0) {
-                pit = participant.mPitSchedulesLabel;
-            }
+            // let pit = '';
+            // if (participant.mPitModes !== null) {
+            //     pit = participant.mPitModesLabel;
+            // }
+            // if (participant.mPitSchedules !== 0 && participant.mPitModes === 0) {
+            //     pit = participant.mPitSchedulesLabel;
+            // }
 
             viewObjects.push(
                 getViewObject([
@@ -1403,9 +1413,9 @@ export default class HudViewFactory {
                         seperator: distance_seperator,
                         suffix: distance_suffix,
                     },
-                    {
-                        label: participant.pit,
-                    }
+                    // {
+                    //     label: participant.pit,
+                    // }
                 ])
             );
         }
