@@ -1,5 +1,6 @@
-import { app, Tray, Menu, ipcMain, nativeTheme } from 'electron';
+import { app, Tray, Menu, ipcMain, nativeTheme, shell } from 'electron';
 import * as fs from 'node:fs';
+import semver from 'semver';
 
 import { electronApp, optimizer } from '@electron-toolkit/utils';
 import iconTrayMac from '../../resources/iconTemplate.png?asset';
@@ -221,6 +222,11 @@ class Main {
             }
 
             this[win].close();
+        });
+
+        // open external url
+        ipcMain.handle('openExternalUrl', async (event, url) => {
+            shell.openExternal(url);
         });
 
         // data

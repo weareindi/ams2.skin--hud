@@ -183,6 +183,29 @@
                 </div> -->
             </div>
         </div>
+        <div class="s-settings__footer">
+            <div class="s-settings__footer-row">
+                <div class="s-settings__footer-item s-settings__footer-item--cuppa">
+                    <div class="s-settings__footer-content">
+                        <p class="s-settings__footer-text">If you enjoy using this HUD and want to help me out, consider <a href="https://buymeacoffee.com/weareindi" target="_blank" @click="goToHref">buying me a cuppa</a>.</p>
+                        <span class="s-settings__footer-logo">
+                            <a href="https://buymeacoffee.com/weareindi" target="_blank" @click="goToHref"><SvgComponent svg="button--bmac" /></a>
+                        </span>
+                    </div>
+                </div>
+            </div>
+            <div class="s-settings__footer-row">
+                <div class="s-settings__footer-item s-settings__footer-item--indi">
+                    <div class="s-settings__footer-content">
+                        <p class="s-settings__footer-text">Looking for a reliable digital designer, web developer or app engineer?<br>Keep me in mind.<br>
+                            You can find me at <a href="https://weareindi.co.uk" target="_blank" @click="goToHref">We Are Indi</a></p>
+                        <span class="s-settings__footer-logo">
+                            <a href="https://weareindi.co.uk" target="_blank" @click="goToHref"><SvgComponent svg="logo--indi" /></a>
+                        </span>
+                    </div>
+                </div>
+            </div>
+        </div>
         <span class="s-settings__overlay"></span>
     </div>
 </template>
@@ -191,6 +214,7 @@
 
 .s-settings {
     display: flex;
+    flex-direction: column;
     align-items: center;
     justify-content: center;
     padding: em(32);
@@ -297,6 +321,78 @@
     bottom: 0;
 }
 
+.s-settings__footer {
+    flex-grow: 0;
+    flex-shrink: 0;
+    flex-basis: auto;
+
+    z-index: 100;
+    margin: em(8) em(-8) em(-8);
+
+    display: flex;
+    flex-direction: column;
+}
+
+.s-settings__footer-row {
+    width: em(720);
+    border-radius: em(8);
+    padding: em(8);
+}
+
+.s-settings__footer-item {
+    padding: em(12) em(14);
+    width: 100%;
+    border-radius: em(8);
+}
+
+.s-settings__footer-content {
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    margin: em(-16);
+}
+
+.s-settings__footer-text {
+    padding: em(16, 13);
+    font-size: em(13);
+    line-height: 1.5em;
+}
+
+.s-settings__footer-logo {
+    padding: em(16);
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    width: em(200);
+
+    a {
+        width: 100%;
+
+        > * {
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            width: 100%;
+        }
+    }
+
+}
+
+.s-settings__footer-item--cuppa {
+    @include color('color', 'black');
+    @include color('background-color', 'yellow');
+}
+
+.s-settings__footer-item--indi {
+    @include color('background-color', 'black');
+
+    .s-settings__footer-logo {
+        a {
+            width: em(80);
+        }
+    }
+}
+
 </style>
 
 <script>
@@ -305,6 +401,7 @@ import SettingInputComponent from '@renderer/views/components/settings/SettingIn
 import SettingKeyPressComponent from '@renderer/views/components/settings/SettingKeyPressComponent.vue';
 import SettingButtonComponent from '@renderer/views/components/settings/SettingButtonComponent.vue';
 import SettingToggleComponent from '@renderer/views/components/settings/SettingToggleComponent.vue';
+import SvgComponent from '@renderer/views/components/SvgComponent.vue';
 
 export default {
     async setup() {
@@ -414,7 +511,8 @@ export default {
         SettingInputComponent,
         SettingKeyPressComponent,
         SettingButtonComponent,
-        SettingToggleComponent
+        SettingToggleComponent,
+        SvgComponent,
     },
     data() {
         const isUpdateAvailable = null;
@@ -484,6 +582,12 @@ export default {
             await this.hideSettings();
             open('https://github.com/weareindi/ams2.skin--hud/releases/latest', '_blank').focus();
         },
+        async goToHref(event) {
+            event.preventDefault();
+
+            await electron.ipcRenderer.invoke('openExternalUrl', event.target.href);
+
+        }
     }
 }
 </script>
