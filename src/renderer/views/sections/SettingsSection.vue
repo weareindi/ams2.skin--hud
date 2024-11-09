@@ -4,7 +4,7 @@
             <div class="s-settings__rows">
                 <div class="s-settings__row">
                     <div class="s-settings__groups">
-                        <div class="s-settings__group">
+                        <!-- <div class="s-settings__group">
                             <div class="s-settings__items s-settings__items--connections">
                                 <div class="s-settings__item">
                                     <SettingToggleComponent icon="auto" label="External Crest" v-model="ExternalCrest" :options="ExternalCrestOptions" />
@@ -19,7 +19,7 @@
                                     <SettingInputComponent label="Connected" readonly="true" :valid="Connected" v-model="Connected" />
                                 </div>
                             </div>
-                        </div>
+                        </div> -->
                         <div class="s-settings__group">
                             <div class="s-settings__items s-settings__items--prefs">
                                 <div class="s-settings__item">
