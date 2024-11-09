@@ -1,0 +1,26 @@
+@font-face {
+    font-family: "secularone";
+    font-style: normal;
+    font-weight: normal;
+    font-display: swap;
+    src: url('@public/fonts/secularone/SecularOne.ttf') format('truetype');
+}
+
+@font-face {
+    font-family: "indi";
+    font-style: normal;
+    font-weight: normal;
+    font-display: swap;
+    src: url('@public/fonts/indi/original/indi-bold.ttf') format('truetype');
+}
+
+body {
+    *,
+    *:before,
+    *:after {
+        font-family: inherit;
+        letter-spacing: inherit;
+    }
+
+    font-family: "indi", sans-serif;
+}

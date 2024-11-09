@@ -1,19 +1,24 @@
-import { app, Tray, Menu, screen, ipcMain, nativeTheme } from 'electron';
-import { electronApp, optimizer, is } from '@electron-toolkit/utils';
-import { execFile } from 'child_process';
-import fs from 'fs';
+import { app, Tray, Menu, ipcMain, nativeTheme, shell } from 'electron';
+import * as fs from 'node:fs';
 import semver from 'semver';
+
+import { electronApp, optimizer } from '@electron-toolkit/utils';
 import iconTrayMac from '../../resources/iconTemplate.png?asset';
 import iconTrayWinLight from '../../resources/iconTemplate.png?asset';
 import iconTrayWinDark from '../../resources/iconTemplateDark.png?asset';
-import crest2 from '../../resources/crest2/CREST2.exe?asset';
-import MainWindow from './MainWindow.js';
-import StreamWindow from './StreamWindow.js';
+
+import SettingsController from './Controllers/SettingsController';
+import DisplayController from './Controllers/DisplayController';
+import DataController from './Controllers/DataController';
+
+import SettingsWindow from './Windows/SettingsWindow';
+import HudWindow from './Windows/HudWindow';
+import DirectorWindow from './Windows/DirectorWindow';
 
 class Main {
     constructor() {
         this.isFirstInstance = app.requestSingleInstanceLock();
-        if (!this.isFirstInstance) { 
+        if (!this.isFirstInstance) {
             app.quit();
             return;
         }
@@ -22,6 +27,10 @@ class Main {
         this.appName = 'AMS2HUD';
         this.defaultWidth = 1920;
         this.defaultHeight = 1080;
+
+        this.HudWindow = null;
+        this.DirectorWindow = null;
+
         this.init();
     }
 
@@ -34,12 +43,60 @@ class Main {
             await app.whenReady();
             await this.setElectronVars();
             await this.createTray();
+            await this.registerSettingsController();
+            await this.registerDisplayController();
+            await this.registerDataController();
             await this.registerAppListeners();
             await this.registerRendererListeners();
-            await this.createMainWindow();
+            await this.registerSettingsWindow();
+            await this.registerHudWindow();
+            await this.registerDirectorWindow();
+            await this.registerMainListeners();
         } catch (error) {
             console.log(error);
         }
+    }
+
+    /**
+     *
+     */
+    async registerSettingsController() {
+        this.SettingsController = new SettingsController();
+    }
+
+    /**
+     *
+     */
+    async registerDataController() {
+        this.DataController = new DataController();
+    }
+
+    /**
+     *
+     */
+    async registerDisplayController() {
+        this.DisplayController = new DisplayController();
+    }
+
+    /**
+     *
+     */
+    async registerSettingsWindow() {
+        this.SettingsWindow = new SettingsWindow();
+    }
+
+    /**
+     *
+     */
+    async registerHudWindow() {
+        this.HudWindow = new HudWindow();
+    }
+
+    /**
+     *
+     */
+    async registerDirectorWindow() {
+        this.DirectorWindow = new DirectorWindow();
     }
 
     /**
@@ -59,18 +116,21 @@ class Main {
             optimizer.watchWindowShortcuts(window);
         });
 
-        // // on activate
-        // app.on('activate', () => {
-        //     // On macOS it's common to re-create a window in the app when the
-        //     // dock icon is clicked and there are no other windows open.
-        //     if (BrowserWindow.getAllWindows().length === 0) {
-        //         this.createMainWindow();
-        //     }
-        // });
-
         // all windows closed?
         app.on('window-all-closed', () => {
-            app.quit();
+            // console.log('window-all-closed');
+            // do nothing, keeping this event keeps the app active even when no windows are open
+        });
+    }
+
+    /**
+     * Register main event listeners
+     */
+    async registerMainListeners() {
+        ipcMain.on('setSetting', async (key, value) => {
+            const data = {};
+            data[key] = value;
+            await this.SettingsWindow.send('setSetting', data);
         });
     }
 
@@ -97,14 +157,14 @@ class Main {
         await this.registerTrayEvents();
         await this.setTrayContextMenu();
     }
-    
+
     /**
      * Set system tray tool tip
      */
     async setTrayToolTip() {
         this.tray.setToolTip(this.appName);
     }
-    
+
     /**
      * Register systemn tray events
      */
@@ -117,7 +177,7 @@ class Main {
             this.tray.popUpContextMenu();
         });
     }
-    
+
     /**
      * Build and set the system tray context menu
      */
@@ -127,41 +187,13 @@ class Main {
             {
                 label: 'Show Settings',
                 click: async () => {
-                    const mainWindow = await this.mainWindow.getWindow();
-                    
-                    if (process.platform === 'darwin') {
-                        mainWindow.maximize();
-                    }
-
-                    if (process.platform === 'win32') {
-                        mainWindow.setFullScreen(true);
-                    }
-
-                    mainWindow.show();
-                    mainWindow.setIgnoreMouseEvents(false);
-                    mainWindow.webContents.send('openSettings');
+                    return this.SettingsWindow.start();
                 }
             },
             {
                 label: 'Quit',
                 click: async () => {
-                    try {
-                        if (typeof this.mainWindow !== 'undefined') {
-                            const mainWindow = await this.mainWindow.getWindow();
-                            mainWindow.close();
-                        }
-                    } catch (error) {
-                        console.log(error);
-                    }
-
-                    try {
-                        if (typeof this.streamWindow !== 'undefined') {
-                            const streamWindow = await this.streamWindow.getWindow();
-                            streamWindow.close();
-                        }
-                    } catch (error) {
-                        console.log(error);
-                    }
+                    app.quit();
                 }
             }
         ]);
@@ -171,254 +203,54 @@ class Main {
     }
 
     /**
-     * Create main window
-     */
-    async createMainWindow() {
-        if (typeof this.mainWindow !== 'undefined') { 
-            await this.exitMainWindow();
-        }
-        
-        return this.mainWindow = new MainWindow();
-    }
-
-    /**
-     * Exit main window
-     */
-    async exitMainWindow() {
-        this.mainWindow.exit();
-        delete this.mainWindow;
-        return;
-    }
-
-    /**
-     * Create stream window
-     */
-    async createStreamWindow() {
-        if (typeof this.streamWindow !== 'undefined') { 
-            await this.exitStreamWindow();
-        }
-
-        this.streamWindow = new StreamWindow();
-    }
-
-    /**
-     * Exit stream window
-     */
-    async exitStreamWindow() {
-        this.streamWindow.exit();
-        delete this.streamWindow;
-        return;
-    }
-
-    /**
-     * Get all displays
-     */
-    async getAllDisplays() {
-        const allDisplays = screen.getAllDisplays();
-        return allDisplays;
-    }
-
-    /**
-     * Open Crest2
-     */
-    async openCrest() {
-        if (process.platform === 'win32') {
-            try {
-                if (typeof this.crest !== 'undefined') {
-                    await this.closeCrest();
-                }
-
-                return this.crest = execFile(crest2, ['-p', '8880']);
-            } catch (error) {
-                console.error(error);
-                return null;
-            }
-        }
-    }
-
-    /**
-     * Close Crest2
-     */
-    async closeCrest() {
-        return this.crest.kill();
-    }
-
-    /**
-     * 
-     * @param {*} id 
-     * @returns 
-     */
-    async getRequestedDisplay(id) {
-        if (typeof id === 'undefined' || !id) { 
-            return await this.getPrimaryDisplay();
-        }
-
-        if (id === 'offscreen') { 
-            const primaryDisplay = await this.getPrimaryDisplay();
-
-            return {
-                id: 'offscreen',
-                bounds: { 
-                    x: primaryDisplay.bounds.x - primaryDisplay.bounds.width,
-                    y: primaryDisplay.bounds.y - primaryDisplay.bounds.height,
-                    width: primaryDisplay.bounds.width,
-                    height: primaryDisplay.bounds.height,
-                }
-            }
-        }
-
-        const allDisplays = await this.getAllDisplays();
-        const requestedDisplay = allDisplays.find((display) => {
-            return display.id === id;
-        });
-
-        if (!requestedDisplay) { 
-            return;
-        }
-
-        return requestedDisplay;
-    }
-
-    /**
-     * 
-     * @param {*} win 
-     * @returns 
-     */
-    async getRequestedWindow(win) {
-        if (typeof win === 'undefined' || !win) { 
-            return null;
-        }
-
-        if (win === 'main' && typeof this.mainWindow !== 'undefined' && this.mainWindow) { 
-            return this.mainWindow;
-        }
-
-        if (win === 'stream' && typeof this.streamWindow !== 'undefined' && this.streamWindow) { 
-            return this.streamWindow;
-        }
-
-        return null;
-    }
-
-    /**
-     * 
-     * @returns 
-     */
-    async getPrimaryDisplay() { 
-        return screen.getPrimaryDisplay();
-    }
-
-    /**
      * Register listern for events from renderer
      */
     async registerRendererListeners() {
-        // get curretn array of displays (monitors)
-        ipcMain.handle('getDisplays', async (event) => {
-            return await this.getAllDisplays();
-        });
-
-        // get primary display
-        ipcMain.handle('getPrimaryDisplay', async (event) => {
-            return await this.getPrimaryDisplay();
-        });
-
-        // change the display
-        ipcMain.handle('changeWindowDisplay', async (event, win, id) => {
-            if (!win) { 
+        // start/init named window
+        ipcMain.handle('startWindow', async (event, win) => {
+            if (!(win in this) || !('start' in this[win])) {
                 return;
             }
 
-            if (!id) {
+            this[win].start();
+        });
+
+        // close named window
+        ipcMain.handle('closeWindow', async (event, win) => {
+            if (!(win in this) || !('close' in this[win])) {
                 return;
             }
 
-            const requestedWindow = await this.getRequestedWindow(win);
-            if (!requestedWindow) { 
-                return;
+            this[win].close();
+        });
+
+        // open external url
+        ipcMain.handle('openExternalUrl', async (event, url) => {
+            shell.openExternal(url);
+        });
+
+        // data
+        ipcMain.on('data', async (data) => {
+            if (this.HudWindow) {
+                await this.HudWindow.data(data);
             }
 
-            const requestedDisplay = await this.getRequestedDisplay(id);
-            if (!requestedDisplay) { 
-                return;
+            if (this.DirectorWindow) {
+                await this.DirectorWindow.data(data);
             }
-           
-            await requestedWindow.setBounds({
-                x: requestedDisplay.bounds.x,
-                y: requestedDisplay.bounds.y,
-                width: requestedDisplay.bounds.width,
-                height: requestedDisplay.bounds.height
-            });
-
-            await requestedWindow.send('updateScale');
         });
 
-        // enable pointer events
-        ipcMain.handle('enableMouse', async (event) => {
-            const mainWindow = await this.mainWindow.getWindow();
-            mainWindow.setIgnoreMouseEvents(false);
+        // dump
+        ipcMain.on('dump', async (data) => {
+            await this.dump(data);
         });
 
-        // disable pointer events
-        ipcMain.handle('disableMouse', async (event) => {
-            const mainWindow = await this.mainWindow.getWindow();
-            mainWindow.setIgnoreMouseEvents(true);
+        // dump
+        ipcMain.handle('dump', async (event, data) => {
+            await this.dump(data);
         });
 
-        // quit app
-        ipcMain.handle('quit', (event) => {
-            app.quit();
-            return;
-        });
-
-        // open crest
-        ipcMain.handle('openCrest', async (event) => {
-            await this.openCrest();
-            return;
-        });
-
-        // close crest
-        ipcMain.handle('closeCrest', async (event) => {
-            await this.closeCrest();
-            return;
-        });
-
-        // open main window
-        ipcMain.handle('createMainWindow', async (event) => {
-            await this.createMainWindow();
-            return;
-        });
-
-        // close main window
-        ipcMain.handle('closeMainWindow', async (event) => {
-            await this.closeMainWindow();
-            return;
-        });
-
-        // open stream window
-        ipcMain.handle('createStreamWindow', async (event) => {
-            await this.createStreamWindow();
-            return;
-        });
-
-        // close stream window
-        ipcMain.handle('exitStreamWindow', async (event) => {
-            await this.exitStreamWindow();
-            return;
-        });
-
-        // update scale
-        ipcMain.handle('getScale', async (event, id) => {
-            const requestedDisplay = await this.getRequestedDisplay(id);
-            if (!requestedDisplay) {
-                return 100;
-            }
-
-            const {width} = requestedDisplay.bounds;
-            const scale = (width / this.defaultWidth) * 100;
-            return scale;
-        });
-
-        // get version
+        // Check for new version on github
         ipcMain.handle('checkUpdate', async (event) => {
             // get package.json from repo
             const url = `https://api.github.com/repos/weareindi/ams2.skin--hud/releases/latest`;
@@ -430,7 +262,7 @@ class Main {
                 console.log(error);
                 return null;
             });
-        
+
             // no response?
             if (!response) {
                 // .. bail
@@ -459,39 +291,113 @@ class Main {
             return true;
         });
 
-        // dump
-        ipcMain.handle('dump', async (event, data) => {
-            if (!data) { 
-                return false;
+        // update settings storage
+        ipcMain.handle('setVariable', async (event, key, value) => {
+            // update storage
+            await this.SettingsController.set(key, value);
+
+            // update vars
+            // if (key === 'IP') {
+            //     await this.DataController.setIP(value);
+            // }
+
+            // if (key === 'Port') {
+            //     await this.DataController.setPort(value);
+            // }
+
+            // if (key === 'TickRate') {
+            //     await this.DataController.setTickRate(value);
+            // }
+
+            if (key === 'ExternalCrest') {
+                await this.DataController.toggle(value);
             }
 
-            if (data === 'null') { 
-                return false;
+            if (key === 'SettingsDisplay') {
+                await this.DisplayController.setDisplay(this.SettingsWindow.window, value);
             }
 
-            if (typeof data === 'object') { 
-                data = JSON.stringify(data);
+            if (key === 'HudEnabled') {
+                await this.HudWindow.toggle(value);
             }
 
-            const { default: slash } = await import('slash');
-            const user_documents = app.getPath('documents');
-            const dir = slash(`${user_documents}/${this.appName}/dump`);
-            const date = new Date();
-            const filename = `${date.toISOString().split('-').join('').split(':').join('').split('.').join('')}.log`;
-            const path = `${dir}/${filename}`;
+            if (key === 'HudDisplay') {
+                await this.DisplayController.setDisplay(this.HudWindow.window, value);
+            }
 
-            fs.mkdir(dir, { recursive: true }, (err) => err && console.error(err));
-            fs.writeFileSync(path, data, 'utf-8', (err) => err && console.error(err));
+            // if (key === 'AutoDirectorEnabled') {
+            //     await this.AutoDirectorWindow.toggle(value);
+            // }
+
+            // if (key === 'AutoDirectorDisplay') {
+            //     await this.DisplayController.setDisplay(this.AutoDirectorWindow.window, value);
+            // }
+
+            if (key === 'DirectorEnabled') {
+                await this.DirectorWindow.toggle(value);
+            }
+
+            if (key === 'DirectorDisplay') {
+                await this.DisplayController.setDisplay(this.DirectorWindow.window, value);
+            }
+
+            if (key === 'DirectorDefaultView') {
+                await this.DirectorWindow.updateSetting(key, value);
+            }
+
+            if (key === 'DirectorStartingView') {
+                await this.DirectorWindow.updateSetting(key, value);
+
+            }
         });
 
-        // send to stream
-        ipcMain.handle('toStream', async (event, data) => {
-            if (typeof this.streamWindow === 'undefined' && !this.streamWindow) { 
-                return;
-            }
-
-            await this.streamWindow.send('data', data);
+        // update scale
+        ipcMain.handle('setScale', async (event, windowName, displayVariableName) => {
+            await this.DisplayController.setScale(this[windowName].window, await this.SettingsController.get(displayVariableName));
         });
+
+        // // enable pointer events
+        // ipcMain.handle('enableMouse', async (event) => {
+        //     const mainWindow = await this.mainWindow.getWindow();
+        //     mainWindow.setIgnoreMouseEvents(false);
+        // });
+
+        // // disable pointer events
+        // ipcMain.handle('disableMouse', async (event) => {
+        //     const mainWindow = await this.mainWindow.getWindow();
+        //     mainWindow.setIgnoreMouseEvents(true);
+        // });
+    }
+
+    /**
+     *
+     * @param {*} data
+     * @returns
+     */
+    async dump(data) {
+        if (!data) {
+            return false;
+        }
+
+        if (data === 'null') {
+            return false;
+        }
+
+        if (typeof data === 'object') {
+            data = JSON.stringify(data);
+        }
+
+
+
+        const { default: slash } = await import('slash');
+        const user_documents = app.getPath('documents');
+        const dir = slash(`${user_documents}/${this.appName}/dump`);
+        const date = new Date();
+        const filename = `${date.toISOString().split('-').join('').split(':').join('').split('.').join('')}.log`;
+        const path = `${dir}/${filename}`;
+
+        fs.mkdir(dir, { recursive: true }, (err) => err && console.error(err));
+        fs.writeFileSync(path, data, 'utf-8', (err) => err && console.error(err));
     }
 }
 
