@@ -13,11 +13,11 @@
                                 <span>{{ data[1].value }}</span>
                             </span>
                             <span class="c-in-car-track-position__state"></span>
-                            <span class="c-in-car-track-position__tag" v-if="data[2] && data[2].label">
-                                <span>{{ data[2].label }}</span>
+                            <span class="c-in-car-track-position__tag">
+                                <span v-if="data[2] && data[2].label">{{ data[2].label }}</span>
                             </span>
-                            <span class="c-in-car-track-position__name" v-if="data[3]">
-                                <span>{{ data[3].label }}</span>
+                            <span class="c-in-car-track-position__name">
+                                <span v-if="data[3] && data[3].label">{{ data[3].label }}</span>
                             </span>
                         </div>
                         <div class="c-in-car-track-position__values">
@@ -155,14 +155,22 @@
 }
 
 .c-in-car-track-position__tag {
-    @include color('background-color', 'white', 0.2);
+    @include color('background-color', 'white', 0.1);
 
     display: flex;
     align-items: center;
     justify-content: center;
-    padding: em(2) em(4);
     border-radius: em(4);
-    min-width: calc(4ch + em(4 * 2));
+    min-width: calc(5ch + em(4 * 2));
+    min-height: em(20);
+
+    span {
+        @include color('background-color', 'white', 0.1);
+
+        padding: em(2) em(4);
+        width: 100%;
+        text-align: center;
+    }
 }
 
 .c-in-car-track-position__name {
