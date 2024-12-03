@@ -49,6 +49,25 @@ export default class CarStateFactory {
 
     /**
      *
+     */
+    getRpmLimit(data) {
+        if (!('vehicleInformation' in data)) {
+            return 0.95;
+        }
+
+        if (!('mCarName' in data.vehicleInformation)) {
+            return 0.95;
+        }
+
+        if (data.vehicleInformation.mCarName === 'MetalMoro MRX Honda P3') {
+            return 0.93;
+        }
+
+        return 0.95;
+    }
+
+    /**
+     *
      * @param {*} data
      * @param {*} mParticipantIndex
      * @returns
@@ -101,7 +120,7 @@ export default class CarStateFactory {
      * @returns
      */
     async mTachometerState(data) {
-        if (data.carState.mTachometer >= 0.95) {
+        if (data.carState.mTachometer >= this.getRpmLimit(data)) {
             return 4;
         }
 
