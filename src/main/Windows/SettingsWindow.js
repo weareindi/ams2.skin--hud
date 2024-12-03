@@ -1,4 +1,4 @@
-import { app, BrowserWindow } from 'electron';
+import { shell, BrowserWindow } from 'electron';
 import { join } from 'path';
 import { is } from '@electron-toolkit/utils';
 import SettingsController from '../Controllers/SettingsController.js';
