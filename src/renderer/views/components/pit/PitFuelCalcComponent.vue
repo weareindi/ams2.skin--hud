@@ -15,10 +15,6 @@
                     <div class="c-pit-fuel-calc__item">
                         <PitDataValueComponent :data="vFuelToEndSessionPit" />
                     </div>
-                </div>
-            </div>
-            <div class="c-pit-fuel-calc__row">
-                <div class="c-pit-fuel-calc__items">
                     <div class="c-pit-fuel-calc__item">
                         <PitDataValueComponent :data="vFuelStopsToEndSessionPit" />
                     </div>
@@ -34,16 +30,17 @@
 <style lang="scss">
 
 .c-pit-fuel-calc {
-    @include color('background-color', 'pitbox', 0.7);
+    @include color('background-color', 'fuelcalc', 1);
 
     position: relative;
-    padding: em(10) em(10) em(10) em(48);
-    border-radius: em(12);
-    width: em(336);
+    padding: em(12) em(18);
+    border-radius: em(10);
+    // width: em(336);
+    // min-height: em(135);
 }
 
 .c-pit-fuel-calc__heading {
-    margin: 0 0 em(24);
+    margin: 0 0 em(17);
 }
 
 .c-pit-fuel-calc__rows {

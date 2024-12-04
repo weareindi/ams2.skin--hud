@@ -8,7 +8,9 @@
 </template>
 
 <style lang="scss">
-.c-pit-data-value {}
+.c-pit-data-value {
+    min-width: em(80);
+}
 
 .c-pit-data-value__label,
 .c-pit-data-value__value {
@@ -18,9 +20,10 @@
 
 .c-pit-data-value__label {
     @include removehighlight();
-    @include color('color', 'white', 0.6);
+    @include color('color', 'white', 0.8);
 
-    font-size: em(16);
+    font-size: em(14);
+    font-weight: 300;
     line-height: 1em;
     pointer-events: none;
 }
@@ -29,8 +32,8 @@
     @include removehighlight();
     @include hideAppearance();
 
-    margin: em(2, 16) 0 0;
-    font-size: em(16);
+    margin: em(2, 14) 0 0;
+    font-size: em(14);
     font-weight: normal;
     line-height: 1em;
 }
