@@ -1,9 +1,17 @@
+// @font-face {
+//     font-family: "secularone";
+//     font-style: normal;
+//     font-weight: normal;
+//     font-display: swap;
+//     src: url('@public/fonts/secularone/SecularOne.ttf') format('truetype');
+// }
+
 @font-face {
-    font-family: "secularone";
+    font-family: "indi";
     font-style: normal;
-    font-weight: normal;
+    font-weight: 300;
     font-display: swap;
-    src: url('@public/fonts/secularone/SecularOne.ttf') format('truetype');
+    src: url('@public/fonts/indi/original/indi-regular.ttf') format('truetype');
 }
 
 @font-face {
