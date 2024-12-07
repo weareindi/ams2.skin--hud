@@ -38,3 +38,12 @@ A simple fix I discovered whilst building this app was to move the system tray i
 More info can be found here: https://github.com/viper4gh/CREST2-AMS2 but essentially, Crest2 is the brain of this HUD, gathering the data and converting it to JSON format.  
 Thank you to [NLxAROSA](https://github.com/NLxAROSA/CREST) for the original Crest and also to [viper4gh](https://github.com/viper4gh/CREST2-AMS2) for maintaining the package for use with AMS2. 
 
+---
+
+## Help Required
+- As mentioned above, I'd like to be able to offer this HUD to players that run fullscreen (as opposed to windowed/borderless). If you can help with that, please get in touch.
+- I'd also like to be able to inject this into VR views for SteamVR and Oculus users. If you know how to do that and can point me in the correct direction, please get in touch.
+- Crest2 really is brilliant and allowed me to get this HUD up and running very quickly but I'd like to remove the need for Crest2 and access the shared memory direcly from AMS2 to improve performance. This app is build on Node/Electron. If you can point me in the correct direction to get that implemented, please get in touch.
+
+Many thanks,
+Loz
