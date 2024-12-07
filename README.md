@@ -29,7 +29,7 @@ AMS2HUD has a system tray tool which is where you can open the settings menu whe
 ## Settings
 Default tick rate is 24. This is perfect for most use cases.
 
-### Windows System Tray Bug
+## Windows System Tray Bug
 Ever noticed how some system tray icons simply don't show properly when you click them?  
 Sometimes they open behind the taskbar, sometimes they don't open at all. It drives me up the wall! 
 A simple fix I discovered whilst building this app was to move the system tray icon into the "hidden icon menu" and access it from there instead.
