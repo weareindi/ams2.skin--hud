@@ -1,9 +1,14 @@
 # AMS2HUD
-A custom HUD for AMS2.
+A custom HUD for AMS2.   
+
+[![AMS2 Custom HUD](https://i.ytimg.com/vi/D6_VJDpU-1k/maxresdefault.jpg)](https://youtu.be/D6_VJDpU-1k "AMS2 Custom HUD")
+
+## Download
+[Click here to download latest release](https://github.com/weareindi/ams2.skin--hud/releases/latest)
 
 ## Why?
 The in game HUD does a fine job... until it doesn't. Alignment issues especially with VR were the main problem for me. Starting off as just an alterative HUD for Automobilista 2, the project soon grew into two parts.   
-I wanted a clean looking HUD just for me without it beind recorded or streamed.   
+I wanted a clean looking HUD just for me without it being recorded or streamed.   
 **Part 1** achieves that goal, it is a good looking HUD with all the info I need and nothing I don't, allowing me to focus on driving without distraction.   
 **Part 2** is a view I share on my recordings, with the aim of making it feel like a genuine broadcast rather than just a recording of my gameplay.   
 
@@ -15,12 +20,14 @@ I wanted a clean looking HUD just for me without it beind recorded or streamed.
 - Start Automobilista 2.
 - Once the HUD settings indicate you're connected *Usually just before the game loads into the main menu*. It is now safe to close the settings menu and go to the track.
 
+## Requirements
+- This HUD runs on a layer over the top of the game window. It does NOT get injected into the game. Please run the game in windowed or borderless view. Running AMS2 in fullscreen prevents this HUD from being seen. (Please get in touch if you're a developer who knows how to inject this HUD into the game so it can run in fullscreen view)
+
 ## System Tray
 AMS2HUD has a system tray tool which is where you can open the settings menu when you need to.
 
 ## Settings
-IP address and port are for connecting to the Crest service. Crest is built into this app. running on port `8881` but you can also run it externally if you prefer.  
-You'll find the standalone package below.
+Default tick rate is 24. This is perfect for most use cases.
 
 ### Windows System Tray Bug
 Ever noticed how some system tray icons simply don't show properly when you click them?  
