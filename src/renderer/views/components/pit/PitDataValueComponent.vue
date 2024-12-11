@@ -9,7 +9,7 @@
 
 <style lang="scss">
 .c-pit-data-value {
-    min-width: em(80);
+    min-width: em(78);
 }
 
 .c-pit-data-value__label,
