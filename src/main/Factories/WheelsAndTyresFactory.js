@@ -282,28 +282,113 @@ export default class WeatherFactory {
      * @returns
      */
     async mTyreTempState(data) {
-        const state = (value) => {
-            if (value >= 110) {
-                return 6;
+        const state = (value, compound) => {
+            if (compound === 'track') {
+                if (value >= 130) {
+                    return 6;
+                }
+
+                if (value >= 120) {
+                    return 5;
+                }
+
+                if (value >= 50) {
+                    return 0;
+                }
             }
 
+            if (compound === 'vintage') {
+                if (value >= 115) {
+                    return 6;
+                }
 
-            if (value >= 100) {
-                return 5;
+                if (value >= 105) {
+                    return 5;
+                }
+
+                if (value >= 50) {
+                    return 0;
+                }
             }
 
-            if (value >= 60) {
-                return 0;
+            if (compound === 'soft slick') {
+                if (value >= 130) {
+                    return 6;
+                }
+
+                if (value >= 120) {
+                    return 5;
+                }
+
+                if (value >= 60) {
+                    return 0;
+                }
+            }
+
+            if (compound === 'medium slick') {
+                if (value >= 135) {
+                    return 6;
+                }
+
+                if (value >= 125) {
+                    return 5;
+                }
+
+                if (value >= 60) {
+                    return 0;
+                }
+            }
+
+            if (compound === 'hard slick') {
+                if (value >= 140) {
+                    return 6;
+                }
+
+                if (value >= 130) {
+                    return 5;
+                }
+
+                if (value >= 60) {
+                    return 0;
+                }
+            }
+
+            if (compound === 'intermediate') {
+                if (value >= 130) {
+                    return 6;
+                }
+
+                if (value >= 120) {
+                    return 5;
+                }
+
+                if (value >= 60) {
+                    return 0;
+                }
+            }
+
+            if (compound === 'wet') {
+                if (value >= 110) {
+                    return 6;
+                }
+
+                if (value >= 100) {
+                    return 5;
+                }
+
+                if (value >= 60) {
+                    return 0;
+                }
             }
 
             return 1;
         }
 
         return [
-            state(data.wheelsAndTyres.mTyreTemp[0]),
-            state(data.wheelsAndTyres.mTyreTemp[1]),
-            state(data.wheelsAndTyres.mTyreTemp[2]),
-            state(data.wheelsAndTyres.mTyreTemp[3])
+            state(data.wheelsAndTyres.mTyreTemp[0], data.wheelsAndTyres.mTyreCompound[0].toLowerCase()),
+            state(data.wheelsAndTyres.mTyreTemp[1], data.wheelsAndTyres.mTyreCompound[1].toLowerCase()),
+            state(data.wheelsAndTyres.mTyreTemp[2], data.wheelsAndTyres.mTyreCompound[2].toLowerCase()),
+            state(data.wheelsAndTyres.mTyreTemp[3], data.wheelsAndTyres.mTyreCompound[3].toLowerCase())
         ];
     }
 

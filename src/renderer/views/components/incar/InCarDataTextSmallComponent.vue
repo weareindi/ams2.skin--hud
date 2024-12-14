@@ -38,7 +38,18 @@
 
     &[state="3"] {}
 
-    &[state="4"] {}
+    &[state="4"] {
+        &:before {
+            @include color('background-color', 'yellow', 1);
+        }
+
+        .c-in-car-data-text-small__zerofill,
+        .c-in-car-data-text-small__value,
+        .c-in-car-data-text-small__seperator,
+        .c-in-car-data-text-small__suffix {
+            @include color('color', 'black', 1);
+        }
+    }
 
     &[state="5"] {
         &:before {
