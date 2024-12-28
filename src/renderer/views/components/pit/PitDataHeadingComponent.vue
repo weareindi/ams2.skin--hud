@@ -5,30 +5,16 @@
 </template>
 
 <style lang="scss">
-.c-pit-data-heading {
-    position: relative;
-
-    &:before {
-        @include color('background-color', 'ams2_red', 1);
-
-        content: '';
-        position: absolute;
-        top: em(4);
-        left: em(-34);
-        width: em(20);
-        height: em(4);
-        border-top-left-radius: em(2);
-        border-bottom-left-radius: em(2);
-    }
-}
+.c-pit-data-heading {}
 
 .c-pit-data-heading__label {
     @include removehighlight();
-    @include color('color', 'white', 0.6);
+    @include color('color', 'white', 1);
 
-    font-size: em(16);
+    font-size: em(14);
+    font-weight: normal;
     pointer-events: none;
-    text-transform: uppercase;
+    // text-transform: uppercase;
 }
 
 </style>

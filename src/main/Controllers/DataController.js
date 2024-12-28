@@ -243,10 +243,10 @@ export default class DataController {
         const response = await fetch(url,
             {
                 signal: AbortSignal.timeout(1000),
-                // headers: {
-                    // "Content-Type": "application/json",
-                    // 'Accept-Encoding': 'gzip'
-                // }
+                headers: {
+                    "Content-Type": "application/json",
+                    'Accept-Encoding': 'gzip'
+                }
             }).catch(async (error) => {
                 return null;
             });

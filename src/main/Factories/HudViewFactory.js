@@ -1299,6 +1299,11 @@ export default class HudViewFactory {
             return null;
         }
 
+        if (data.wheelsAndTyres.mAirPressurePrevious === null) {
+            return null;
+        }
+
+
         return getViewObject([
             {
                 value: data.wheelsAndTyres.mTyreWear[index],
@@ -1318,6 +1323,11 @@ export default class HudViewFactory {
                 seperator: ' ',
                 suffix: 'B',
                 state: data.wheelsAndTyres.mAirPressureState[index]
+            },
+            {
+                value: data.wheelsAndTyres.mAirPressurePrevious[index],
+                seperator: ' ',
+                suffix: 'B'
             }
         ]);
     }
