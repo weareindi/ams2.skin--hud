@@ -2,6 +2,7 @@
 A custom HUD for AMS2.   
 
 [![AMS2 Custom HUD](https://i.ytimg.com/vi/D6_VJDpU-1k/maxresdefault.jpg)](https://youtu.be/D6_VJDpU-1k "AMS2 Custom HUD")
+![AMS2HUD_pitbox_compressed](https://github.com/user-attachments/assets/3f36273e-b05f-440a-bac3-bbf5e8beba73)
 
 ## Download
 [Click here to download latest release](https://github.com/weareindi/ams2.skin--hud/releases/latest)
