@@ -1,4 +1,4 @@
-import { isReady } from '../../utils/CrestUtils';
+import { isReady, isOnCircuit } from '../../utils/CrestUtils';
 
 export default class WeatherFactory {
     constructor() {
@@ -21,7 +21,7 @@ export default class WeatherFactory {
      */
     async reset() {
         try {
-
+            this.mAirPressures = [null,null,null,null];
         } catch (error) {
             console.error(error);
         }
@@ -66,8 +66,24 @@ export default class WeatherFactory {
         data.wheelsAndTyres.mTyreCompoundShort = await this.mTyreCompoundShort(data);
         data.wheelsAndTyres.mAirPressure = await this.mAirPressure(data);
         data.wheelsAndTyres.mAirPressureState = await this.mAirPressureState(data);
+        data.wheelsAndTyres.mAirPressurePrevious = await this.mAirPressurePrevious(data);
 
         return data;
+    }
+
+
+    /**
+     *
+     * @param {*} data
+     * @returns
+     */
+    async mAirPressurePrevious(data) {
+        const onCircuit = await isOnCircuit(data);
+        if (onCircuit) {
+            return this.mAirPressures = data.wheelsAndTyres.mAirPressure;
+        }
+
+        return this.mAirPressures;
     }
 
     /**
@@ -298,6 +314,20 @@ export default class WeatherFactory {
             }
 
             if (compound === 'vintage') {
+                if (value >= 115) {
+                    return 6;
+                }
+
+                if (value >= 105) {
+                    return 5;
+                }
+
+                if (value >= 50) {
+                    return 0;
+                }
+            }
+
+            if (compound === 'semi-slick') {
                 if (value >= 115) {
                     return 6;
                 }

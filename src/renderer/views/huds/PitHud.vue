@@ -1,5 +1,6 @@
 <template>
     <div class="c-hud-pit">
+        <div class="c-hud-pit__air-pressure"><PitAirPressureComponent /></div>
         <div class="c-hud-pit__fuel-calc"><PitFuelCalcComponent /></div>
     </div>
 </template>
@@ -13,6 +14,12 @@
     margin: auto;
 }
 
+.c-hud-pit__air-pressure {
+    position: absolute;
+    top: em(25);
+    right: em(242);
+}
+
 .c-hud-pit__fuel-calc {
     position: absolute;
     top: em(95);
@@ -21,10 +28,12 @@
 </style>
 
 <script>
+import PitAirPressureComponent from '../components/pit/PitAirPressureComponent.vue';
 import PitFuelCalcComponent from '../components/pit/PitFuelCalcComponent.vue';
 
 export default {
     components: {
+        PitAirPressureComponent,
         PitFuelCalcComponent
     }
 }
