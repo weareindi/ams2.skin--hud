@@ -1,4 +1,4 @@
-import { app, Tray, Menu, ipcMain, nativeTheme, shell } from 'electron';
+import { app, Tray, Menu, ipcMain, nativeTheme, shell  } from 'electron';
 import * as fs from 'node:fs';
 import semver from 'semver';
 
@@ -182,24 +182,80 @@ class Main {
      * Build and set the system tray context menu
      */
     async setTrayContextMenu() {
-        // prepare context menu
-        const contextMenu = Menu.buildFromTemplate([
-            {
-                label: 'Show Settings',
+        let menu = [];
+
+        const updateAvailable = await this.checkUpdate();
+        if (updateAvailable) {
+            menu.push({
+                label: 'Download Update',
                 click: async () => {
-                    return this.SettingsWindow.start();
+                    shell.openExternal('https://github.com/weareindi/ams2.skin--hud/releases/latest');
                 }
-            },
-            {
-                label: 'Quit',
-                click: async () => {
-                    app.quit();
-                }
+            });
+        }
+
+        menu.push({
+            label: 'Show Settings',
+            click: async () => {
+                return this.SettingsWindow.start();
             }
-        ]);
+        });
+        menu.push({
+            label: 'Quit',
+            click: async () => {
+                app.quit();
+            }
+        });
+
+        // prepare context menu
+        const contextMenu = Menu.buildFromTemplate(menu);
 
         // prepare the tray context menu
         this.tray.setContextMenu(contextMenu);
+    }
+
+    /**
+     *
+     * @returns
+     */
+    async checkUpdate() {
+        // get package.json from repo
+        const url = `https://api.github.com/repos/weareindi/ams2.skin--hud/releases/latest`;
+
+        // fetch the data
+        const response = await fetch(url, {
+            method: 'GET'
+        }).catch(async (error) => {
+            console.log(error);
+            return null;
+        });
+
+        // no response?
+        if (!response) {
+            // .. bail
+            return false;
+        }
+
+        // get json
+        const json = await response.json();
+
+        // get running app current version
+        let localVersion = `v${app.getVersion()}`;
+
+        // pprepare latest version for comparison
+        let latestRelease = localVersion;
+        if ('tag_name' in json) {
+            // ... update latest version to found version from fetch request
+            latestRelease = json.tag_name;
+        }
+
+        // compare. if same version return false
+        if (semver.compare(localVersion, latestRelease) >= 0) {
+            return false;
+        }
+
+        // return true, update avilable
+        return true;
     }
 
     /**
@@ -252,43 +308,7 @@ class Main {
 
         // Check for new version on github
         ipcMain.handle('checkUpdate', async (event) => {
-            // get package.json from repo
-            const url = `https://api.github.com/repos/weareindi/ams2.skin--hud/releases/latest`;
-
-            // fetch the data
-            const response = await fetch(url, {
-                method: 'GET'
-            }).catch(async (error) => {
-                console.log(error);
-                return null;
-            });
-
-            // no response?
-            if (!response) {
-                // .. bail
-                return false;
-            }
-
-            // get json
-            const json = await response.json();
-
-            // get running app current version
-            let localVersion = `v${app.getVersion()}`;
-
-            // pprepare latest version for comparison
-            let latestRelease = localVersion;
-            if ('tag_name' in json) {
-                // ... update latest version to found version from fetch request
-                latestRelease = json.tag_name;
-            }
-
-            // compare. if same version return false
-            if (semver.compare(localVersion, latestRelease) >= 0) {
-                return false;
-            }
-
-            // return true, update avilable
-            return true;
+            return await this.checkUpdate();
         });
 
         // update settings storage

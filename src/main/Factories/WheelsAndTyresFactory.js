@@ -241,10 +241,10 @@ export default class WeatherFactory {
      */
     async mTyreWear(data) {
         return [
-            data.wheelsAndTyres.mTyreWear[0],
-            data.wheelsAndTyres.mTyreWear[1],
-            data.wheelsAndTyres.mTyreWear[2],
-            data.wheelsAndTyres.mTyreWear[3],
+            data.wheelsAndTyres.mTyreWear[0] * 2,
+            data.wheelsAndTyres.mTyreWear[1] * 2,
+            data.wheelsAndTyres.mTyreWear[2] * 2,
+            data.wheelsAndTyres.mTyreWear[3] * 2,
         ];
     }
 
