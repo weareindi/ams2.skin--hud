@@ -299,116 +299,61 @@ export default class WeatherFactory {
      */
     async mTyreTempState(data) {
         const state = (value, compound) => {
-            if (compound === 'track') {
-                if (value >= 130) {
-                    return 6;
-                }
+            switch (compound) {
+                case 'track':
+                    return color(value, 120, 90, 50);
+                case 'vintage':
+                    return color(value, 110, 90, 40);
+                case 'semi-slick':
+                    return color(value, 135, 110, 60);
+                case 'soft slick':
+                    return color(value, 140, 110, 70);
+                case 'medium slick':
+                    return color(value, 145, 120, 70);
+                case 'hard slick':
+                    return color(value, 160, 140, 80);
+                case 'slick':
+                    return color(value, 95, 70, 30);
+                case 'extreme':
+                    return color(value, 125, 85, 30);
+                case 'intermediate':
+                    return color(value, 135, 100, 60);
+                case 'wet':
+                    return color(value, 130, 90, 30);
+                case 'street':
+                    return color(value, 115, 90, 45);
+                case 'slick d (soft)':
+                    return color(value, 125, 100, 55);
+                case 'slick c (medium)':
+                    return color(value, 140, 115, 70);
+                case 'slick b (hard)':
+                    return color(value, 150, 125, 70);
+                case 'avon (zzr)':
+                    return color(value, 125, 100, 55);
+                case 'avon (zzs)':
+                    return color(value, 90, 60, 25);
+                case 'dry':
+                    return color(value, 125, 95, 40);
+                case 'slick option':
+                    return color(value, 135, 105, 60);
+                case 'slick primary':
+                    return color(value, 145, 120, 75);
+                default:
+                    return color(value, 130, 100, 50);
+            }
+        }
 
-                if (value >= 120) {
-                    return 5;
-                }
-
-                if (value >= 50) {
-                    return 0;
-                }
+        const color = (value, r, y, g) => {
+            if (value >= r) {
+                return 5;
             }
 
-            if (compound === 'vintage') {
-                if (value >= 115) {
-                    return 6;
-                }
-
-                if (value >= 105) {
-                    return 5;
-                }
-
-                if (value >= 50) {
-                    return 0;
-                }
+            if (value >= y) {
+                return 4;
             }
 
-            if (compound === 'semi-slick') {
-                if (value >= 115) {
-                    return 6;
-                }
-
-                if (value >= 105) {
-                    return 5;
-                }
-
-                if (value >= 50) {
-                    return 0;
-                }
-            }
-
-            if (compound === 'soft slick') {
-                if (value >= 130) {
-                    return 6;
-                }
-
-                if (value >= 120) {
-                    return 5;
-                }
-
-                if (value >= 60) {
-                    return 0;
-                }
-            }
-
-            if (compound === 'medium slick') {
-                if (value >= 135) {
-                    return 6;
-                }
-
-                if (value >= 125) {
-                    return 5;
-                }
-
-                if (value >= 60) {
-                    return 0;
-                }
-            }
-
-            if (compound === 'hard slick') {
-                if (value >= 140) {
-                    return 6;
-                }
-
-                if (value >= 130) {
-                    return 5;
-                }
-
-                if (value >= 60) {
-                    return 0;
-                }
-            }
-
-            if (compound === 'intermediate') {
-                if (value >= 130) {
-                    return 6;
-                }
-
-                if (value >= 120) {
-                    return 5;
-                }
-
-                if (value >= 60) {
-                    return 0;
-                }
-            }
-
-            if (compound === 'wet') {
-                if (value >= 110) {
-                    return 6;
-                }
-
-                if (value >= 100) {
-                    return 5;
-                }
-
-                if (value >= 60) {
-                    return 0;
-                }
+            if (value >= g) {
+                return 0;
             }
 
             return 1;
@@ -429,8 +374,24 @@ export default class WeatherFactory {
      */
     async mTyreCompoundShort(data) {
         const short = (string) => {
-            // use first character
-            return string.substring(0, 1);
+            switch (string.toLowerCase()) {
+                case 'avon zzr':
+                    return 'r';
+                case 'avon zzs':
+                    return 's';
+                case 'slick option':
+                    return 'o';
+                case 'slick primary':
+                    return 'p';
+                case 'slick d (soft)':
+                    return 's';
+                case 'slick c (medium)':
+                    return 'm';
+                case 'slick b (hard)':
+                    return 'h';
+                default:
+                    return string.substring(0, 1);
+            }
         }
 
         return [
