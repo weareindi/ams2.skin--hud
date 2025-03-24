@@ -374,8 +374,24 @@ export default class WeatherFactory {
      */
     async mTyreCompoundShort(data) {
         const short = (string) => {
-            // use first character
-            return string.substring(0, 1);
+            switch (string.toLowerCase()) {
+                case 'avon zzr':
+                    return 'r';
+                case 'avon zzs':
+                    return 's';
+                case 'slick option':
+                    return 'o';
+                case 'slick primary':
+                    return 'p';
+                case 'slick d (soft)':
+                    return 's';
+                case 'slick c (medium)':
+                    return 'm';
+                case 'slick b (hard)':
+                    return 'h';
+                default:
+                    return string.substring(0, 1);
+            }
         }
 
         return [
