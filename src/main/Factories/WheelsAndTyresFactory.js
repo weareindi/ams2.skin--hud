@@ -313,7 +313,17 @@ export default class WeatherFactory {
                 case 'hard slick':
                     return color(value, 160, 140, 80);
                 case 'slick':
-                    return color(value, 95, 70, 30);
+
+                    if (['Formula Inter MG-15'].includes(data.vehicleInformation.mCarName)) {
+                        return color(value, 95, 70, 30);
+                    }
+
+                    if (['Dallara F301'].includes(data.vehicleInformation.mCarName)) {
+                        return color(value, 125, 90, 50);
+                    }
+
+                    return color(value, 120, 90, 50);
+
                 case 'extreme':
                     return color(value, 125, 85, 30);
                 case 'intermediate':
